@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ import (
 
 func TestJSONSize(t *testing.T) {
 	var err error
-	data := gocqrs.EventMessage{
+	data := zamus.EventMessage{
 		EventID:       "bhh9lvkrtr33vbmh6djg1",
 		PartitionKey:  "bhh9lvkrtr33vbmh6djg",
 		EventType:     "domain.subdomain.aggregate.StockItemCreated",
@@ -42,7 +42,7 @@ func TestJSONSize(t *testing.T) {
 
 func TestSizeProto(t *testing.T) {
 	var err error
-	data := gocqrs.EventMessage{
+	data := zamus.EventMessage{
 		EventID:       "bhh9lvkrtr33vbmh6djg1",
 		PartitionKey:  "bhh9lvkrtr33vbmh6djg",
 		EventType:     "domain.subdomain.aggregate.StockItemCreated",
@@ -76,7 +76,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		"p": "{"id":"1"}"
 	}`)
 
-	data := gocqrs.EventMessage{
+	data := zamus.EventMessage{
 		AggregateID:   "a1",
 		AggregateType: "domain.aggregate",
 		Seq:           10,

@@ -19,10 +19,11 @@ type invokeHandlers struct {
 type InvokeEvents []*InvokeEvent
 
 type InvokeEvent struct {
-	Function string          `json:"function"`
-	Args     json.RawMessage `json:"arguments"`
-	Source   json.RawMessage `json:"source"`
-	Identity *Identity       `json:"identity"`
+	Function      string          `json:"function"`
+	Args          json.RawMessage `json:"arguments"`
+	Source        json.RawMessage `json:"source"`
+	Identity      *Identity       `json:"identity"`
+	PermissionKey string          `json:"pemKey"`
 }
 
 func (e *InvokeEvent) ParseArgs(v interface{}) error {

@@ -8,10 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/onedaycat/gocqrs"
-	"github.com/onedaycat/gocqrs/common/clock"
-	"github.com/onedaycat/gocqrs/common/eid"
-	"github.com/onedaycat/gocqrs/testdata/domain"
+	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/common/eid"
+	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,7 +41,7 @@ func TestSaveAndGet(t *testing.T) {
 	db := getDB()
 	db.TruncateTables()
 
-	es := gocqrs.NewEventStore(db)
+	es := zamus.NewEventStore(db)
 
 	now1 := time.Now().UTC().Add(time.Second * -10)
 	now2 := time.Now().UTC().Add(time.Second * -5)
@@ -73,7 +73,7 @@ func TestSaveAndGet(t *testing.T) {
 	require.NoError(t, err)
 
 	st3 := domain.NewStockItem()
-	events, err := es.GetEvents(st.GetAggregateID(), gocqrs.NewSeq(now2.Unix(), 0), st3)
+	events, err := es.GetEvents(st.GetAggregateID(), zamus.NewSeq(now2.Unix(), 0), st3)
 	require.NoError(t, err)
 	require.Len(t, events, 2)
 	require.True(t, st.IsRemoved())
@@ -89,14 +89,14 @@ func TestSaveAndGet(t *testing.T) {
 	require.Equal(t, st4, st)
 
 	// GetByEventType
-	events, err = es.GetEventsByEventType(domain.StockItemUpdatedEvent, gocqrs.NewSeq(now2.Unix(), 0))
+	events, err = es.GetEventsByEventType(domain.StockItemUpdatedEvent, zamus.NewSeq(now2.Unix(), 0))
 	require.NoError(t, err)
 	require.Len(t, events, 1)
 	require.Equal(t, domain.StockItemUpdatedEvent, events[0].EventType)
 	require.Equal(t, int64(6), events[0].Seq)
 
 	// GetByAggregateType
-	events, err = es.GetEventsByAggregateType(st.GetAggregateType(), gocqrs.NewSeq(now2.Unix(), 0))
+	events, err = es.GetEventsByAggregateType(st.GetAggregateType(), zamus.NewSeq(now2.Unix(), 0))
 	require.NoError(t, err)
 	require.Len(t, events, 2)
 	require.True(t, st.IsRemoved())
@@ -109,13 +109,13 @@ func TestSaveAndGet(t *testing.T) {
 func TestNotFound(t *testing.T) {
 	db := getDB()
 
-	es := gocqrs.NewEventStore(db)
+	es := zamus.NewEventStore(db)
 
 	// GetAggregate
 	st := domain.NewStockItem()
 	st.SetAggregateID("1x")
 	err := es.GetAggregate(st.GetAggregateID(), st)
-	require.Equal(t, gocqrs.ErrNotFound, err)
+	require.Equal(t, zamus.ErrNotFound, err)
 
 	// Get
 	st3 := domain.NewStockItem()
@@ -126,7 +126,7 @@ func TestNotFound(t *testing.T) {
 	// GetSnapshot
 	st4 := domain.NewStockItem()
 	err = es.GetSnapshot(st.GetAggregateID(), st4)
-	require.Equal(t, gocqrs.ErrNotFound, err)
+	require.Equal(t, zamus.ErrNotFound, err)
 	require.Nil(t, events)
 
 	// GetByEventType
@@ -144,7 +144,7 @@ func TestConcurency(t *testing.T) {
 	db := getDB()
 
 	db.TruncateTables()
-	es := gocqrs.NewEventStore(db)
+	es := zamus.NewEventStore(db)
 
 	wg := sync.WaitGroup{}
 	wg.Add(2)
@@ -175,6 +175,6 @@ func TestConcurency(t *testing.T) {
 	}()
 
 	wg.Wait()
-	require.Equal(t, gocqrs.ErrVersionInconsistency, err1)
+	require.Equal(t, zamus.ErrVersionInconsistency, err1)
 	require.Nil(t, err2)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 )
 
 const (
@@ -221,7 +221,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) ([]*gocqrs.EventMessage, error) {
+func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) ([]*zamus.EventMessage, error) {
 	keyCond := getCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getKV: &dynamodb.AttributeValue{S: &hashKey},
@@ -248,7 +248,7 @@ func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) 
 		return nil, nil
 	}
 
-	snapshots := make([]*gocqrs.EventMessage, 0, len(output.Items))
+	snapshots := make([]*zamus.EventMessage, 0, len(output.Items))
 	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &snapshots); err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) 
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetEventsByEventType(eventType gocqrs.EventType, seq, limit int64) ([]*gocqrs.EventMessage, error) {
+func (d *DynamoDBEventStore) GetEventsByEventType(eventType zamus.EventType, seq, limit int64) ([]*zamus.EventMessage, error) {
 	keyCond := getByEventTypeCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getByEventTypeKV: &dynamodb.AttributeValue{S: &eventType},
@@ -284,7 +284,7 @@ func (d *DynamoDBEventStore) GetEventsByEventType(eventType gocqrs.EventType, se
 		return nil, nil
 	}
 
-	snapshots := make([]*gocqrs.EventMessage, 0, len(output.Items))
+	snapshots := make([]*zamus.EventMessage, 0, len(output.Items))
 	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &snapshots); err != nil {
 		return nil, err
 	}
@@ -292,7 +292,7 @@ func (d *DynamoDBEventStore) GetEventsByEventType(eventType gocqrs.EventType, se
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType gocqrs.AggregateType, seq, limit int64) ([]*gocqrs.EventMessage, error) {
+func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType zamus.AggregateType, seq, limit int64) ([]*zamus.EventMessage, error) {
 	keyCond := getByAggregateTypeCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getByAggregateTypeKV: &dynamodb.AttributeValue{S: &aggType},
@@ -320,7 +320,7 @@ func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType gocqrs.AggregateTy
 		return nil, nil
 	}
 
-	snapshots := make([]*gocqrs.EventMessage, 0, len(output.Items))
+	snapshots := make([]*zamus.EventMessage, 0, len(output.Items))
 	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &snapshots); err != nil {
 		return nil, err
 	}
@@ -328,7 +328,7 @@ func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType gocqrs.AggregateTy
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*gocqrs.Snapshot, error) {
+func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*zamus.Snapshot, error) {
 	output, err := d.db.GetItem(&dynamodb.GetItemInput{
 		TableName:      &d.snapshotTable,
 		ConsistentRead: falseStrongRead,
@@ -341,10 +341,10 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*gocqrs.Snapsho
 	}
 
 	if len(output.Item) == 0 {
-		return nil, gocqrs.ErrNotFound
+		return nil, zamus.ErrNotFound
 	}
 
-	snapshot := &gocqrs.Snapshot{}
+	snapshot := &zamus.Snapshot{}
 	if err = dynamodbattribute.UnmarshalMap(output.Item, snapshot); err != nil {
 		return nil, err
 	}
@@ -352,7 +352,7 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*gocqrs.Snapsho
 	return snapshot, nil
 }
 
-func (d *DynamoDBEventStore) Save(events []*gocqrs.EventMessage, snapshot *gocqrs.Snapshot) error {
+func (d *DynamoDBEventStore) Save(events []*zamus.EventMessage, snapshot *zamus.Snapshot) error {
 	var err error
 	var snapshotReq map[string]*dynamodb.AttributeValue
 	snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
@@ -401,7 +401,7 @@ func (d *DynamoDBEventStore) Save(events []*gocqrs.EventMessage, snapshot *gocqr
 	if err != nil {
 		aerr := err.(awserr.Error)
 		if aerr.Code() == dynamodb.ErrCodeTransactionCanceledException {
-			return gocqrs.ErrVersionInconsistency
+			return zamus.ErrVersionInconsistency
 		}
 
 		return err

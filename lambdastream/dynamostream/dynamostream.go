@@ -3,11 +3,11 @@ package dynamostream
 import (
 	"context"
 
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 )
 
-type EventMessage = gocqrs.EventMessage
-type EventMessages = []*gocqrs.EventMessage
+type EventMessage = zamus.EventMessage
+type EventMessages = []*zamus.EventMessage
 
 type LambdaHandler func(ctx context.Context, event *DynamoDBStreamEvent) (interface{}, error)
 type EventMessageHandler func(msg *EventMessage) error

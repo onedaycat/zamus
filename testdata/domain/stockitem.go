@@ -1,12 +1,12 @@
 package domain
 
 import (
-	"github.com/onedaycat/gocqrs"
-	"github.com/onedaycat/gocqrs/common/clock"
+	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/common/clock"
 )
 
 type AccountProfile struct {
-	*gocqrs.AggregateBase
+	*zamus.AggregateBase
 	AccountID string
 	Fullname  string
 	Country   string
@@ -16,7 +16,7 @@ func (a *AccountProfile) GetPartitionKey() string {
 	return a.AccountID
 }
 
-func (a *AccountProfile) GetAggregateType() gocqrs.AggregateType {
+func (a *AccountProfile) GetAggregateType() zamus.AggregateType {
 	return "SellConnect.Account.AccountProfile"
 }
 
@@ -29,7 +29,7 @@ func (a *AccountProfile) SetAggregateID(id string) {
 }
 
 type StockItem struct {
-	*gocqrs.AggregateBase
+	*zamus.AggregateBase
 	ID        string
 	ProductID string
 	Qty       Qty
@@ -38,7 +38,7 @@ type StockItem struct {
 
 func NewStockItem() *StockItem {
 	return &StockItem{
-		AggregateBase: gocqrs.InitAggregate(),
+		AggregateBase: zamus.InitAggregate(),
 	}
 }
 
@@ -46,7 +46,7 @@ func (st *StockItem) GetPartitionKey() string {
 	return st.ProductID
 }
 
-func (st *StockItem) GetAggregateType() gocqrs.AggregateType {
+func (st *StockItem) GetAggregateType() zamus.AggregateType {
 	return "domain.subdomain.aggregate"
 }
 
@@ -68,7 +68,7 @@ func (st *StockItem) Create(id, productID string, qty Qty) {
 	})
 }
 
-func (st *StockItem) Apply(msg *gocqrs.EventMessage) error {
+func (st *StockItem) Apply(msg *zamus.EventMessage) error {
 	switch msg.EventType {
 	case StockItemCreatedEvent:
 		event := &StockItemCreated{}

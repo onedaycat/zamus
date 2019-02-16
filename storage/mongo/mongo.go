@@ -8,7 +8,7 @@ package mongo
 // 	"github.com/mongodb/mongo-go-driver/mongo"
 // 	"github.com/mongodb/mongo-go-driver/mongo/options"
 // 	"github.com/mongodb/mongo-go-driver/x/bsonx"
-// 	"github.com/onedaycat/gocqrs"
+// 	"github.com/onedaycat/zamus"
 // )
 
 // var (
@@ -112,7 +112,7 @@ package mongo
 // 	return err
 // }
 
-// func (m *MongoEventStore) Get(id string, time int64) ([]*gocqrs.EventMessage, error) {
+// func (m *MongoEventStore) Get(id string, time int64) ([]*zamus.EventMessage, error) {
 // 	ctx := context.Background()
 
 // 	cursor, err := m.event.Find(ctx,
@@ -126,9 +126,9 @@ package mongo
 // 		return nil, err
 // 	}
 
-// 	ems := []*gocqrs.EventMessage{}
+// 	ems := []*zamus.EventMessage{}
 // 	for cursor.Next(ctx) {
-// 		em := gocqrs.EventMessage{}
+// 		em := zamus.EventMessage{}
 // 		cursor.Decode(&em)
 
 // 		ems = append(ems, &em)
@@ -137,7 +137,7 @@ package mongo
 // 	return ems, nil
 // }
 
-// func (m *MongoEventStore) GetByEventType(eventType gocqrs.EventType, time int64) ([]*gocqrs.EventMessage, error) {
+// func (m *MongoEventStore) GetByEventType(eventType zamus.EventType, time int64) ([]*zamus.EventMessage, error) {
 // 	ctx := context.Background()
 
 // 	cursor, err := m.event.Find(ctx, bson.D{
@@ -148,9 +148,9 @@ package mongo
 // 		return nil, err
 // 	}
 
-// 	ems := []*gocqrs.EventMessage{}
+// 	ems := []*zamus.EventMessage{}
 // 	for cursor.Next(ctx) {
-// 		em := gocqrs.EventMessage{}
+// 		em := zamus.EventMessage{}
 // 		cursor.Decode(&em)
 
 // 		ems = append(ems, &em)
@@ -159,7 +159,7 @@ package mongo
 // 	return ems, nil
 // }
 
-// func (m *MongoEventStore) GetByAggregateType(aggType gocqrs.AggregateType, time int64) ([]*gocqrs.EventMessage, error) {
+// func (m *MongoEventStore) GetByAggregateType(aggType zamus.AggregateType, time int64) ([]*zamus.EventMessage, error) {
 // 	ctx := context.Background()
 
 // 	cursor, err := m.event.Find(ctx, bson.D{
@@ -170,9 +170,9 @@ package mongo
 // 		return nil, err
 // 	}
 
-// 	ems := []*gocqrs.EventMessage{}
+// 	ems := []*zamus.EventMessage{}
 // 	for cursor.Next(ctx) {
-// 		em := gocqrs.EventMessage{}
+// 		em := zamus.EventMessage{}
 // 		cursor.Decode(&em)
 
 // 		ems = append(ems, &em)
@@ -181,10 +181,10 @@ package mongo
 // 	return ems, nil
 // }
 
-// func (m *MongoEventStore) GetSnapshot(id string) (*gocqrs.Snapshot, error) {
+// func (m *MongoEventStore) GetSnapshot(id string) (*zamus.Snapshot, error) {
 // 	ctx := context.Background()
 
-// 	snapshot := &gocqrs.Snapshot{}
+// 	snapshot := &zamus.Snapshot{}
 
 // 	err := m.snapshot.FindOne(ctx, bson.D{{xid, id}}).Decode(snapshot)
 // 	if err != nil && err != mongo.ErrNoDocuments {
@@ -192,7 +192,7 @@ package mongo
 // 	}
 
 // 	if err == mongo.ErrNoDocuments {
-// 		return nil, gocqrs.ErrNotFound
+// 		return nil, zamus.ErrNotFound
 // 	}
 
 // 	return snapshot, nil
@@ -213,7 +213,7 @@ package mongo
 // 	return err
 // }
 
-// func (m *MongoEventStore) Save(ctx context.Context, payloads []*gocqrs.EventMessage, snapshot *gocqrs.Snapshot) error {
+// func (m *MongoEventStore) Save(ctx context.Context, payloads []*zamus.EventMessage, snapshot *zamus.Snapshot) error {
 // 	docs := make([]interface{}, len(payloads))
 // 	for i := 0; i < len(payloads); i++ {
 // 		docs[i] = payloads[i]
@@ -225,7 +225,7 @@ package mongo
 // 		if ok {
 // 			for _, wrs := range aerr.WriteErrors {
 // 				if wrs.Code == errDupCode {
-// 					return gocqrs.ErrVersionInconsistency
+// 					return zamus.ErrVersionInconsistency
 // 				}
 // 			}
 // 		}
@@ -240,7 +240,7 @@ package mongo
 // 	return err
 // }
 
-// func createToken(limit int, length int, events []*gocqrs.EventMessage) ([]*gocqrs.EventMessage, string) {
+// func createToken(limit int, length int, events []*zamus.EventMessage) ([]*zamus.EventMessage, string) {
 // 	if limit != 0 && length > limit {
 // 		lastIndex := length - 1
 // 		newEvents := events[:lastIndex]

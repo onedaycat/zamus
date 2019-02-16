@@ -6,18 +6,36 @@ type Claims struct {
 	CreatedAt int    `json:"iat"`
 }
 
+type Permission map[string][]string
+
+func (p Permission) Has(workspace, permission string) bool {
+	ws, ok := p[workspace]
+	if !ok {
+		return false
+	}
+
+	for _, pem := range ws {
+		if pem == permission {
+			return true
+		}
+	}
+
+	return false
+}
+
 type Identity struct {
-	Sub                   string   `json:"sub"`
-	AccountId             string   `json:"accountId"`
-	CognitoIdentityPoolId string   `json:"cognitoIdentityPoolId"`
-	CognitoIdentityId     string   `json:"cognitoIdentityId"`
-	SourceIP              []string `json:"sourceIp"`
-	Groups                []string `json:"groups"`
-	Username              string   `json:"username"`
-	UserArn               string   `json:"userArn"`
-	Issuer                string   `json:"issuer"`
-	Claims                Claims   `json:"claims"`
-	DefaultAuthStrategy   string   `json:"defaultAuthStrategy"`
+	Sub                   string     `json:"sub"`
+	AccountId             string     `json:"accountId"`
+	CognitoIdentityPoolId string     `json:"cognitoIdentityPoolId"`
+	CognitoIdentityId     string     `json:"cognitoIdentityId"`
+	SourceIP              []string   `json:"sourceIp"`
+	Groups                []string   `json:"groups"`
+	Username              string     `json:"username"`
+	UserArn               string     `json:"userArn"`
+	Issuer                string     `json:"issuer"`
+	Claims                Claims     `json:"claims"`
+	DefaultAuthStrategy   string     `json:"defaultAuthStrategy"`
+	Permissions           Permission `json:"permissions"`
 }
 
 func (id *Identity) GetID() string {

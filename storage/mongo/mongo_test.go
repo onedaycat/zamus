@@ -8,9 +8,9 @@ package mongo
 // 	"time"
 
 // 	"github.com/mongodb/mongo-go-driver/mongo"
-// 	"github.com/onedaycat/gocqrs"
-// 	"github.com/onedaycat/gocqrs/example/ecom/domain/stock"
-// 	"github.com/onedaycat/gocqrs/common/clock"
+// 	"github.com/onedaycat/zamus"
+// 	"github.com/onedaycat/zamus/example/ecom/domain/stock"
+// 	"github.com/onedaycat/zamus/common/clock"
 // 	"github.com/stretchr/testify/require"
 // )
 
@@ -31,7 +31,7 @@ package mongo
 
 // func TestGet2(t *testing.T) {
 // 	db := newDB(t)
-// 	es := gocqrs.NewEventStore(db, nil)
+// 	es := zamus.NewEventStore(db, nil)
 
 // 	wg := sync.WaitGroup{}
 
@@ -63,7 +63,7 @@ package mongo
 
 // func TestGetSnapShot(t *testing.T) {
 // 	db := newDB(t)
-// 	es := gocqrs.NewEventStore(db, nil)
+// 	es := zamus.NewEventStore(db, nil)
 
 // 	st := stock.NewStockItem("1")
 // 	st.Add(10)
@@ -76,7 +76,7 @@ package mongo
 // 	require.NoError(t, err)
 
 // 	expSt := &stock.StockItem{
-// 		AggregateBase: gocqrs.InitAggregate("1"),
+// 		AggregateBase: zamus.InitAggregate("1"),
 // 		ProductID:     "1",
 // 		Qty:           10,
 // 	}
@@ -90,7 +90,7 @@ package mongo
 
 // func TestGet(t *testing.T) {
 // 	db := newDB(t)
-// 	es := gocqrs.NewEventStore(db, nil)
+// 	es := zamus.NewEventStore(db, nil)
 // 	now := time.Now()
 
 // 	// Step 1

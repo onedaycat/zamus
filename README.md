@@ -1,7 +1,7 @@
-# GoCQRS
+# zamus
 
 ## Installation
 
 ```sh
-go get -u github.com/onedaycat/gocqrs/...
+go get -u github.com/onedaycat/zamus/...
 ```

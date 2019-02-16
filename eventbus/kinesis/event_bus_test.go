@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +18,7 @@ func TestPublish(t *testing.T) {
 	require.NoError(t, err)
 	k := NewKinesisEventBus(sess, "eventsourcing")
 
-	events := []*gocqrs.EventMessage{
+	events := []*zamus.EventMessage{
 		{EventID: "1", AggregateID: "a1"},
 		{EventID: "2", AggregateID: "a2"},
 		{EventID: "3", AggregateID: "a3"},

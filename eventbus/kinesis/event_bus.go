@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 )
 
 var (
@@ -26,13 +26,13 @@ func NewKinesisEventBus(sess *session.Session, streamName string) *KinesisEventB
 	}
 }
 
-func (k *KinesisEventBus) Publish(events []*gocqrs.EventMessage) error {
+func (k *KinesisEventBus) Publish(events []*zamus.EventMessage) error {
 	records := make([]*kinesis.PutRecordsRequestEntry, len(events))
 	wg := sync.WaitGroup{}
 	wg.Add(len(events))
 
 	for i := 0; i < len(events); i++ {
-		go func(index int, event *gocqrs.EventMessage) {
+		go func(index int, event *zamus.EventMessage) {
 			data, _ := json.Marshal(event)
 			records[index] = &kinesis.PutRecordsRequestEntry{
 				Data:         data,

@@ -6,17 +6,17 @@ import (
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 )
 
 func handler(ctx context.Context, evs *events.KinesisFirehoseEvent) (*events.KinesisFirehoseResponse, error) {
 	var raw []byte
-	var eventmsg *gocqrs.EventMessage
+	var eventmsg *zamus.EventMessage
 	var err error
 	result := make([]events.KinesisFirehoseResponseRecord, len(evs.Records))
 
 	for i, record := range evs.Records {
-		eventmsg = &gocqrs.EventMessage{}
+		eventmsg = &zamus.EventMessage{}
 		if err = eventmsg.Unmarshal(record.Data); err != nil {
 			result[i] = events.KinesisFirehoseResponseRecord{
 				RecordID: record.RecordID,

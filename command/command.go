@@ -3,23 +3,26 @@ package command
 import (
 	"context"
 
-	"github.com/onedaycat/gocqrs/invoke"
+	"github.com/onedaycat/zamus/invoke"
 )
 
 type CommandHandler func(ctx context.Context, event *invoke.InvokeEvent) (interface{}, error)
 
 type commandinfo struct {
-	handler    CommandHandler
-	permission map[string]struct{}
+	handler     CommandHandler
+	prehandlers []CommandHandler
 }
 
-type CommandOptions func(info *commandinfo)
-
-func WithPermission(pms ...string) CommandOptions {
-	return func(info *commandinfo) {
-		info.permission = make(map[string]struct{})
-		for _, p := range pms {
-			info.permission[p] = struct{}{}
+func WithPermission(pm string) CommandHandler {
+	return func(ctx context.Context, event *invoke.InvokeEvent) (interface{}, error) {
+		if event.Identity.Permissions == nil {
+			return nil, ErrPermissionDenied
 		}
+
+		if ok := event.Identity.Permissions.Has(event.PermissionKey, pm); !ok {
+			return nil, ErrPermissionDenied
+		}
+
+		return nil, nil
 	}
 }

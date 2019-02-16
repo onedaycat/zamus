@@ -1,4 +1,4 @@
-package gocqrs
+package zamus
 
 import (
 	"github.com/onedaycat/errors"

@@ -1,4 +1,4 @@
-package gocqrs
+package zamus
 
 //go:generate mockery -name=Storage
 // Get(id string, withSnapshot bool)

@@ -1,4 +1,4 @@
-package gocqrs
+package zamus
 
 type AggregateType = string
 

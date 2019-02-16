@@ -1,4 +1,4 @@
-service: gocqrs-dynamodb-to-kinesis
+service: zamus-dynamodb-to-kinesis
 region: ap-southeast-1
 stage: dev
 dynamoStream: arn:aws:dynamodb:<region>:<account-id>:table/users/stream/<timestamp>

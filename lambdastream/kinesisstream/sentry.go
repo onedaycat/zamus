@@ -5,11 +5,11 @@ import (
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 	"github.com/rs/zerolog/log"
 )
 
-func sendSentry(ctx context.Context, msg *gocqrs.EventMessage, err error) {
+func sendSentry(ctx context.Context, msg *zamus.EventMessage, err error) {
 	var appErr *errors.AppError
 	var ok bool
 

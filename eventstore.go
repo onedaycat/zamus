@@ -1,11 +1,11 @@
-package gocqrs
+package zamus
 
 import (
 	"encoding/json"
 	"time"
 
-	"github.com/onedaycat/gocqrs/common/clock"
-	"github.com/onedaycat/gocqrs/common/eid"
+	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/common/eid"
 )
 
 //go:generate mockery -name=EventStore

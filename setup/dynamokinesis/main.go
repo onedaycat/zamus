@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/onedaycat/gocqrs"
-	"github.com/onedaycat/gocqrs/lambdastream/dynamostream"
+	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/lambdastream/dynamostream"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,7 +23,7 @@ var (
 )
 
 func work(records dynamostream.Records, result *[]*kinesis.PutRecordsRequestEntry, wg *sync.WaitGroup) {
-	var event *gocqrs.EventMessage
+	var event *zamus.EventMessage
 	for i := 0; i < len(records); i++ {
 		if records[i].DynamoDB.NewImage == nil {
 			continue
@@ -91,7 +91,7 @@ func handlerIterator(ctx context.Context, stream *dynamostream.DynamoDBStreamEve
 	n := len(stream.Records)
 	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
 
-	var event *gocqrs.EventMessage
+	var event *zamus.EventMessage
 	for i := 0; i < n; i++ {
 		if stream.Records[i].DynamoDB.NewImage == nil {
 			continue

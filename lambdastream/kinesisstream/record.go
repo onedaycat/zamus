@@ -3,7 +3,7 @@ package kinesisstream
 import (
 	"encoding/base64"
 
-	"github.com/onedaycat/gocqrs"
+	"github.com/onedaycat/zamus"
 )
 
 type Records = []*Record
@@ -35,7 +35,7 @@ type KinesisPayload struct {
 }
 
 type Payload struct {
-	EventMessage *gocqrs.EventMessage
+	EventMessage *zamus.EventMessage
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
@@ -50,7 +50,7 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	p.EventMessage = &gocqrs.EventMessage{}
+	p.EventMessage = &zamus.EventMessage{}
 	if err = p.EventMessage.Unmarshal(bdata); err != nil {
 		return err
 	}
