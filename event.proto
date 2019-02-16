@@ -1,0 +1,23 @@
+syntax = "proto3";
+package gocqrs;
+
+message Metadata {
+  string userID = 1;
+  string sourceType = 2;
+  string source = 3;
+  string ip = 4;
+}
+
+message EventMessage {
+  string eventID = 1;
+  string eventType = 2;
+  string aggregateID = 3;
+  string aggregateType = 4;
+  string partitionKey = 5;  // Unique ID number for this person.
+  string hashKey = 6;  // Unique ID number for this person.
+  bytes payload = 7;
+  int64 time = 8;
+  int64 seq = 9;
+  int64 timeSeq = 10;
+  Metadata metadata = 11;
+}

@@ -1,0 +1,34 @@
+service: ${file(./setting.yml):service}
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: ${file(./setting.yml):region}
+  stage: ${file(./setting.yml):stage}
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Resource: '*'
+      Action:
+        - 'dynamodb:*'
+        - 'kinesis:*'
+
+functions:
+  service:
+    handler: bin/app
+    environment:
+      KINESIS_STREAM_NAME: ${file(./setting.yml):kinesisStreamName}
+    memorySize: ${file(./setting.yml):memorySize}
+    timeout: ${file(./setting.yml):timeout}
+    events:
+      - stream:
+          type: dynamodb
+          arn: ${file(./setting.yml):dynamoStream}
+          batchSize: ${file(./setting.yml):batchSize}
+          startingPosition: ${file(./setting.yml):startingPosition}
+          enabled: ${file(./setting.yml):enableStream}

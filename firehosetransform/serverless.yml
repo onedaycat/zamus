@@ -1,0 +1,19 @@
+service: ${file(./setting.yml):service}
+
+package:
+  exclude:
+    - ./**
+  include:
+    - ./bin/**
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: ${file(./setting.yml):region}
+  stage: ${file(./setting.yml):stage}
+
+functions:
+  service:
+    handler: bin/app
+    memorySize: ${file(./setting.yml):memorySize}
+    timeout: ${file(./setting.yml):timeout}

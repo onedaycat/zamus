@@ -1,0 +1,5 @@
+service: gocqrs-firehose-transform
+region: ap-southeast-1
+stage: dev
+memorySize: 1024
+timeout: 60

@@ -1,0 +1,13 @@
+service: gocqrs-dynamodb-to-kinesis
+region: ap-southeast-1
+stage: dev
+dynamoStream: arn:aws:dynamodb:<region>:<account-id>:table/users/stream/<timestamp>
+kinesisStreamName: kinesis-stream
+batchSize: 500
+# LATEST – Process new records that are added to the stream.
+# TRIM_HORIZON – Process all records in the stream.
+# AT_TIMESTAMP – Process records starting from a specific time.
+startingPosition: TRIM_HORIZON
+enableStream: true
+memorySize: 1024
+timeout: 60
