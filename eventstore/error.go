@@ -1,4 +1,4 @@
-package zamus
+package eventstore
 
 import (
 	"github.com/onedaycat/errors"

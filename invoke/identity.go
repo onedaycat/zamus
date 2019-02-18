@@ -1,41 +1,37 @@
 package invoke
 
+import "strings"
+
 type Claims struct {
-	Email     string `json:"email"`
-	ExpiredAt int    `json:"exp"`
-	CreatedAt int    `json:"iat"`
+	Email       string      `json:"email"`
+	ExpiredAt   int         `json:"exp"`
+	CreatedAt   int         `json:"iat"`
+	Permissions Permissions `json:"pem"`
 }
 
-type Permission map[string][]string
+type Permissions map[string]string
 
-func (p Permission) Has(workspace, permission string) bool {
+func (p Permissions) Has(workspace, permission string) bool {
 	ws, ok := p[workspace]
 	if !ok {
 		return false
 	}
 
-	for _, pem := range ws {
-		if pem == permission {
-			return true
-		}
-	}
-
-	return false
+	return strings.Contains(ws, permission)
 }
 
 type Identity struct {
-	Sub                   string     `json:"sub"`
-	AccountId             string     `json:"accountId"`
-	CognitoIdentityPoolId string     `json:"cognitoIdentityPoolId"`
-	CognitoIdentityId     string     `json:"cognitoIdentityId"`
-	SourceIP              []string   `json:"sourceIp"`
-	Groups                []string   `json:"groups"`
-	Username              string     `json:"username"`
-	UserArn               string     `json:"userArn"`
-	Issuer                string     `json:"issuer"`
-	Claims                Claims     `json:"claims"`
-	DefaultAuthStrategy   string     `json:"defaultAuthStrategy"`
-	Permissions           Permission `json:"permissions"`
+	Sub                   string   `json:"sub"`
+	AccountId             string   `json:"accountId"`
+	CognitoIdentityPoolId string   `json:"cognitoIdentityPoolId"`
+	CognitoIdentityId     string   `json:"cognitoIdentityId"`
+	SourceIP              []string `json:"sourceIp"`
+	Groups                []string `json:"groups"`
+	Username              string   `json:"username"`
+	UserArn               string   `json:"userArn"`
+	Issuer                string   `json:"issuer"`
+	Claims                Claims   `json:"claims"`
+	DefaultAuthStrategy   string   `json:"defaultAuthStrategy"`
 }
 
 func (id *Identity) GetID() string {

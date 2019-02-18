@@ -11,7 +11,8 @@ import (
 type Build mg.Namespace
 
 func (Build) Linux() {
-	mg.BuildLinux(".", "./bin/app")
+	mg.BuildLinux("./dynamokinesis", "./dynamokinesis/bin/app")
+	mg.BuildLinux("./firehosetransform", "./firehosetransform/bin/app")
 	fmt.Println("Build Done")
 }
 

@@ -8,7 +8,7 @@ package mongo
 // 	"time"
 
 // 	"github.com/mongodb/mongo-go-driver/mongo"
-// 	"github.com/onedaycat/zamus"
+// 	"github.com/onedaycat/zamus/eventstore"
 // 	"github.com/onedaycat/zamus/example/ecom/domain/stock"
 // 	"github.com/onedaycat/zamus/common/clock"
 // 	"github.com/stretchr/testify/require"

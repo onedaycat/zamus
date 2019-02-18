@@ -3,7 +3,7 @@ package kinesisstream
 import (
 	"encoding/base64"
 
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 )
 
 type Records = []*Record
@@ -35,7 +35,7 @@ type KinesisPayload struct {
 }
 
 type Payload struct {
-	EventMessage *zamus.EventMessage
+	EventMessage *eventstore.EventMsg
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
@@ -45,13 +45,13 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 	b = b[1 : len(b)-1]
 	bdata = make([]byte, base64.StdEncoding.DecodedLen(len(b)))
 
-	_, err = base64.StdEncoding.Decode(bdata, b)
+	n, err := base64.StdEncoding.Decode(bdata, b)
 	if err != nil {
 		return err
 	}
 
-	p.EventMessage = &zamus.EventMessage{}
-	if err = p.EventMessage.Unmarshal(bdata); err != nil {
+	p.EventMessage = &eventstore.EventMsg{}
+	if err = p.EventMessage.Unmarshal(bdata[:n]); err != nil {
 		return err
 	}
 

@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 )
 
-type EventMessage = zamus.EventMessage
-type EventMessages = []*zamus.EventMessage
+type EventMessage = eventstore.EventMsg
+type EventMessages = []*eventstore.EventMsg
 
 type LambdaHandler func(ctx context.Context, event *KinesisStreamEvent)
 type EventMessageHandler func(msg *EventMessage) error
@@ -40,7 +40,7 @@ func (s *KinesisStream) CreateIteratorHandler(handler EventMessageHandler, onErr
 		}
 
 		var err error
-		var msg *zamus.EventMessage
+		var msg *eventstore.EventMsg
 		for _, record := range event.Records {
 			msg = record.Kinesis.Data.EventMessage
 			if err = handler(record.Kinesis.Data.EventMessage); err != nil {

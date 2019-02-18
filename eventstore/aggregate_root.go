@@ -1,43 +1,38 @@
-package zamus
-
-type AggregateType = string
+package eventstore
 
 type AggregateRoot interface {
-	Apply(payload *EventMessage) error
+	Apply(payload *EventMsg) error
 	GetAggregateID() string
 	SetAggregateID(id string)
 	GetAggregateType() string
 	SetSequence(seq int64) *AggregateBase
 	GetSequence() int64
-	SetMetadata(metadata *Metadata)
-	GetMetadata() *Metadata
 	IncreaseSequence()
 	GetEventPayloads() []interface{}
-	GetEventTypes() []EventType
+	GetEventTypes() []string
 	ClearEvents()
 	IsNew() bool
-	Publish(eventType EventType, event interface{})
+	Publish(eventType string, eventData interface{})
 	GetPartitionKey() string
 }
 
 type AggregateBase struct {
 	eventPayloads []interface{}
-	eventTypes    []EventType
+	eventTypes    []string
 	seq           int64
-	metadata      *Metadata
 }
 
 // InitAggregate if id is empty, id will be generated
 func InitAggregate() *AggregateBase {
 	return &AggregateBase{
 		eventPayloads: make([]interface{}, 0, 1),
-		eventTypes:    make([]EventType, 0, 1),
+		eventTypes:    make([]string, 0, 1),
 		seq:           0,
 	}
 }
 
-func (a *AggregateBase) Publish(eventType EventType, event interface{}) {
-	a.eventPayloads = append(a.eventPayloads, event)
+func (a *AggregateBase) Publish(eventType string, eventData interface{}) {
+	a.eventPayloads = append(a.eventPayloads, eventData)
 	a.eventTypes = append(a.eventTypes, eventType)
 }
 
@@ -45,7 +40,7 @@ func (a *AggregateBase) GetEventPayloads() []interface{} {
 	return a.eventPayloads
 }
 
-func (a *AggregateBase) GetEventTypes() []EventType {
+func (a *AggregateBase) GetEventTypes() []string {
 	return a.eventTypes
 }
 
@@ -57,7 +52,7 @@ func (a *AggregateBase) SetSequence(seq int64) *AggregateBase {
 
 func (a *AggregateBase) ClearEvents() {
 	a.eventPayloads = make([]interface{}, 0, 1)
-	a.eventTypes = make([]EventType, 0, 1)
+	a.eventTypes = make([]string, 0, 1)
 }
 
 func (a *AggregateBase) IncreaseSequence() {
@@ -70,12 +65,4 @@ func (a *AggregateBase) GetSequence() int64 {
 
 func (a *AggregateBase) IsNew() bool {
 	return a.seq == 0
-}
-
-func (a *AggregateBase) SetMetadata(metadata *Metadata) {
-	a.metadata = metadata
-}
-
-func (a *AggregateBase) GetMetadata() *Metadata {
-	return a.metadata
 }

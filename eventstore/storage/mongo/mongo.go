@@ -8,7 +8,7 @@ package mongo
 // 	"github.com/mongodb/mongo-go-driver/mongo"
 // 	"github.com/mongodb/mongo-go-driver/mongo/options"
 // 	"github.com/mongodb/mongo-go-driver/x/bsonx"
-// 	"github.com/onedaycat/zamus"
+// 	"github.com/onedaycat/zamus/eventstore"
 // )
 
 // var (
@@ -112,7 +112,7 @@ package mongo
 // 	return err
 // }
 
-// func (m *MongoEventStore) Get(id string, time int64) ([]*zamus.EventMessage, error) {
+// func (m *MongoEventStore) Get(id string, time int64) ([]*eventstore.EventMsg, error) {
 // 	ctx := context.Background()
 
 // 	cursor, err := m.event.Find(ctx,
@@ -126,9 +126,9 @@ package mongo
 // 		return nil, err
 // 	}
 
-// 	ems := []*zamus.EventMessage{}
+// 	ems := []*eventstore.EventMsg{}
 // 	for cursor.Next(ctx) {
-// 		em := zamus.EventMessage{}
+// 		em := eventstore.EventMsg{}
 // 		cursor.Decode(&em)
 
 // 		ems = append(ems, &em)
@@ -137,7 +137,7 @@ package mongo
 // 	return ems, nil
 // }
 
-// func (m *MongoEventStore) GetByEventType(eventType zamus.EventType, time int64) ([]*zamus.EventMessage, error) {
+// func (m *MongoEventStore) GetByEventType(eventType zamus.EventType, time int64) ([]*eventstore.EventMsg, error) {
 // 	ctx := context.Background()
 
 // 	cursor, err := m.event.Find(ctx, bson.D{
@@ -148,9 +148,9 @@ package mongo
 // 		return nil, err
 // 	}
 
-// 	ems := []*zamus.EventMessage{}
+// 	ems := []*eventstore.EventMsg{}
 // 	for cursor.Next(ctx) {
-// 		em := zamus.EventMessage{}
+// 		em := eventstore.EventMsg{}
 // 		cursor.Decode(&em)
 
 // 		ems = append(ems, &em)
@@ -159,7 +159,7 @@ package mongo
 // 	return ems, nil
 // }
 
-// func (m *MongoEventStore) GetByAggregateType(aggType zamus.AggregateType, time int64) ([]*zamus.EventMessage, error) {
+// func (m *MongoEventStore) GetByAggregateType(aggType zamus.AggregateType, time int64) ([]*eventstore.EventMsg, error) {
 // 	ctx := context.Background()
 
 // 	cursor, err := m.event.Find(ctx, bson.D{
@@ -170,9 +170,9 @@ package mongo
 // 		return nil, err
 // 	}
 
-// 	ems := []*zamus.EventMessage{}
+// 	ems := []*eventstore.EventMsg{}
 // 	for cursor.Next(ctx) {
-// 		em := zamus.EventMessage{}
+// 		em := eventstore.EventMsg{}
 // 		cursor.Decode(&em)
 
 // 		ems = append(ems, &em)
@@ -213,7 +213,7 @@ package mongo
 // 	return err
 // }
 
-// func (m *MongoEventStore) Save(ctx context.Context, payloads []*zamus.EventMessage, snapshot *zamus.Snapshot) error {
+// func (m *MongoEventStore) Save(ctx context.Context, payloads []*eventstore.EventMsg, snapshot *zamus.Snapshot) error {
 // 	docs := make([]interface{}, len(payloads))
 // 	for i := 0; i < len(payloads); i++ {
 // 		docs[i] = payloads[i]
@@ -240,7 +240,7 @@ package mongo
 // 	return err
 // }
 
-// func createToken(limit int, length int, events []*zamus.EventMessage) ([]*zamus.EventMessage, string) {
+// func createToken(limit int, length int, events []*eventstore.EventMsg) ([]*eventstore.EventMsg, string) {
 // 	if limit != 0 && length > limit {
 // 		lastIndex := length - 1
 // 		newEvents := events[:lastIndex]

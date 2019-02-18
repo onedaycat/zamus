@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 )
 
 var (
@@ -26,13 +26,13 @@ func NewKinesisEventBus(sess *session.Session, streamName string) *KinesisEventB
 	}
 }
 
-func (k *KinesisEventBus) Publish(events []*zamus.EventMessage) error {
+func (k *KinesisEventBus) Publish(events []*eventstore.EventMsg) error {
 	records := make([]*kinesis.PutRecordsRequestEntry, len(events))
 	wg := sync.WaitGroup{}
 	wg.Add(len(events))
 
 	for i := 0; i < len(events); i++ {
-		go func(index int, event *zamus.EventMessage) {
+		go func(index int, event *eventstore.EventMsg) {
 			data, _ := json.Marshal(event)
 			records[index] = &kinesis.PutRecordsRequestEntry{
 				Data:         data,

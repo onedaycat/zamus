@@ -1,7 +1,8 @@
-package zamus
+package eventstore
 
 import (
 	"encoding/json"
+	fmt "fmt"
 	"time"
 
 	"github.com/onedaycat/zamus/common/clock"
@@ -19,15 +20,28 @@ const emptyStr = ""
 
 type EventType = string
 
+type SaveOption func(opt *saveOption)
+
+type saveOption struct {
+	userID string
+}
+
+func WithUser(id string) SaveOption {
+	return func(opt *saveOption) {
+		opt.userID = id
+	}
+}
+
 type EventStore interface {
 	SetEventLimit(limit int64)
-	SetSnapshotStrategy(strategies SnapshotStategyHandler)
-	GetEvents(aggID string, seq int64, agg AggregateRoot) ([]*EventMessage, error)
-	GetEventsByEventType(eventType EventType, seq int64) ([]*EventMessage, error)
-	GetEventsByAggregateType(aggType AggregateType, seq int64) ([]*EventMessage, error)
+	// SetSnapshotStrategy(strategies SnapshotStategyHandler)
+	GetEvents(aggID string, seq int64, agg AggregateRoot) ([]*EventMsg, error)
+	// GetEventsByEventType(eventType EventType, seq int64) ([]*EventMsg, error)
+	// GetEventsByAggregateType(aggType string, seq int64) ([]*EventMsg, error)
 	GetAggregate(aggID string, agg AggregateRoot) error
-	GetSnapshot(aggID string, agg AggregateRoot) error
-	Save(agg AggregateRoot) error
+	// GetAggregateByEvents(aggID string, agg AggregateRoot) error
+	// GetSnapshot(aggID string, agg AggregateRoot) error
+	Save(agg AggregateRoot, options ...SaveOption) error
 }
 
 type eventStore struct {
@@ -52,7 +66,7 @@ func (es *eventStore) SetSnapshotStrategy(strategies SnapshotStategyHandler) {
 	es.snapshotStrategy = strategies
 }
 
-func (es *eventStore) GetAggregate(id string, agg AggregateRoot) error {
+func (es *eventStore) GetAggregateByEvents(id string, agg AggregateRoot) error {
 	err := es.GetSnapshot(id, agg)
 	if err != nil && err != ErrNotFound {
 		return err
@@ -102,17 +116,34 @@ func (es *eventStore) getAggregateFromEvent(id, hashKey string, agg AggregateRoo
 	return nil
 }
 
-func (es *eventStore) GetEvents(id string, seq int64, agg AggregateRoot) ([]*EventMessage, error) {
+func (es *eventStore) GetEvents(id string, seq int64, agg AggregateRoot) ([]*EventMsg, error) {
 	hashKey := es.createHashKey(id, agg.GetAggregateType())
 	return es.storage.GetEvents(id, hashKey, seq, es.limit)
 }
 
-func (es *eventStore) GetEventsByEventType(eventType EventType, seq int64) ([]*EventMessage, error) {
+func (es *eventStore) GetEventsByEventType(eventType EventType, seq int64) ([]*EventMsg, error) {
 	return es.storage.GetEventsByEventType(eventType, seq, es.limit)
 }
 
-func (es *eventStore) GetEventsByAggregateType(aggType AggregateType, seq int64) ([]*EventMessage, error) {
+func (es *eventStore) GetEventsByAggregateType(aggType string, seq int64) ([]*EventMsg, error) {
 	return es.storage.GetEventsByAggregateType(aggType, seq, es.limit)
+}
+
+func (es *eventStore) GetAggregate(id string, agg AggregateRoot) error {
+	hashKey := es.createHashKey(id, agg.GetAggregateType())
+	snapshot, err := es.storage.GetAggregate(id, hashKey)
+	if err != nil {
+		return err
+	}
+
+	agg.SetAggregateID(snapshot.AggregateID)
+	agg.SetSequence(snapshot.Seq)
+
+	if err = json.Unmarshal(snapshot.Data, agg); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (es *eventStore) GetSnapshot(id string, agg AggregateRoot) error {
@@ -122,17 +153,19 @@ func (es *eventStore) GetSnapshot(id string, agg AggregateRoot) error {
 		return err
 	}
 
+	fmt.Println("@@@", snapshot, err)
+
 	agg.SetAggregateID(snapshot.AggregateID)
 	agg.SetSequence(snapshot.Seq)
 
-	if err = json.Unmarshal(snapshot.Payload, agg); err != nil {
+	if err = json.Unmarshal(snapshot.Data, agg); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (es *eventStore) Save(agg AggregateRoot) error {
+func (es *eventStore) Save(agg AggregateRoot, options ...SaveOption) error {
 	payloads := agg.GetEventPayloads()
 	n := len(payloads)
 	if n == 0 {
@@ -147,26 +180,31 @@ func (es *eventStore) Save(agg AggregateRoot) error {
 		return ErrNoAggregateID
 	}
 
-	events := make([]*EventMessage, n)
+	opts := &saveOption{}
+	for _, option := range options {
+		option(opts)
+	}
+
+	events := make([]*EventMsg, n)
 	now := clock.Now().Unix()
 	aggType := agg.GetAggregateType()
 	eventTypes := agg.GetEventTypes()
 
-	var lastEvent *EventMessage
+	var lastEvent *EventMsg
 
 	for i := 0; i < n; i++ {
 		agg.IncreaseSequence()
 		aggid := agg.GetAggregateID()
 		seq := agg.GetSequence()
 		eid := eid.CreateEventID(aggid, seq)
-		metadata := agg.GetMetadata()
+		userID := opts.userID
 		hashKey := es.createHashKey(aggid, aggType)
-		payload, err := json.Marshal(payloads[i])
+		data, err := json.Marshal(payloads[i])
 		if err != nil {
 			return err
 		}
 
-		events[i] = &EventMessage{
+		events[i] = &EventMsg{
 			EventID:       eid,
 			EventType:     eventTypes[i],
 			AggregateID:   aggid,
@@ -174,10 +212,10 @@ func (es *eventStore) Save(agg AggregateRoot) error {
 			PartitionKey:  agg.GetPartitionKey(),
 			HashKey:       hashKey,
 			Seq:           seq,
-			Payload:       payload,
+			Data:          data,
 			Time:          now,
 			TimeSeq:       NewSeq(now, seq),
-			Metadata:      metadata,
+			UserID:        userID,
 		}
 
 		if len(payloads)-1 == i {
@@ -189,27 +227,23 @@ func (es *eventStore) Save(agg AggregateRoot) error {
 		return ErrInvalidVersionNotAllowed
 	}
 
-	var snapshot *Snapshot
-	if es.snapshotStrategy(agg, events) {
-		aggPayload, err := json.Marshal(agg)
-		if err != nil {
-			return err
-		}
-
-		snapshot = &Snapshot{
-			AggregateID:   agg.GetAggregateID(),
-			AggregateType: aggType,
-			HashKey:       lastEvent.HashKey,
-			Payload:       aggPayload,
-			EventID:       lastEvent.EventID,
-			Time:          lastEvent.Time,
-			Seq:           lastEvent.Seq,
-			TimeSeq:       lastEvent.TimeSeq,
-			Metadata:      lastEvent.Metadata,
-		}
+	var aggmsg *AggregateMsg
+	aggData, err := json.Marshal(agg)
+	if err != nil {
+		return err
 	}
 
-	if err := es.storage.Save(events, snapshot); err != nil {
+	aggmsg = &AggregateMsg{
+		AggregateID: agg.GetAggregateID(),
+		HashKey:     lastEvent.HashKey,
+		Data:        aggData,
+		EventID:     lastEvent.EventID,
+		Time:        lastEvent.Time,
+		Seq:         lastEvent.Seq,
+		TimeSeq:     lastEvent.TimeSeq,
+	}
+
+	if err := es.storage.Save(events, aggmsg); err != nil {
 		return err
 	}
 

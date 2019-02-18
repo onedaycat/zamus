@@ -52,7 +52,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						"s": {
 							"N": "10001"
 						},
-						"p": {
+						"d": {
 							"B": "%s"
 						}
 					},
@@ -90,7 +90,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 					"s": {
 						"N": "10001"
 					},
-					"p": {
+					"d": {
 						"B": "%s"
 					}
 				},
@@ -119,7 +119,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	fmt.Println(string(xx))
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].DynamoDB.NewImage.EventMessage.Payload, pp)
+	err = json.Unmarshal(event.Records[0].DynamoDB.NewImage.EventMessage.Data, pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 
 	"github.com/stretchr/testify/require"
 )
@@ -17,7 +17,7 @@ import (
 
 func TestJSONSize(t *testing.T) {
 	var err error
-	data := zamus.EventMessage{
+	data := eventstore.EventMsg{
 		EventID:       "bhh9lvkrtr33vbmh6djg1",
 		PartitionKey:  "bhh9lvkrtr33vbmh6djg",
 		EventType:     "domain.subdomain.aggregate.StockItemCreated",
@@ -26,9 +26,13 @@ func TestJSONSize(t *testing.T) {
 		Seq:           10,
 		Time:          1549966068,
 		TimeSeq:       154996606800001,
+		Metadata: eventstore.Metadata{
+			"a": "1",
+			"b": "2",
+		},
 	}
 
-	data.Payload, err = json.Marshal(map[string]interface{}{
+	data.Data, err = json.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -42,7 +46,7 @@ func TestJSONSize(t *testing.T) {
 
 func TestSizeProto(t *testing.T) {
 	var err error
-	data := zamus.EventMessage{
+	data := eventstore.EventMsg{
 		EventID:       "bhh9lvkrtr33vbmh6djg1",
 		PartitionKey:  "bhh9lvkrtr33vbmh6djg",
 		EventType:     "domain.subdomain.aggregate.StockItemCreated",
@@ -51,9 +55,13 @@ func TestSizeProto(t *testing.T) {
 		Seq:           10,
 		Time:          1549966068,
 		TimeSeq:       154996606800001,
+		Metadata: eventstore.Metadata{
+			"a": "1",
+			"b": "2",
+		},
 	}
 
-	data.Payload, err = json.Marshal(map[string]interface{}{
+	data.Data, err = json.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -73,10 +81,10 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		"s": 10,
 		"e": "domain.aggregate.event",
 		"x": 10001,
-		"p": "{"id":"1"}"
+		"d": "{"id":"1"}"
 	}`)
 
-	data := zamus.EventMessage{
+	data := eventstore.EventMsg{
 		AggregateID:   "a1",
 		AggregateType: "domain.aggregate",
 		Seq:           10,
@@ -84,7 +92,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		TimeSeq:       10001,
 	}
 
-	data.Payload, err = json.Marshal(map[string]interface{}{
+	data.Data, err = json.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -153,7 +161,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 	require.Equal(t, int64(11), event.Records[1].Kinesis.Data.EventMessage.Seq)
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMessage.Payload, pp)
+	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMessage.Data, pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)

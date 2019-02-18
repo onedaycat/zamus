@@ -1,0 +1,247 @@
+service: ${file(./setting.yml):service}
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: go1.x
+  region: ${file(./setting.yml):region}
+  stage: ${file(./setting.yml):stage}
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Resource: '*'
+      Action:
+        - 'dynamodb:*'
+        - 'kinesis:*'
+
+functions:
+  dynamodb-kinesis:
+    handler: dynamokinesis/bin/app
+    environment:
+      KINESIS_STREAM_NAME: ${self:service}-event-stream-${self:provider.stage}
+    memorySize: ${file(./setting.yml):dynamokinesis.memorySize}
+    timeout: ${file(./setting.yml):dynamokinesis.timeout}
+    events:
+      - stream:
+          type: dynamodb
+          arn: { 'Fn::GetAtt': ['EventstoreEvent', 'StreamArn'] }
+          batchSize: ${file(./setting.yml):dynamokinesis.batchSize}
+          startingPosition: ${file(./setting.yml):dynamokinesis.startingPosition}
+          enabled: true
+    package:
+      exclude:
+        - ./**
+      include:
+        - ./dynamokinesis/bin/**
+  firehose-transform:
+    handler: firehosetransform/bin/app
+    memorySize: ${file(./setting.yml):firehosetransform.memorySize}
+    timeout: ${file(./setting.yml):firehosetransform.timeout}
+    package:
+      exclude:
+        - ./**
+      include:
+        - ./firehosetransform/bin/**
+
+resources:
+  Resources:
+    EventstoreEvent:
+      Type: 'AWS::DynamoDB::Table'
+      # DeletionPolicy: Retain
+      Properties:
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        AttributeDefinitions:
+          - AttributeName: h
+            AttributeType: S
+          - AttributeName: x
+            AttributeType: 'N'
+        KeySchema:
+          - AttributeName: h
+            KeyType: HASH
+          - AttributeName: x
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:service}-eventstore-${self:provider.stage}
+    EventstoreAggregate:
+      Type: 'AWS::DynamoDB::Table'
+      # DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: h
+            AttributeType: S
+        KeySchema:
+          - AttributeName: h
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:service}-aggregate-${self:provider.stage}
+    EventstoreSnapshot:
+      Type: 'AWS::DynamoDB::Table'
+      # DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: h
+            AttributeType: S
+          - AttributeName: x
+            AttributeType: 'N'
+        KeySchema:
+          - AttributeName: h
+            KeyType: HASH
+          - AttributeName: x
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:service}-snapshot-${self:provider.stage}
+    S3Event:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: Retain
+      Properties:
+        BucketName: ${self:service}-event-${self:provider.stage}
+    FirehoseToS3Role:
+      Type: AWS::IAM::Role
+      # DeletionPolicy: Retain
+      Properties:
+        RoleName: ${self:service}-firehose-to-s3-${self:provider.stage}
+        AssumeRolePolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - firehose.amazonaws.com
+              Action: sts:AssumeRole
+              Condition:
+                StringEquals:
+                  sts:ExternalId: ${file(./setting.yml):account}
+        Policies:
+          - PolicyName: KinesisToFirehoseToS3Policy
+            PolicyDocument:
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - kinesis:DescribeStream
+                    - kinesis:GetShardIterator
+                    - kinesis:GetRecords
+                  Resource: { 'Fn::GetAtt': ['Kinesis', 'Arn'] }
+                - Effect: Allow
+                  Action:
+                    - s3:AbortMultipartUpload
+                    - s3:GetBucketLocation
+                    - s3:GetObject
+                    - s3:ListBucket
+                    - s3:ListBucketMultipartUploads
+                    - s3:PutObject
+                  Resource:
+                    - arn:aws:s3:::${self:service}-event-${self:provider.stage}
+                    - arn:aws:s3:::${self:service}-event-${self:provider.stage}/*
+                    - arn:aws:s3:::%FIREHOSE_BUCKET_NAME%
+                    - arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                    - lambda:GetFunctionConfiguration
+                  Resource:
+                    - arn:aws:lambda:${self:provider.region}:${file(./setting.yml):account}:function:${self:service}-${self:provider.stage}-firehose-transform:*
+                - Effect: Allow
+                  Action:
+                    - logs:PutLogEvents
+                  Resource:
+                    - arn:aws:logs:${self:provider.region}:${file(./setting.yml):account}:log-group:/aws/kinesisfirehose/${self:service}-firehose-${self:provider.stage}:log-stream:*
+                - Effect: Allow
+                  Action:
+                    - glue:GetTableVersions
+                  Resource: '*'
+    Kinesis:
+      Type: AWS::Kinesis::Stream
+      # DeletionPolicy: Retain
+      Properties:
+        Name: ${self:service}-event-stream-${self:provider.stage}
+        RetentionPeriodHours: ${file(./setting.yml):kinesis.retentionPeriodHours}
+        ShardCount: ${file(./setting.yml):kinesis.shardCount}
+    Firehose:
+      Type: AWS::KinesisFirehose::DeliveryStream
+      DependsOn:
+        - S3Event
+        - FirehoseToS3Role
+        - Kinesis
+        - GlueCreateTable
+      # DeletionPolicy: Retain
+      Properties:
+        DeliveryStreamName: ${self:service}-firehose-${self:provider.stage}
+        DeliveryStreamType: KinesisStreamAsSource
+        KinesisStreamSourceConfiguration:
+          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-event-stream-${self:provider.stage}
+          RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
+        ExtendedS3DestinationConfiguration:
+          BucketARN:
+            Fn::Join:
+              - ''
+              - - 'arn:aws:s3:::'
+                - Ref: S3Event
+          RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
+          Prefix: 'firehose/'
+          # ErrorOutputPrefix: '/firehose-error'
+          CompressionFormat: UNCOMPRESSED
+          BufferingHints:
+            IntervalInSeconds: ${file(./setting.yml):firehose.intervalInSeconds}
+            SizeInMBs: ${file(./setting.yml):firehose.sizeInMBs}
+          # CloudWatchLoggingOptions:
+          # Enabled: true
+          # LogGroupName: String
+          # LogStreamName: String
+          ProcessingConfiguration:
+            Enabled: true
+            Processors:
+              - Parameters:
+                  - ParameterName: LambdaArn
+                    ParameterValue: arn:aws:lambda:${self:provider.region}:${file(./setting.yml):account}:function:${self:service}-${self:provider.stage}-firehose-transform
+                Type: Lambda
+          # DataFormatConversionConfiguration:
+          #   Enabled: true
+          #   SchemaConfiguration:
+          #     CatalogId: ${file(./setting.yml):account}
+          #     DatabaseName: ${self:service}_${self:provider.stage}
+          #     TableName: eventstore
+          #     OutputFormatConfiguration:
+          #       ParquetSerDe:
+          #         Compression: SNAPPY
+          #     RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
+    GlueCreateDatabase:
+      Type: AWS::Glue::Database
+      # DeletionPolicy: Retain
+      Properties:
+        DatabaseInput:
+          Name: ${self:service}_${self:provider.stage}
+        CatalogId: ${file(./setting.yml):account}
+    GlueCreateTable:
+      Type: AWS::Glue::Table
+      # DeletionPolicy: Retain
+      DependsOn:
+        - S3Event
+        - GlueCreateDatabase
+      Properties:
+        DatabaseName: ${self:service}_${self:provider.stage}
+        CatalogId: ${file(./setting.yml):account}
+        TableInput:
+          Name: eventstore
+          TableType: EXTERNAL_TABLE
+          StorageDescriptor:
+            Compressed: false
+            Location: 's3://${self:service}-event-${self:provider.stage}/firehose/'
+            InputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
+            OutputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
+            Columns:
+              - { Name: h, Type: string }
+              - { Name: x, Type: bigint }
+              - { Name: i, Type: string }
+              - { Name: e, Type: string }
+              - { Name: a, Type: string }
+              - { Name: b, Type: string }
+              - { Name: k, Type: string }
+              - { Name: d, Type: string }
+              - { Name: t, Type: timestamp }
+              - { Name: s, Type: bigint }
+              - { Name: u, Type: string }
+            SerdeInfo:
+              SerializationLibrary: 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
+              Parameters:
+                serialization.format: '1'

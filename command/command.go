@@ -2,11 +2,7 @@ package command
 
 import (
 	"context"
-
-	"github.com/onedaycat/zamus/invoke"
 )
-
-type CommandHandler func(ctx context.Context, event *invoke.InvokeEvent) (interface{}, error)
 
 type commandinfo struct {
 	handler     CommandHandler
@@ -14,12 +10,12 @@ type commandinfo struct {
 }
 
 func WithPermission(pm string) CommandHandler {
-	return func(ctx context.Context, event *invoke.InvokeEvent) (interface{}, error) {
-		if event.Identity.Permissions == nil {
+	return func(ctx context.Context, event *Command) (interface{}, error) {
+		if event.Identity.Claims.Permissions == nil {
 			return nil, ErrPermissionDenied
 		}
 
-		if ok := event.Identity.Permissions.Has(event.PermissionKey, pm); !ok {
+		if ok := event.Identity.Claims.Permissions.Has(event.PermissionKey, pm); !ok {
 			return nil, ErrPermissionDenied
 		}
 

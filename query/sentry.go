@@ -1,4 +1,4 @@
-package command
+package query
 
 import (
 	"context"
@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func SentryError(dsn string, options ...sentry.Option) ErrorHandler {
+func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 	sentry.SetDSN(dsn)
 	sentry.SetOptions(options...)
 
-	return func(ctx context.Context, event *Command, err error) {
+	return func(ctx context.Context, event *Query, err error) {
 		var appErr *errors.AppError
 
 		appErr, _ = errors.FromError(err)

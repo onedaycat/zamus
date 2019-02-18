@@ -1,35 +1,32 @@
-package command
+package query
 
 import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/onedaycat/zamus/invoke"
 )
 
-type Command = invoke.InvokeEvent
-
-type ErrorHandler func(ctx context.Context, event *Command, err error)
-type CommandHandler func(ctx context.Context, event *Command) (interface{}, error)
+type ErrorHandler func(ctx context.Context, queries *Query, err error)
+type QueryHandler func(ctx context.Context, queries *Query) (QueryResult, error)
 
 type Handler struct {
-	commands     map[string]*commandinfo
-	preHandlers  []CommandHandler
-	postHandlers []CommandHandler
+	quries       map[string]*queryinfo
+	preHandlers  []QueryHandler
+	postHandlers []QueryHandler
 	errHandlers  []ErrorHandler
 }
 
 func NewHandler() *Handler {
 	return &Handler{
-		commands: make(map[string]*commandinfo, 30),
+		quries: make(map[string]*queryinfo, 30),
 	}
 }
 
-func (h *Handler) PreHandler(handlers ...CommandHandler) {
+func (h *Handler) PreHandler(handlers ...QueryHandler) {
 	h.preHandlers = handlers
 }
 
-func (h *Handler) PostHandler(handlers ...CommandHandler) {
+func (h *Handler) PostHandler(handlers ...QueryHandler) {
 	h.postHandlers = handlers
 }
 
@@ -37,17 +34,21 @@ func (h *Handler) ErrorHandler(handlers ...ErrorHandler) {
 	h.errHandlers = handlers
 }
 
-func (h *Handler) RegisterCommand(command string, handler CommandHandler, prehandlers ...CommandHandler) {
-	h.commands[command] = &commandinfo{
+func (h *Handler) RegisterQuery(query string, handler QueryHandler, prehandlers ...QueryHandler) {
+	h.quries[query] = &queryinfo{
 		handler:     handler,
 		prehandlers: prehandlers,
 	}
 }
 
-func (h *Handler) handler(ctx context.Context, event *Command) (interface{}, error) {
-	info, ok := h.commands[event.Function]
+func (h *Handler) handler(ctx context.Context, event *Query) (QueryResult, error) {
+	if event == nil {
+		return nil, nil
+	}
+
+	info, ok := h.quries[event.Function]
 	if !ok {
-		return nil, ErrCommandNotFound(event.Function)
+		return nil, ErrQueryNotFound(event.Function)
 	}
 
 	for _, handler := range h.preHandlers {
@@ -73,6 +74,10 @@ func (h *Handler) handler(ctx context.Context, event *Command) (interface{}, err
 				errHandler(ctx, event, err)
 			}
 			return nil, err
+		}
+
+		if result.Len() != event.NSource {
+			return nil, ErrQueryResultSizeNotMatch.WithCaller()
 		}
 
 		if result != nil {

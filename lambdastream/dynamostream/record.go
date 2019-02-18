@@ -24,7 +24,7 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 	}
 
 	p.EventMessage = event
-	p.EventMessage.Payload = data["p"].B
+	p.EventMessage.Data = data["d"].B
 
 	return nil
 }

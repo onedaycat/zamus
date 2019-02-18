@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/dynamostream"
 	"github.com/rs/zerolog/log"
 )
@@ -23,7 +23,7 @@ var (
 )
 
 func work(records dynamostream.Records, result *[]*kinesis.PutRecordsRequestEntry, wg *sync.WaitGroup) {
-	var event *zamus.EventMessage
+	var event *eventstore.EventMsg
 	for i := 0; i < len(records); i++ {
 		if records[i].DynamoDB.NewImage == nil {
 			continue
@@ -42,7 +42,7 @@ func work(records dynamostream.Records, result *[]*kinesis.PutRecordsRequestEntr
 
 func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
 	n := len(stream.Records)
-	if n < numCore {
+	if n <= numCore {
 		return handlerIterator(ctx, stream)
 	}
 
@@ -91,7 +91,7 @@ func handlerIterator(ctx context.Context, stream *dynamostream.DynamoDBStreamEve
 	n := len(stream.Records)
 	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
 
-	var event *zamus.EventMessage
+	var event *eventstore.EventMsg
 	for i := 0; i < n; i++ {
 		if stream.Records[i].DynamoDB.NewImage == nil {
 			continue
@@ -135,5 +135,5 @@ func init() {
 }
 
 func main() {
-	lambda.Start(handler)
+	lambda.Start(handlerIterator)
 }

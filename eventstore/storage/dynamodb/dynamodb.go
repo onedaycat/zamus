@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 )
 
 const (
@@ -39,14 +39,16 @@ type DynamoDBEventStore struct {
 	db              *dynamodb.DynamoDB
 	eventstoreTable string
 	snapshotTable   string
+	aggregateTable  string
 	ttl             time.Duration
 }
 
-func New(sess *session.Session, eventstoreTable, snapshotTable string) *DynamoDBEventStore {
+func New(sess *session.Session, eventstoreTable, aggregateTable, snapshotTable string) *DynamoDBEventStore {
 	return &DynamoDBEventStore{
 		db:              dynamodb.New(sess),
 		eventstoreTable: eventstoreTable,
 		snapshotTable:   snapshotTable,
+		aggregateTable:  aggregateTable,
 		ttl:             24 * 30 * time.Hour,
 	}
 }
@@ -196,7 +198,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 
 	_, err = d.db.CreateTable(&dynamodb.CreateTableInput{
 		BillingMode: aws.String("PAY_PER_REQUEST"),
-		TableName:   &d.snapshotTable,
+		TableName:   &d.aggregateTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
 				AttributeName: aws.String("h"),
@@ -218,10 +220,42 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 		}
 	}
 
+	_, err = d.db.CreateTable(&dynamodb.CreateTableInput{
+		BillingMode: aws.String("PAY_PER_REQUEST"),
+		TableName:   &d.snapshotTable,
+		AttributeDefinitions: []*dynamodb.AttributeDefinition{
+			{
+				AttributeName: aws.String("h"),
+				AttributeType: aws.String("S"),
+			},
+			{
+				AttributeName: aws.String("x"),
+				AttributeType: aws.String("N"),
+			},
+		},
+		KeySchema: []*dynamodb.KeySchemaElement{
+			{
+				AttributeName: aws.String("h"),
+				KeyType:       aws.String("HASH"),
+			},
+			{
+				AttributeName: aws.String("x"),
+				KeyType:       aws.String("RANGE"),
+			},
+		},
+	})
+
+	if err != nil {
+		aerr, _ := err.(awserr.Error)
+		if aerr.Code() != dynamodb.ErrCodeResourceInUseException {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) ([]*zamus.EventMessage, error) {
+func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) ([]*eventstore.EventMsg, error) {
 	keyCond := getCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getKV: &dynamodb.AttributeValue{S: &hashKey},
@@ -248,7 +282,7 @@ func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) 
 		return nil, nil
 	}
 
-	snapshots := make([]*zamus.EventMessage, 0, len(output.Items))
+	snapshots := make([]*eventstore.EventMsg, 0, len(output.Items))
 	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &snapshots); err != nil {
 		return nil, err
 	}
@@ -256,7 +290,7 @@ func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) 
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetEventsByEventType(eventType zamus.EventType, seq, limit int64) ([]*zamus.EventMessage, error) {
+func (d *DynamoDBEventStore) GetEventsByEventType(eventType string, seq, limit int64) ([]*eventstore.EventMsg, error) {
 	keyCond := getByEventTypeCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getByEventTypeKV: &dynamodb.AttributeValue{S: &eventType},
@@ -284,7 +318,7 @@ func (d *DynamoDBEventStore) GetEventsByEventType(eventType zamus.EventType, seq
 		return nil, nil
 	}
 
-	snapshots := make([]*zamus.EventMessage, 0, len(output.Items))
+	snapshots := make([]*eventstore.EventMsg, 0, len(output.Items))
 	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &snapshots); err != nil {
 		return nil, err
 	}
@@ -292,7 +326,7 @@ func (d *DynamoDBEventStore) GetEventsByEventType(eventType zamus.EventType, seq
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType zamus.AggregateType, seq, limit int64) ([]*zamus.EventMessage, error) {
+func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType string, seq, limit int64) ([]*eventstore.EventMsg, error) {
 	keyCond := getByAggregateTypeCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getByAggregateTypeKV: &dynamodb.AttributeValue{S: &aggType},
@@ -320,7 +354,7 @@ func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType zamus.AggregateTyp
 		return nil, nil
 	}
 
-	snapshots := make([]*zamus.EventMessage, 0, len(output.Items))
+	snapshots := make([]*eventstore.EventMsg, 0, len(output.Items))
 	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &snapshots); err != nil {
 		return nil, err
 	}
@@ -328,7 +362,7 @@ func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType zamus.AggregateTyp
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*zamus.Snapshot, error) {
+func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*eventstore.SnapshotMsg, error) {
 	output, err := d.db.GetItem(&dynamodb.GetItemInput{
 		TableName:      &d.snapshotTable,
 		ConsistentRead: falseStrongRead,
@@ -341,10 +375,10 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*zamus.Snapshot
 	}
 
 	if len(output.Item) == 0 {
-		return nil, zamus.ErrNotFound
+		return nil, eventstore.ErrNotFound
 	}
 
-	snapshot := &zamus.Snapshot{}
+	snapshot := &eventstore.SnapshotMsg{}
 	if err = dynamodbattribute.UnmarshalMap(output.Item, snapshot); err != nil {
 		return nil, err
 	}
@@ -352,10 +386,34 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*zamus.Snapshot
 	return snapshot, nil
 }
 
-func (d *DynamoDBEventStore) Save(events []*zamus.EventMessage, snapshot *zamus.Snapshot) error {
+func (d *DynamoDBEventStore) GetAggregate(aggID, hashKey string) (*eventstore.AggregateMsg, error) {
+	output, err := d.db.GetItem(&dynamodb.GetItemInput{
+		TableName:      &d.aggregateTable,
+		ConsistentRead: falseStrongRead,
+		Key: map[string]*dynamodb.AttributeValue{
+			hashKeyK: &dynamodb.AttributeValue{S: &hashKey},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Item) == 0 {
+		return nil, eventstore.ErrNotFound
+	}
+
+	aggnsg := &eventstore.AggregateMsg{}
+	if err = dynamodbattribute.UnmarshalMap(output.Item, aggnsg); err != nil {
+		return nil, err
+	}
+
+	return aggnsg, nil
+}
+
+func (d *DynamoDBEventStore) Save(events []*eventstore.EventMsg, aggnsg *eventstore.AggregateMsg) error {
 	var err error
 	var snapshotReq map[string]*dynamodb.AttributeValue
-	snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
+	snapshotReq, err = dynamodbattribute.MarshalMap(aggnsg)
 	if err != nil {
 		return err
 	}
@@ -363,14 +421,14 @@ func (d *DynamoDBEventStore) Save(events []*zamus.EventMessage, snapshot *zamus.
 	var putES []*dynamodb.TransactWriteItem
 	var payloadReq map[string]*dynamodb.AttributeValue
 
-	if snapshot != nil {
+	if aggnsg != nil {
 		putES = make([]*dynamodb.TransactWriteItem, 0, len(events)+1)
 		putES = append(putES, &dynamodb.TransactWriteItem{
 			Put: &dynamodb.Put{
-				TableName:           &d.snapshotTable,
+				TableName:           &d.aggregateTable,
 				ConditionExpression: saveSnapCond,
 				ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-					seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(snapshot.TimeSeq, 10))},
+					seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(aggnsg.TimeSeq, 10))},
 				},
 				Item: snapshotReq,
 			},
@@ -401,7 +459,7 @@ func (d *DynamoDBEventStore) Save(events []*zamus.EventMessage, snapshot *zamus.
 	if err != nil {
 		aerr := err.(awserr.Error)
 		if aerr.Code() == dynamodb.ErrCodeTransactionCanceledException {
-			return zamus.ErrVersionInconsistency
+			return eventstore.ErrVersionInconsistency
 		}
 
 		return err

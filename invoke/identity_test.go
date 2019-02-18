@@ -27,7 +27,10 @@ func TestIdentity(t *testing.T) {
   			],
 		   "exp":1547879344,
 		   "iat":1547875744,
-		   "email":"test@test.com"
+		   "email":"test@test.com",
+		   "pem": {
+			   "shop1": "read,open"
+		   }
 		},
 		"sourceIp":[
 		   "x.x.x.x"
@@ -52,6 +55,9 @@ func TestIdentity(t *testing.T) {
 			Email:     "test@test.com",
 			CreatedAt: 1547875744,
 			ExpiredAt: 1547879344,
+			Permissions: Permissions{
+				"shop1": "read,open",
+			},
 		},
 		SourceIP:            []string{"x.x.x.x"},
 		DefaultAuthStrategy: "ALLOW",
@@ -63,4 +69,8 @@ func TestIdentity(t *testing.T) {
 	require.Equal(t, "x.x.x.x", id.GetIP())
 	require.True(t, id.HasGroup("admin"))
 	require.False(t, id.HasGroup("user"))
+	require.True(t, id.Claims.Permissions.Has("shop1", "read"))
+	require.True(t, id.Claims.Permissions.Has("shop1", "open"))
+	require.False(t, id.Claims.Permissions.Has("shop1", "write"))
+	require.False(t, id.Claims.Permissions.Has("shop2", "read"))
 }

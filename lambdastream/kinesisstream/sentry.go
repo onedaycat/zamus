@@ -5,11 +5,11 @@ import (
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/rs/zerolog/log"
 )
 
-func sendSentry(ctx context.Context, msg *zamus.EventMessage, err error) {
+func sendSentry(ctx context.Context, msg *eventstore.EventMsg, err error) {
 	var appErr *errors.AppError
 	var ok bool
 
@@ -28,9 +28,9 @@ func sendSentry(ctx context.Context, msg *zamus.EventMessage, err error) {
 	}
 
 	packet := sentry.NewPacket(err)
-	if msg.Metadata.UserID != "" {
+	if msg.Metadata["u"] != "" {
 		packet.AddUser(&sentry.User{
-			ID: msg.Metadata.UserID,
+			ID: msg.Metadata["u"],
 		})
 	}
 
