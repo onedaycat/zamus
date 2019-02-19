@@ -1,7 +1,6 @@
 package kinesisstream
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -46,7 +45,6 @@ func (c *GroupConcurrency) Process(records Records) {
 
 	for key, gh := range c.handlers {
 		go func(h *grouphandler, k string) {
-			fmt.Println("do", k)
 			if msg, err := h.handler(h.recordKeys); err != nil {
 				for _, errhandler := range c.errorHandlers {
 					errhandler(msg, err)
