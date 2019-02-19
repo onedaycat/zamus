@@ -32,8 +32,8 @@ func (c *concurrencyManager) Send(record *Record, handler EventMessageHandler, o
 					return
 				}
 
-				if err := handler(rec.Kinesis.Data.EventMessage); err != nil {
-					onError(rec.Kinesis.Data.EventMessage, err)
+				if err := handler(rec.Kinesis.Data.EventMsg); err != nil {
+					onError(rec.Kinesis.Data.EventMsg, err)
 				}
 				// fmt.Println("do", key, *(rec.DynamoDB.Keys["id"].S), rec.DynamoDB.NewImage.EventMessage.EventID)
 				c.wg.Done()

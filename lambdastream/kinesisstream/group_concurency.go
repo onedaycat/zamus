@@ -5,40 +5,58 @@ import (
 	"sync"
 )
 
-type groupConcurrencyManager struct {
-	recordKeys map[string]EventMessages
-	wg         sync.WaitGroup
+type grouphandler struct {
+	handler    EventMessagesHandler
+	recordKeys EventMsgs
 }
 
-func newGroupConcurrencyManager(nwork int) *groupConcurrencyManager {
-	return &groupConcurrencyManager{
-		recordKeys: make(map[string]EventMessages),
+type GroupConcurrency struct {
+	wg            sync.WaitGroup
+	handlers      map[string]*grouphandler
+	errorHandlers []EventMessageErrorHandler
+}
+
+func NewGroupConcurrency() *GroupConcurrency {
+	return &GroupConcurrency{
+		handlers: make(map[string]*grouphandler, 20),
 	}
 }
 
-func (c *groupConcurrencyManager) Send(records Records, handler EventMessagesHandler, onError EventMessagesErrorHandler) {
+func (c *GroupConcurrency) RegisterEvent(eventType string, handler EventMessagesHandler) {
+	c.handlers[eventType] = &grouphandler{
+		handler:    handler,
+		recordKeys: make(EventMsgs, 0, 100),
+	}
+}
+
+func (c *GroupConcurrency) ErrorHandler(handlers ...EventMessageErrorHandler) {
+	c.errorHandlers = handlers
+}
+
+func (c *GroupConcurrency) Process(records Records) {
 	for _, record := range records {
-		key := record.Kinesis.PartitionKey
-		_, ok := c.recordKeys[key]
+		gh, ok := c.handlers[record.Kinesis.Data.EventMsg.EventType]
 		if !ok {
-			c.recordKeys[key] = make(EventMessages, 0, 100)
+			continue
 		}
-		c.recordKeys[key] = append(c.recordKeys[key], record.Kinesis.Data.EventMessage)
+		gh.recordKeys = append(gh.recordKeys, record.Kinesis.Data.EventMsg)
 	}
 
-	c.wg.Add(len(c.recordKeys))
+	c.wg.Add(len(c.handlers))
 
-	for key, recordKey := range c.recordKeys {
-		go func(msgs EventMessages, k string) {
+	for key, gh := range c.handlers {
+		go func(h *grouphandler, k string) {
 			fmt.Println("do", k)
-			if err := handler(msgs); err != nil {
-				onError(msgs, err)
+			if msg, err := h.handler(h.recordKeys); err != nil {
+				for _, errhandler := range c.errorHandlers {
+					errhandler(msg, err)
+				}
 			}
 			c.wg.Done()
-		}(recordKey, key)
+		}(gh, key)
 	}
 }
 
-func (c *groupConcurrencyManager) Wait() {
+func (c *GroupConcurrency) Wait() {
 	c.wg.Wait()
 }

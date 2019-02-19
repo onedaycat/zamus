@@ -26,10 +26,6 @@ func TestJSONSize(t *testing.T) {
 		Seq:           10,
 		Time:          1549966068,
 		TimeSeq:       154996606800001,
-		Metadata: eventstore.Metadata{
-			"a": "1",
-			"b": "2",
-		},
 	}
 
 	data.Data, err = json.Marshal(map[string]interface{}{
@@ -55,10 +51,6 @@ func TestSizeProto(t *testing.T) {
 		Seq:           10,
 		Time:          1549966068,
 		TimeSeq:       154996606800001,
-		Metadata: eventstore.Metadata{
-			"a": "1",
-			"b": "2",
-		},
 	}
 
 	data.Data, err = json.Marshal(map[string]interface{}{
@@ -155,13 +147,13 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 	err = json.Unmarshal(bpayload, event)
 	require.NoError(t, err)
 	require.Len(t, event.Records, 2)
-	require.Equal(t, "domain.aggregate", event.Records[0].Kinesis.Data.EventMessage.AggregateType)
-	require.Equal(t, "domain.aggregate.event", event.Records[0].Kinesis.Data.EventMessage.EventType)
-	require.Equal(t, int64(10), event.Records[0].Kinesis.Data.EventMessage.Seq)
-	require.Equal(t, int64(11), event.Records[1].Kinesis.Data.EventMessage.Seq)
+	require.Equal(t, "domain.aggregate", event.Records[0].Kinesis.Data.EventMsg.AggregateType)
+	require.Equal(t, "domain.aggregate.event", event.Records[0].Kinesis.Data.EventMsg.EventType)
+	require.Equal(t, int64(10), event.Records[0].Kinesis.Data.EventMsg.Seq)
+	require.Equal(t, int64(11), event.Records[1].Kinesis.Data.EventMsg.Seq)
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMessage.Data, pp)
+	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMsg.Data, pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)

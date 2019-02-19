@@ -18,12 +18,12 @@ type Record struct {
 	Kinesis   *KinesisPayload `json:"kinesis"`
 }
 
-func (r *Record) add(key, eid string) {
+func (r *Record) add(eid, etype string) {
 	r.Kinesis = &KinesisPayload{
-		PartitionKey: key,
 		Data: &Payload{
-			EventMessage: &EventMessage{
-				EventID: eid,
+			EventMsg: &EventMsg{
+				EventID:   eid,
+				EventType: etype,
 			},
 		},
 	}
@@ -35,7 +35,7 @@ type KinesisPayload struct {
 }
 
 type Payload struct {
-	EventMessage *eventstore.EventMsg
+	EventMsg *eventstore.EventMsg
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
@@ -50,8 +50,8 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	p.EventMessage = &eventstore.EventMsg{}
-	if err = p.EventMessage.Unmarshal(bdata[:n]); err != nil {
+	p.EventMsg = &eventstore.EventMsg{}
+	if err = p.EventMsg.Unmarshal(bdata[:n]); err != nil {
 		return err
 	}
 

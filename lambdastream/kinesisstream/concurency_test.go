@@ -9,7 +9,7 @@ import (
 
 func TestConcurency(t *testing.T) {
 
-	handler := func(msg *EventMessage) error {
+	handler := func(msg *EventMsg) error {
 		if msg.EventID == "eid3" {
 			return errors.New("eid3")
 		}
@@ -17,7 +17,7 @@ func TestConcurency(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(msg *EventMessage, err error) {
+	onErr := func(msg *EventMsg, err error) {
 		fmt.Println("error:", err)
 	}
 

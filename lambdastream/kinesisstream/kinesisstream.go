@@ -3,31 +3,21 @@ package kinesisstream
 import (
 	"context"
 
-	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
-type EventMessage = eventstore.EventMsg
-type EventMessages = []*eventstore.EventMsg
+type EventMsg = eventstore.EventMsg
+type EventMsgs = []*eventstore.EventMsg
 
 type LambdaHandler func(ctx context.Context, event *KinesisStreamEvent)
-type EventMessageHandler func(msg *EventMessage) error
-type EventMessagesHandler func(msgs EventMessages) error
-type EventMessageErrorHandler func(msg *EventMessage, err error)
-type EventMessagesErrorHandler func(msgs EventMessages, err error)
+type EventMessageHandler func(msg *EventMsg) error
+type EventMessagesHandler func(msgs EventMsgs) (*EventMsg, error)
+type EventMessageErrorHandler func(msg *EventMsg, err error)
 
-type KinesisStream struct {
-	enableSentry bool
-}
+type KinesisStream struct{}
 
 func New() *KinesisStream {
 	return &KinesisStream{}
-}
-
-func (s *KinesisStream) SetSentry(dsn string, opts ...sentry.Option) {
-	s.enableSentry = true
-	sentry.SetDSN(dsn)
-	sentry.SetOptions(opts...)
 }
 
 func (s *KinesisStream) CreateIteratorHandler(handler EventMessageHandler, onError EventMessageErrorHandler) LambdaHandler {
@@ -36,18 +26,15 @@ func (s *KinesisStream) CreateIteratorHandler(handler EventMessageHandler, onErr
 			return
 		}
 		if onError == nil {
-			onError = func(msg *EventMessage, err error) {}
+			onError = func(msg *EventMsg, err error) {}
 		}
 
 		var err error
 		var msg *eventstore.EventMsg
 		for _, record := range event.Records {
-			msg = record.Kinesis.Data.EventMessage
-			if err = handler(record.Kinesis.Data.EventMessage); err != nil {
+			msg = record.Kinesis.Data.EventMsg
+			if err = handler(record.Kinesis.Data.EventMsg); err != nil {
 				onError(msg, err)
-				if s.enableSentry {
-					sendSentry(ctx, msg, err)
-				}
 			}
 		}
 	}
@@ -59,7 +46,7 @@ func (s *KinesisStream) CreateConcurencyHandler(handler EventMessageHandler, onE
 			return
 		}
 		if onError == nil {
-			onError = func(msg *EventMessage, err error) {}
+			onError = func(msg *EventMsg, err error) {}
 		}
 
 		cm := newConcurrencyManager(len(event.Records))
@@ -72,18 +59,18 @@ func (s *KinesisStream) CreateConcurencyHandler(handler EventMessageHandler, onE
 	}
 }
 
-func (s *KinesisStream) CreateGroupConcurencyHandler(handler EventMessagesHandler, onError EventMessagesErrorHandler) LambdaHandler {
+func (s *KinesisStream) CreateGroupConcurencyHandler(handler EventMessagesHandler, onError EventMessageErrorHandler) LambdaHandler {
 	return func(ctx context.Context, event *KinesisStreamEvent) {
 		if handler == nil {
 			return
 		}
 		if onError == nil {
-			onError = func(msgs EventMessages, err error) {}
+			onError = func(msg *EventMsg, err error) {}
 		}
 
-		cm := newGroupConcurrencyManager(len(event.Records))
+		cm := NewGroupConcurrency()
 
-		cm.Send(event.Records, handler, onError)
+		cm.Process(event.Records)
 		cm.Wait()
 	}
 }
