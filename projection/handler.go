@@ -8,12 +8,10 @@ import (
 )
 
 type EventHandler = kinesisstream.EventMessagesHandler
-type ErrorHandler = kinesisstream.EventMessageErrorHandler
+type ErrorHandler = kinesisstream.EventMessagesErrorHandler
 
 type Handler struct {
-	gropcon      *kinesisstream.GroupConcurrency
-	preHandlers  []kinesisstream.EventMessagesHandler
-	postHandlers []kinesisstream.EventMessagesHandler
+	gropcon *kinesisstream.GroupConcurrency
 }
 
 func NewHandler() *Handler {
@@ -23,19 +21,23 @@ func NewHandler() *Handler {
 }
 
 func (h *Handler) PreHandler(handlers ...EventHandler) {
-	h.preHandlers = handlers
+	h.gropcon.PreHandlers(handlers...)
 }
 
 func (h *Handler) PostHandler(handlers ...EventHandler) {
-	h.postHandlers = handlers
+	h.gropcon.PostHandlers(handlers...)
 }
 
 func (h *Handler) ErrorHandler(handlers ...ErrorHandler) {
-	h.gropcon.ErrorHandler(handlers...)
+	h.gropcon.ErrorHandlers(handlers...)
 }
 
-func (h *Handler) RegisterEvent(eventType string, handler EventHandler) {
-	h.gropcon.RegisterEvent(eventType, handler)
+func (h *Handler) RegisterHandler(handler EventHandler) {
+	h.gropcon.RegisterHandler(handler)
+}
+
+func (h *Handler) FilterEvents(eventTypes ...string) {
+	h.gropcon.FilterEvents(eventTypes...)
 }
 
 func (h *Handler) handler(ctx context.Context, event *kinesisstream.KinesisStreamEvent) {

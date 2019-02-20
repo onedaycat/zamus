@@ -2,49 +2,39 @@ package kinesisstream
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
-	"time"
 )
 
 func TestGroupConcurency(t *testing.T) {
 
-	handler := func(msgs EventMsgs) (*EventMsg, error) {
-		fmt.Println(len(msgs))
-		for _, x := range msgs {
-			fmt.Println(x.EventID)
-			time.Sleep(time.Second)
+	handler := func(msgs EventMsgs) error {
+		for _, msg := range msgs {
+			fmt.Println(msg.EventID, msg.EventType)
 		}
-		return nil, nil
+		return nil
 	}
 
-	handler2 := func(msgs EventMsgs) (*EventMsg, error) {
-		fmt.Println(len(msgs))
-		for _, x := range msgs {
-			fmt.Println(x.EventID)
-		}
-		time.Sleep(time.Second)
-		return nil, nil
-	}
-
-	onErr := func(msg *EventMsg, err error) {}
+	onErr := func(msgs EventMsgs, err error) {}
 
 	n := 10
 	cm := NewGroupConcurrency()
-	cm.RegisterEvent("et1", handler)
-	cm.RegisterEvent("et3", handler2)
-	cm.ErrorHandler(onErr)
+	cm.RegisterHandler(handler)
+	cm.FilterEvents("et1", "et3")
+	cm.ErrorHandlers(onErr)
 
 	records := make(Records, n)
 	for i := range records {
 		rec := &Record{}
+		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("1", "et1")
+			rec.add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("2", "et2")
+			rec.add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("3", "et3")
+			rec.add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}

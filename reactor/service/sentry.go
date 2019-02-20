@@ -11,7 +11,7 @@ func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 	sentry.SetDSN(dsn)
 	sentry.SetOptions(options...)
 
-	return func(msg *kinesisstream.EventMsg, err error) {
+	return func(msgs kinesisstream.EventMsgs, err error) {
 		var appErr *errors.AppError
 		var ok bool
 
@@ -30,11 +30,6 @@ func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 		}
 
 		packet := sentry.NewPacket(err)
-		if msg.UserID != "" {
-			packet.AddUser(&sentry.User{
-				ID: msg.UserID,
-			})
-		}
 
 		if appErr.Input != nil {
 			packet.AddExtra(sentry.Extra{

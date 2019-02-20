@@ -29,13 +29,13 @@ func TestConcurency(t *testing.T) {
 		rec := &Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("1", "eid"+istr)
+			rec.add("p1", "1", "eid"+istr)
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("2", "eid"+istr)
+			rec.add("p2", "2", "eid"+istr)
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("3", "eid"+istr)
+			rec.add("p3", "3", "eid"+istr)
 		}
 		records[i] = rec
 	}
