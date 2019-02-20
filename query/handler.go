@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/onedaycat/zamus/eventstore"
 )
 
 type ErrorHandler func(ctx context.Context, queries *Query, err error)
 type QueryHandler func(ctx context.Context, queries *Query) (QueryResult, error)
+type EventMsg = eventstore.EventMsg
+type EventMsgs = []*eventstore.EventMsg
 
 type Handler struct {
 	quries       map[string]*queryinfo

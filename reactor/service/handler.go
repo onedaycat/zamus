@@ -3,12 +3,16 @@ package service
 import (
 	"context"
 
+	"github.com/onedaycat/zamus/eventstore"
+
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
 
 type EventHandler = kinesisstream.EventMessagesHandler
 type ErrorHandler = kinesisstream.EventMessagesErrorHandler
+type EventMsg = eventstore.EventMsg
+type EventMsgs = []*eventstore.EventMsg
 
 type Handler struct {
 	gropcon *kinesisstream.GroupConcurrency

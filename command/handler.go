@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/invoke"
 )
 
@@ -11,6 +12,8 @@ type Command = invoke.InvokeEvent
 
 type ErrorHandler func(ctx context.Context, event *Command, err error)
 type CommandHandler func(ctx context.Context, event *Command) (interface{}, error)
+type EventMsg = eventstore.EventMsg
+type EventMsgs = []*eventstore.EventMsg
 
 type Handler struct {
 	commands     map[string]*commandinfo
