@@ -402,18 +402,18 @@ func (d *DynamoDBEventStore) GetAggregate(aggID, hashKey string) (*eventstore.Ag
 		return nil, eventstore.ErrNotFound
 	}
 
-	aggnsg := &eventstore.AggregateMsg{}
-	if err = dynamodbattribute.UnmarshalMap(output.Item, aggnsg); err != nil {
+	aggmsg := &eventstore.AggregateMsg{}
+	if err = dynamodbattribute.UnmarshalMap(output.Item, aggmsg); err != nil {
 		return nil, err
 	}
 
-	return aggnsg, nil
+	return aggmsg, nil
 }
 
-func (d *DynamoDBEventStore) Save(events []*eventstore.EventMsg, aggnsg *eventstore.AggregateMsg) error {
+func (d *DynamoDBEventStore) Save(events []*eventstore.EventMsg, aggmsg *eventstore.AggregateMsg) error {
 	var err error
 	var snapshotReq map[string]*dynamodb.AttributeValue
-	snapshotReq, err = dynamodbattribute.MarshalMap(aggnsg)
+	snapshotReq, err = dynamodbattribute.MarshalMap(aggmsg)
 	if err != nil {
 		return err
 	}
@@ -421,14 +421,14 @@ func (d *DynamoDBEventStore) Save(events []*eventstore.EventMsg, aggnsg *eventst
 	var putES []*dynamodb.TransactWriteItem
 	var payloadReq map[string]*dynamodb.AttributeValue
 
-	if aggnsg != nil {
+	if aggmsg != nil {
 		putES = make([]*dynamodb.TransactWriteItem, 0, len(events)+1)
 		putES = append(putES, &dynamodb.TransactWriteItem{
 			Put: &dynamodb.Put{
 				TableName:           &d.aggregateTable,
 				ConditionExpression: saveSnapCond,
 				ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-					seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(aggnsg.TimeSeq, 10))},
+					seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(aggmsg.TimeSeq, 10))},
 				},
 				Item: snapshotReq,
 			},

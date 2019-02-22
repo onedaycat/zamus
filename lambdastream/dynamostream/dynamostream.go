@@ -6,14 +6,14 @@ import (
 	"github.com/onedaycat/zamus/eventstore"
 )
 
-type EventMessage = eventstore.EventMsg
-type EventMessages = []*eventstore.EventMsg
+type EventMsg = eventstore.EventMsg
+type EventMsgs = []*eventstore.EventMsg
 
 type LambdaHandler func(ctx context.Context, event *DynamoDBStreamEvent) (interface{}, error)
-type EventMessageHandler func(msg *EventMessage) error
-type EventMessagesHandler func(msgs EventMessages) error
-type EventMessageErrorHandler func(msg *EventMessage, err error)
-type EventMessagesErrorHandler func(msgs EventMessages, err error)
+type EventMessageHandler func(msg *EventMsg) error
+type EventMessagesHandler func(msgs EventMsgs) error
+type EventMessageErrorHandler func(msg *EventMsg, err error)
+type EventMessagesErrorHandler func(msgs EventMsgs, err error)
 type KeyHandler func(record *Record) string
 
 type DyanmoStream struct{}
@@ -28,18 +28,18 @@ func (s *DyanmoStream) CreateIteratorHandler(handler EventMessageHandler, onErro
 			return nil, nil
 		}
 		if onError == nil {
-			onError = func(msg *EventMessage, err error) {}
+			onError = func(msg *EventMsg, err error) {}
 		}
 
 		var err error
-		var msg *EventMessage
+		var msg *EventMsg
 		for _, record := range event.Records {
 			if record.EventName != EventInsert {
 				continue
 			}
 
-			msg = record.DynamoDB.NewImage.EventMessage
-			if err = handler(record.DynamoDB.NewImage.EventMessage); err != nil {
+			msg = record.DynamoDB.NewImage.EventMsg
+			if err = handler(record.DynamoDB.NewImage.EventMsg); err != nil {
 				onError(msg, err)
 			}
 		}
@@ -54,7 +54,7 @@ func (s *DyanmoStream) CreateConcurencyHandler(getKey KeyHandler, handler EventM
 			return nil, nil
 		}
 		if onError == nil {
-			onError = func(msg *EventMessage, err error) {}
+			onError = func(msg *EventMsg, err error) {}
 		}
 
 		cm := newConcurrencyManager(len(event.Records))
@@ -80,12 +80,12 @@ func (s *DyanmoStream) CreateGroupConcurencyHandler(getKey KeyHandler, handler E
 			return nil, nil
 		}
 		if onError == nil {
-			onError = func(msgs EventMessages, err error) {}
+			onError = func(msgs EventMsgs, err error) {}
 		}
 
-		cm := newGroupConcurrencyManager(len(event.Records))
+		cm := NewGroupConcurrency()
 
-		cm.Send(event.Records, getKey, handler, onError)
+		// cm.Send(event.Records, getKey, handler, onError)
 		cm.Wait()
 
 		return nil, nil

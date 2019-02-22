@@ -3,7 +3,6 @@ package sideeffect
 import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 	"github.com/rs/zerolog/log"
 )
 
@@ -11,7 +10,7 @@ func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 	sentry.SetDSN(dsn)
 	sentry.SetOptions(options...)
 
-	return func(msgs kinesisstream.EventMsgs, err error) {
+	return func(msgs EventMsgs, err error) {
 		var appErr *errors.AppError
 		var ok bool
 

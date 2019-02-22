@@ -8,7 +8,7 @@ import (
 )
 
 type Payload struct {
-	EventMessage *EventMessage
+	EventMsg *EventMsg
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
@@ -18,15 +18,7 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	event := &EventMessage{}
-	if err = dynamodbattribute.UnmarshalMap(data, event); err != nil {
-		return err
-	}
-
-	p.EventMessage = event
-	p.EventMessage.Data = data["d"].B
-
-	return nil
+	return dynamodbattribute.UnmarshalMap(data, &p.EventMsg)
 }
 
 const EventInsert = "INSERT"
@@ -43,14 +35,13 @@ type Record struct {
 	DynamoDB  *DynamoDBRecord `json:"dynamodb"`
 }
 
-func (r *Record) add(key, val, eid string) {
+func (r *Record) add(key, eid, etype string) {
 	r.DynamoDB = &DynamoDBRecord{
-		Keys: map[string]*dynamodb.AttributeValue{
-			key: &dynamodb.AttributeValue{S: &val},
-		},
 		NewImage: &Payload{
-			EventMessage: &EventMessage{
-				EventID: eid,
+			EventMsg: &EventMsg{
+				PartitionKey: key,
+				EventID:      eid,
+				EventType:    etype,
 			},
 		},
 	}

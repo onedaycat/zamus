@@ -1,6 +1,7 @@
 package dynamodb
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -167,6 +168,7 @@ func TestConcurency(t *testing.T) {
 	go func() {
 		st := domain.NewStockItem()
 		st.Create("a1", "1", 0)
+		st.Add(1)
 		st.Remove()
 
 		err2 = es.Save(st)
@@ -175,6 +177,8 @@ func TestConcurency(t *testing.T) {
 	}()
 
 	wg.Wait()
+	fmt.Println(err1)
+	fmt.Println(err2)
 	require.Equal(t, eventstore.ErrVersionInconsistency, err1)
 	require.Nil(t, err2)
 }

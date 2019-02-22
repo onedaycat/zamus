@@ -46,6 +46,22 @@ functions:
 
 resources:
   Resources:
+    # FanoutStore:
+    #   Type: 'AWS::DynamoDB::Table'
+    #   # DeletionPolicy: Retain
+    #   Properties:
+    #     AttributeDefinitions:
+    #       - AttributeName: h
+    #         AttributeType: S
+    #       - AttributeName: x
+    #         AttributeType: 'N'
+    #     KeySchema:
+    #       - AttributeName: h
+    #         KeyType: HASH
+    #       - AttributeName: x
+    #         KeyType: RANGE
+    #     BillingMode: PAY_PER_REQUEST
+    #     TableName: ${self:service}-fanout-${self:provider.stage}
     EventstoreEvent:
       Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain

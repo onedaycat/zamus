@@ -2,7 +2,6 @@ package eventstore
 
 import (
 	"encoding/json"
-	fmt "fmt"
 	"time"
 
 	"github.com/onedaycat/zamus/common/clock"
@@ -152,8 +151,6 @@ func (es *eventStore) GetSnapshot(id string, agg AggregateRoot) error {
 	if err != nil {
 		return err
 	}
-
-	fmt.Println("@@@", snapshot, err)
 
 	agg.SetAggregateID(snapshot.AggregateID)
 	agg.SetSequence(snapshot.Seq)
