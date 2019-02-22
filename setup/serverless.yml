@@ -51,7 +51,7 @@ resources:
     #   # DeletionPolicy: Retain
     #   Properties:
     #     AttributeDefinitions:
-    #       - AttributeName: h
+    #       - AttributeName: k
     #         AttributeType: S
     #       - AttributeName: x
     #         AttributeType: 'N'
@@ -69,12 +69,12 @@ resources:
         StreamSpecification:
           StreamViewType: NEW_IMAGE
         AttributeDefinitions:
-          - AttributeName: h
+          - AttributeName: a
             AttributeType: S
           - AttributeName: x
             AttributeType: 'N'
         KeySchema:
-          - AttributeName: h
+          - AttributeName: a
             KeyType: HASH
           - AttributeName: x
             KeyType: RANGE
@@ -85,10 +85,10 @@ resources:
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: h
+          - AttributeName: a
             AttributeType: S
         KeySchema:
-          - AttributeName: h
+          - AttributeName: a
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-aggregate-${self:provider.stage}
@@ -97,12 +97,12 @@ resources:
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: h
+          - AttributeName: a
             AttributeType: S
           - AttributeName: x
             AttributeType: 'N'
         KeySchema:
-          - AttributeName: h
+          - AttributeName: a
             KeyType: HASH
           - AttributeName: x
             KeyType: RANGE

@@ -20,6 +20,7 @@ type AggregateBase struct {
 	eventPayloads []interface{}
 	eventTypes    []string
 	seq           int64
+	id            string
 }
 
 // InitAggregate if id is empty, id will be generated
@@ -29,6 +30,14 @@ func InitAggregate() *AggregateBase {
 		eventTypes:    make([]string, 0, 1),
 		seq:           0,
 	}
+}
+
+func (a *AggregateBase) GetAggregateID() string {
+	return a.id
+}
+
+func (a *AggregateBase) SetAggregateID(id string) {
+	a.id = id
 }
 
 func (a *AggregateBase) Publish(eventType string, eventData interface{}) {

@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	hashKeyK             = "h"
+	hashKeyK             = "a"
 	emptyStr             = ""
 	seqKV                = ":x"
-	getKV                = ":h"
+	getKV                = ":a"
 	getByEventTypeKV     = ":et"
 	getByAggregateTypeKV = ":b"
 )
@@ -26,8 +26,8 @@ var (
 	bSIndex                        = aws.String("b-x-index")
 	saveCond                       = aws.String("attribute_not_exists(x)")
 	saveSnapCond                   = aws.String("attribute_not_exists(x) or x < :x")
-	getCond                        = aws.String("h=:h")
-	getCondWithTime                = aws.String("h=:h and x > :x")
+	getCond                        = aws.String("a=:a")
+	getCondWithTime                = aws.String("a=:a and x > :x")
 	getByEventTypeCond             = aws.String("e=:et")
 	getByEventTypeWithTimeCond     = aws.String("e=:et and x > :x")
 	getByAggregateTypeCond         = aws.String("b=:b")
@@ -127,7 +127,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 		TableName: &d.eventstoreTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("h"),
+				AttributeName: aws.String("a"),
 				AttributeType: aws.String("S"),
 			},
 			{
@@ -145,7 +145,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("h"),
+				AttributeName: aws.String("a"),
 				KeyType:       aws.String("HASH"),
 			},
 			{
@@ -201,13 +201,13 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 		TableName:   &d.aggregateTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("h"),
+				AttributeName: aws.String("a"),
 				AttributeType: aws.String("S"),
 			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("h"),
+				AttributeName: aws.String("a"),
 				KeyType:       aws.String("HASH"),
 			},
 		},
@@ -225,7 +225,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 		TableName:   &d.snapshotTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("h"),
+				AttributeName: aws.String("a"),
 				AttributeType: aws.String("S"),
 			},
 			{
@@ -235,7 +235,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("h"),
+				AttributeName: aws.String("a"),
 				KeyType:       aws.String("HASH"),
 			},
 			{
@@ -255,10 +255,10 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *DynamoDBEventStore) GetEvents(aggID, hashKey string, seq, limit int64) ([]*eventstore.EventMsg, error) {
+func (d *DynamoDBEventStore) GetEvents(aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
 	keyCond := getCond
 	exValue := map[string]*dynamodb.AttributeValue{
-		getKV: &dynamodb.AttributeValue{S: &hashKey},
+		getKV: &dynamodb.AttributeValue{S: &aggID},
 	}
 
 	if seq > 0 {
@@ -362,12 +362,12 @@ func (d *DynamoDBEventStore) GetEventsByAggregateType(aggType string, seq, limit
 	return snapshots, nil
 }
 
-func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*eventstore.SnapshotMsg, error) {
+func (d *DynamoDBEventStore) GetSnapshot(aggID string) (*eventstore.SnapshotMsg, error) {
 	output, err := d.db.GetItem(&dynamodb.GetItemInput{
 		TableName:      &d.snapshotTable,
 		ConsistentRead: falseStrongRead,
 		Key: map[string]*dynamodb.AttributeValue{
-			hashKeyK: &dynamodb.AttributeValue{S: &hashKey},
+			hashKeyK: &dynamodb.AttributeValue{S: &aggID},
 		},
 	})
 	if err != nil {
@@ -386,12 +386,12 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID, hashKey string) (*eventstore.Sna
 	return snapshot, nil
 }
 
-func (d *DynamoDBEventStore) GetAggregate(aggID, hashKey string) (*eventstore.AggregateMsg, error) {
+func (d *DynamoDBEventStore) GetAggregate(aggID string) (*eventstore.AggregateMsg, error) {
 	output, err := d.db.GetItem(&dynamodb.GetItemInput{
 		TableName:      &d.aggregateTable,
 		ConsistentRead: falseStrongRead,
 		Key: map[string]*dynamodb.AttributeValue{
-			hashKeyK: &dynamodb.AttributeValue{S: &hashKey},
+			hashKeyK: &dynamodb.AttributeValue{S: &aggID},
 		},
 	})
 	if err != nil {

@@ -10,13 +10,13 @@ type Storage struct {
 	mock.Mock
 }
 
-// GetAggregate provides a mock function with given fields: aggID, hashKey
-func (_m *Storage) GetAggregate(aggID string, hashKey string) (*eventstore.AggregateMsg, error) {
-	ret := _m.Called(aggID, hashKey)
+// GetAggregate provides a mock function with given fields: aggID
+func (_m *Storage) GetAggregate(aggID string) (*eventstore.AggregateMsg, error) {
+	ret := _m.Called(aggID)
 
 	var r0 *eventstore.AggregateMsg
-	if rf, ok := ret.Get(0).(func(string, string) *eventstore.AggregateMsg); ok {
-		r0 = rf(aggID, hashKey)
+	if rf, ok := ret.Get(0).(func(string) *eventstore.AggregateMsg); ok {
+		r0 = rf(aggID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*eventstore.AggregateMsg)
@@ -24,8 +24,8 @@ func (_m *Storage) GetAggregate(aggID string, hashKey string) (*eventstore.Aggre
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(aggID, hashKey)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(aggID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -33,13 +33,13 @@ func (_m *Storage) GetAggregate(aggID string, hashKey string) (*eventstore.Aggre
 	return r0, r1
 }
 
-// GetEvents provides a mock function with given fields: aggID, hashKey, seq, limit
-func (_m *Storage) GetEvents(aggID string, hashKey string, seq int64, limit int64) ([]*eventstore.EventMsg, error) {
-	ret := _m.Called(aggID, hashKey, seq, limit)
+// GetEvents provides a mock function with given fields: aggID, seq, limit
+func (_m *Storage) GetEvents(aggID string, seq int64, limit int64) ([]*eventstore.EventMsg, error) {
+	ret := _m.Called(aggID, seq, limit)
 
 	var r0 []*eventstore.EventMsg
-	if rf, ok := ret.Get(0).(func(string, string, int64, int64) []*eventstore.EventMsg); ok {
-		r0 = rf(aggID, hashKey, seq, limit)
+	if rf, ok := ret.Get(0).(func(string, int64, int64) []*eventstore.EventMsg); ok {
+		r0 = rf(aggID, seq, limit)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*eventstore.EventMsg)
@@ -47,8 +47,8 @@ func (_m *Storage) GetEvents(aggID string, hashKey string, seq int64, limit int6
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, int64, int64) error); ok {
-		r1 = rf(aggID, hashKey, seq, limit)
+	if rf, ok := ret.Get(1).(func(string, int64, int64) error); ok {
+		r1 = rf(aggID, seq, limit)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -102,13 +102,13 @@ func (_m *Storage) GetEventsByEventType(eventType string, seq int64, limit int64
 	return r0, r1
 }
 
-// GetSnapshot provides a mock function with given fields: aggID, hashKey
-func (_m *Storage) GetSnapshot(aggID string, hashKey string) (*eventstore.SnapshotMsg, error) {
-	ret := _m.Called(aggID, hashKey)
+// GetSnapshot provides a mock function with given fields: aggID
+func (_m *Storage) GetSnapshot(aggID string) (*eventstore.SnapshotMsg, error) {
+	ret := _m.Called(aggID)
 
 	var r0 *eventstore.SnapshotMsg
-	if rf, ok := ret.Get(0).(func(string, string) *eventstore.SnapshotMsg); ok {
-		r0 = rf(aggID, hashKey)
+	if rf, ok := ret.Get(0).(func(string) *eventstore.SnapshotMsg); ok {
+		r0 = rf(aggID)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*eventstore.SnapshotMsg)
@@ -116,8 +116,8 @@ func (_m *Storage) GetSnapshot(aggID string, hashKey string) (*eventstore.Snapsh
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(aggID, hashKey)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(aggID)
 	} else {
 		r1 = ret.Error(1)
 	}

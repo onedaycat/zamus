@@ -69,13 +69,11 @@ func (es *eventStore) GetAggregateByEvents(id string, agg AggregateRoot) error {
 		return err
 	}
 
-	hashKey := es.createHashKey(id, agg.GetAggregateType())
-
-	return es.getAggregateFromEvent(id, hashKey, agg, agg.GetSequence())
+	return es.getAggregateFromEvent(id, agg, agg.GetSequence())
 }
 
-func (es *eventStore) getAggregateFromEvent(id, hashKey string, agg AggregateRoot, seq int64) error {
-	events, err := es.storage.GetEvents(id, hashKey, seq, es.limit)
+func (es *eventStore) getAggregateFromEvent(id string, agg AggregateRoot, seq int64) error {
+	events, err := es.storage.GetEvents(id, seq, es.limit)
 	if err != nil {
 		return err
 	}
@@ -98,7 +96,7 @@ func (es *eventStore) getAggregateFromEvent(id, hashKey string, agg AggregateRoo
 	}
 
 	for n >= int(es.limit) {
-		if err = es.getAggregateFromEvent(id, hashKey, agg, lastEvent.Seq); err != nil {
+		if err = es.getAggregateFromEvent(id, agg, lastEvent.Seq); err != nil {
 			if err == ErrNotFound {
 				break
 			}
@@ -114,8 +112,7 @@ func (es *eventStore) getAggregateFromEvent(id, hashKey string, agg AggregateRoo
 }
 
 func (es *eventStore) GetEvents(id string, seq int64, agg AggregateRoot) ([]*EventMsg, error) {
-	hashKey := es.createHashKey(id, agg.GetAggregateType())
-	return es.storage.GetEvents(id, hashKey, seq, es.limit)
+	return es.storage.GetEvents(id, seq, es.limit)
 }
 
 func (es *eventStore) GetEventsByEventType(eventType string, seq int64) ([]*EventMsg, error) {
@@ -127,8 +124,7 @@ func (es *eventStore) GetEventsByAggregateType(aggType string, seq int64) ([]*Ev
 }
 
 func (es *eventStore) GetAggregate(id string, agg AggregateRoot) error {
-	hashKey := es.createHashKey(id, agg.GetAggregateType())
-	snapshot, err := es.storage.GetAggregate(id, hashKey)
+	snapshot, err := es.storage.GetAggregate(id)
 	if err != nil {
 		return err
 	}
@@ -144,8 +140,7 @@ func (es *eventStore) GetAggregate(id string, agg AggregateRoot) error {
 }
 
 func (es *eventStore) GetSnapshot(id string, agg AggregateRoot) error {
-	hashKey := es.createHashKey(id, agg.GetAggregateType())
-	snapshot, err := es.storage.GetSnapshot(id, hashKey)
+	snapshot, err := es.storage.GetSnapshot(id)
 	if err != nil {
 		return err
 	}
@@ -193,7 +188,6 @@ func (es *eventStore) Save(agg AggregateRoot, options ...SaveOption) error {
 		seq := agg.GetSequence()
 		eid := eid.CreateEventID(aggid, seq)
 		userID := opts.userID
-		hashKey := es.createHashKey(aggid, aggType)
 		data, err := json.Marshal(payloads[i])
 		if err != nil {
 			return err
@@ -205,7 +199,6 @@ func (es *eventStore) Save(agg AggregateRoot, options ...SaveOption) error {
 			AggregateID:   aggid,
 			AggregateType: aggType,
 			PartitionKey:  agg.GetPartitionKey(),
-			HashKey:       hashKey,
 			Seq:           seq,
 			Data:          data,
 			Time:          now,
@@ -230,7 +223,6 @@ func (es *eventStore) Save(agg AggregateRoot, options ...SaveOption) error {
 
 	aggmsg = &AggregateMsg{
 		AggregateID: agg.GetAggregateID(),
-		HashKey:     lastEvent.HashKey,
 		Data:        aggData,
 		EventID:     lastEvent.EventID,
 		Time:        lastEvent.Time,
@@ -245,10 +237,6 @@ func (es *eventStore) Save(agg AggregateRoot, options ...SaveOption) error {
 	agg.ClearEvents()
 
 	return nil
-}
-
-func (es *eventStore) createHashKey(aggid, aggType string) string {
-	return aggid + aggType
 }
 
 func WithRetry(numberRetry int, delay time.Duration, fn RetryHandler) error {

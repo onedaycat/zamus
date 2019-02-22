@@ -9,10 +9,9 @@ message EventMsg {
   string aggregateID = 3;
   string aggregateType = 4;
   string partitionKey = 5;  // Unique ID number for this person.
-  string hashKey = 6;  // Unique ID number for this person.
-  bytes data = 7;
-  int64 time = 8;
-  int64 seq = 9;
-  int64 timeSeq = 10;
-  string userID = 11;
+  bytes data = 6;
+  int64 time = 7;
+  int64 seq = 8;
+  int64 timeSeq = 9;
+  string userID = 10;
 }

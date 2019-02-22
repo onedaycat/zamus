@@ -1,7 +1,6 @@
 package dynamodb
 
 import (
-	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -47,8 +46,8 @@ func TestSaveAndGet(t *testing.T) {
 	now1 := time.Now().UTC().Add(time.Second * -10)
 	now2 := time.Now().UTC().Add(time.Second * -5)
 
-	st := domain.NewStockItem()
 	id := eid.GenerateID()
+	st := domain.NewStockItem()
 	st.Create(id, "1", 0)
 	st.Add(10)
 	st.Sub(5)
@@ -177,8 +176,7 @@ func TestConcurency(t *testing.T) {
 	}()
 
 	wg.Wait()
-	fmt.Println(err1)
-	fmt.Println(err2)
+
 	require.Equal(t, eventstore.ErrVersionInconsistency, err1)
 	require.Nil(t, err2)
 }
