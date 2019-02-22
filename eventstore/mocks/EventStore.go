@@ -24,20 +24,6 @@ func (_m *EventStore) GetAggregate(aggID string, agg eventstore.AggregateRoot) e
 	return r0
 }
 
-// GetAggregateByEvents provides a mock function with given fields: aggID, agg
-func (_m *EventStore) GetAggregateByEvents(aggID string, agg eventstore.AggregateRoot) error {
-	ret := _m.Called(aggID, agg)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(string, eventstore.AggregateRoot) error); ok {
-		r0 = rf(aggID, agg)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // GetEvents provides a mock function with given fields: aggID, seq, agg
 func (_m *EventStore) GetEvents(aggID string, seq int64, agg eventstore.AggregateRoot) ([]*eventstore.EventMsg, error) {
 	ret := _m.Called(aggID, seq, agg)
@@ -61,73 +47,20 @@ func (_m *EventStore) GetEvents(aggID string, seq int64, agg eventstore.Aggregat
 	return r0, r1
 }
 
-// GetEventsByAggregateType provides a mock function with given fields: aggType, seq
-func (_m *EventStore) GetEventsByAggregateType(aggType string, seq int64) ([]*eventstore.EventMsg, error) {
-	ret := _m.Called(aggType, seq)
-
-	var r0 []*eventstore.EventMsg
-	if rf, ok := ret.Get(0).(func(string, int64) []*eventstore.EventMsg); ok {
-		r0 = rf(aggType, seq)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*eventstore.EventMsg)
-		}
+// Save provides a mock function with given fields: agg, options
+func (_m *EventStore) Save(agg eventstore.AggregateRoot, options ...eventstore.SaveOption) error {
+	_va := make([]interface{}, len(options))
+	for _i := range options {
+		_va[_i] = options[_i]
 	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, int64) error); ok {
-		r1 = rf(aggType, seq)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetEventsByEventType provides a mock function with given fields: eventType, seq
-func (_m *EventStore) GetEventsByEventType(eventType string, seq int64) ([]*eventstore.EventMsg, error) {
-	ret := _m.Called(eventType, seq)
-
-	var r0 []*eventstore.EventMsg
-	if rf, ok := ret.Get(0).(func(string, int64) []*eventstore.EventMsg); ok {
-		r0 = rf(eventType, seq)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*eventstore.EventMsg)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, int64) error); ok {
-		r1 = rf(eventType, seq)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetSnapshot provides a mock function with given fields: aggID, agg
-func (_m *EventStore) GetSnapshot(aggID string, agg eventstore.AggregateRoot) error {
-	ret := _m.Called(aggID, agg)
+	var _ca []interface{}
+	_ca = append(_ca, agg)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, eventstore.AggregateRoot) error); ok {
-		r0 = rf(aggID, agg)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Save provides a mock function with given fields: agg
-func (_m *EventStore) Save(agg eventstore.AggregateRoot) error {
-	ret := _m.Called(agg)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(eventstore.AggregateRoot) error); ok {
-		r0 = rf(agg)
+	if rf, ok := ret.Get(0).(func(eventstore.AggregateRoot, ...eventstore.SaveOption) error); ok {
+		r0 = rf(agg, options...)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -138,9 +71,4 @@ func (_m *EventStore) Save(agg eventstore.AggregateRoot) error {
 // SetEventLimit provides a mock function with given fields: limit
 func (_m *EventStore) SetEventLimit(limit int64) {
 	_m.Called(limit)
-}
-
-// SetSnapshotStrategy provides a mock function with given fields: strategies
-func (_m *EventStore) SetSnapshotStrategy(strategies eventstore.SnapshotStategyHandler) {
-	_m.Called(strategies)
 }

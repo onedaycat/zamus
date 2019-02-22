@@ -5,10 +5,9 @@ package eventstore
 
 import (
 	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
 	io "io"
 	math "math"
-
-	proto "github.com/golang/protobuf/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -23,17 +22,17 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type EventMsg struct {
-	EventID              string   `protobuf:"bytes,1,opt,name=eventID,proto3" json:"i,omitempty"`
-	EventType            string   `protobuf:"bytes,2,opt,name=eventType,proto3" json:"e,omitempty"`
-	AggregateID          string   `protobuf:"bytes,3,opt,name=aggregateID,proto3" json:"a,omitempty"`
-	AggregateType        string   `protobuf:"bytes,4,opt,name=aggregateType,proto3" json:"b,omitempty"`
-	PartitionKey         string   `protobuf:"bytes,5,opt,name=partitionKey,proto3" json:"k,omitempty"`
-	HashKey              string   `protobuf:"bytes,6,opt,name=hashKey,proto3" json:"h,omitempty"`
-	Data                 []byte   `protobuf:"bytes,7,opt,name=data,proto3" json:"d,omitempty"`
-	Time                 int64    `protobuf:"varint,8,opt,name=time,proto3" json:"t,omitempty"`
-	Seq                  int64    `protobuf:"varint,9,opt,name=seq,proto3" json:"s,omitempty"`
-	TimeSeq              int64    `protobuf:"varint,10,opt,name=timeSeq,proto3" json:"x,omitempty"`
-	UserID               string   `protobuf:"bytes,11,opt,name=userID,proto3" json:"u,omitempty"`
+	EventID              string   `protobuf:"bytes,1,opt,name=eventID,proto3" json:"eventID,omitempty"`
+	EventType            string   `protobuf:"bytes,2,opt,name=eventType,proto3" json:"eventType,omitempty"`
+	AggregateID          string   `protobuf:"bytes,3,opt,name=aggregateID,proto3" json:"aggregateID,omitempty"`
+	AggregateType        string   `protobuf:"bytes,4,opt,name=aggregateType,proto3" json:"aggregateType,omitempty"`
+	PartitionKey         string   `protobuf:"bytes,5,opt,name=partitionKey,proto3" json:"partitionKey,omitempty"`
+	HashKey              string   `protobuf:"bytes,6,opt,name=hashKey,proto3" json:"hashKey,omitempty"`
+	Data                 []byte   `protobuf:"bytes,7,opt,name=data,proto3" json:"data,omitempty"`
+	Time                 int64    `protobuf:"varint,8,opt,name=time,proto3" json:"time,omitempty"`
+	Seq                  int64    `protobuf:"varint,9,opt,name=seq,proto3" json:"seq,omitempty"`
+	TimeSeq              int64    `protobuf:"varint,10,opt,name=timeSeq,proto3" json:"timeSeq,omitempty"`
+	UserID               string   `protobuf:"bytes,11,opt,name=userID,proto3" json:"userID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`

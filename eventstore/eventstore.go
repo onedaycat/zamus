@@ -17,8 +17,6 @@ type RetryHandler func() error
 
 const emptyStr = ""
 
-type EventType = string
-
 type SaveOption func(opt *saveOption)
 
 type saveOption struct {
@@ -120,7 +118,7 @@ func (es *eventStore) GetEvents(id string, seq int64, agg AggregateRoot) ([]*Eve
 	return es.storage.GetEvents(id, hashKey, seq, es.limit)
 }
 
-func (es *eventStore) GetEventsByEventType(eventType EventType, seq int64) ([]*EventMsg, error) {
+func (es *eventStore) GetEventsByEventType(eventType string, seq int64) ([]*EventMsg, error) {
 	return es.storage.GetEventsByEventType(eventType, seq, es.limit)
 }
 
