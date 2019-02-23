@@ -22,20 +22,15 @@ func (e *EventMsg) AddExpired(d time.Duration) {
 	e.Expired = time.Unix(e.Time, 0).Add(d).Unix()
 }
 
-func (m *Metadata) SetExtraVal(key, value string) {
-	if m.Extra == nil {
-		m.Extra = make(map[string]string, 10)
+func (e *EventMsg) UnmarshalMetadata() *Metadata {
+	metadata := &Metadata{}
+	if e.Metadata == nil {
+		return metadata
 	}
 
-	m.Extra[key] = value
-}
+	metadata.Unmarshal(e.Metadata)
 
-func (m *Metadata) GetExtraVal(key string) string {
-	if m.Extra == nil {
-		return emptyStr
-	}
-
-	return m.Extra[key]
+	return metadata
 }
 
 // EventID              string    `protobuf:"bytes,1,opt,name=eventID,proto3" json:"i,omitempty"`
@@ -47,7 +42,7 @@ func (m *Metadata) GetExtraVal(key string) string {
 // Seq                  int64     `protobuf:"varint,7,opt,name=seq,proto3" json:"s,omitempty"`
 // TimeSeq              int64     `protobuf:"varint,8,opt,name=timeSeq,proto3" json:"x,omitempty"`
 // Expired              int64     `protobuf:"varint,9,opt,name=expired,proto3" json:"l,omitempty"`
-// Metadata             *Metadata `protobuf:"bytes,10,opt,name=metadata,proto3" json:"m,omitempty"`
+// Metadata             []byte   `protobuf:"bytes,10,opt,name=metadata,proto3" json:"m,omitempty"`
 
 // EventMsgs            []*EventMsg `protobuf:"bytes,1,rep,name=eventMsgs,proto3" json:"e,omitempty"`
 

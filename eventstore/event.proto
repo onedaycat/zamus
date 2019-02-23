@@ -21,7 +21,7 @@ message EventMsg {
   int64 seq = 7;
   int64 timeSeq = 8;
   int64 expired = 9;
-  Metadata metadata = 10;
+  bytes metadata = 10;
 }
 
 message EventMsgList {

@@ -28,6 +28,10 @@ func TestSaveAndGet(t *testing.T) {
 
 	es := eventstore.NewEventStore(db)
 
+	metadata := &eventstore.Metadata{
+		UserID: "u1",
+	}
+
 	now1 := time.Now().UTC().Add(time.Second * -10)
 	now2 := time.Now().UTC().Add(time.Second * -5)
 
@@ -55,7 +59,7 @@ func TestSaveAndGet(t *testing.T) {
 	require.True(t, st.IsRemoved())
 
 	clock.Freeze(now2)
-	err = es.Save(st)
+	err = es.SaveWithMetadata(st, metadata)
 	require.NoError(t, err)
 
 	events, err := es.GetEvents(st.GetAggregateID(), eventstore.TimeSeq(now2.Unix(), 0))
@@ -65,6 +69,8 @@ func TestSaveAndGet(t *testing.T) {
 	require.Equal(t, int64(6), events[0].Seq)
 	require.Equal(t, domain.StockItemRemovedEvent, events[1].EventType)
 	require.Equal(t, int64(7), events[1].Seq)
+	require.Equal(t, metadata, events[0].UnmarshalMetadata())
+	require.Equal(t, metadata, events[1].UnmarshalMetadata())
 
 	// GetAggregateByTimeSeq
 	st4 := domain.NewStockItem()

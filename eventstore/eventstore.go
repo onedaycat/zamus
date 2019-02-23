@@ -24,6 +24,7 @@ type EventStore interface {
 	GetAggregate(aggID string, agg AggregateRoot) error
 	GetAggregateByTimeSeq(aggID string, agg AggregateRoot, timeSeq int64) error
 	Save(agg AggregateRoot) error
+	SaveWithMetadata(agg AggregateRoot, metadata *Metadata) error
 }
 
 type eventStore struct {
@@ -119,7 +120,7 @@ func (es *eventStore) GetSnapshot(aggID string) (*Snapshot, error) {
 	return es.storage.GetSnapshot(aggID)
 }
 
-func (es *eventStore) Save(agg AggregateRoot) error {
+func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) error {
 	events := agg.GetEvents()
 	n := len(events)
 	if n == 0 {
@@ -140,6 +141,11 @@ func (es *eventStore) Save(agg AggregateRoot) error {
 
 	var lastEvent *EventMsg
 	var saveSnapshot bool
+
+	var metadataByte []byte
+	if metadata != nil {
+		metadataByte, _ = metadata.Marshal()
+	}
 
 	for i := 0; i < n; i++ {
 		agg.IncreaseSequence()
@@ -166,6 +172,7 @@ func (es *eventStore) Save(agg AggregateRoot) error {
 			Event:       eventDataSnap,
 			Time:        now,
 			TimeSeq:     TimeSeq(now, seq),
+			Metadata:    metadataByte,
 		}
 	}
 
@@ -204,6 +211,10 @@ func (es *eventStore) Save(agg AggregateRoot) error {
 	agg.SetLastEventID(lastEvent.EventID)
 
 	return nil
+}
+
+func (es *eventStore) Save(agg AggregateRoot) error {
+	return es.SaveWithMetadata(agg, nil)
 }
 
 func TimeSeq(time int64, seq int64) int64 {

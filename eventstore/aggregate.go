@@ -25,6 +25,7 @@ type AggregateBase struct {
 	time       int64
 	eventid    string
 	id         string
+	metadata   *Metadata
 }
 
 // InitAggregate if id is empty, id will be generated
