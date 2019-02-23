@@ -19,7 +19,7 @@ functions:
   dynamodb-kinesis:
     handler: dynamokinesis/bin/app
     environment:
-      KINESIS_STREAM_NAMES: ${self:service}-event-stream-1-${self:provider.stage}
+      KINESIS_STREAM_NAMES: ${self:service}-stream-1-${self:provider.stage}
     memorySize: ${file(./setting.yml):dynamokinesis.memorySize}
     timeout: ${file(./setting.yml):dynamokinesis.timeout}
     events:
@@ -46,6 +46,14 @@ functions:
 
 resources:
   Resources:
+    DynamodbDashKinesisLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: '30'
+    FirehoseDashTransformLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        RetentionInDays: '30'
     EventstoreEvent:
       Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
@@ -80,7 +88,7 @@ resources:
       Type: AWS::S3::Bucket
       DeletionPolicy: Retain
       Properties:
-        BucketName: ${self:service}-event-${self:provider.stage}
+        BucketName: ${self:service}-${self:provider.stage}
     FirehoseToS3Role:
       Type: AWS::IAM::Role
       # DeletionPolicy: Retain
@@ -115,8 +123,8 @@ resources:
                     - s3:ListBucketMultipartUploads
                     - s3:PutObject
                   Resource:
-                    - arn:aws:s3:::${self:service}-event-${self:provider.stage}
-                    - arn:aws:s3:::${self:service}-event-${self:provider.stage}/*
+                    - arn:aws:s3:::${self:service}-${self:provider.stage}
+                    - arn:aws:s3:::${self:service}-${self:provider.stage}/*
                     - arn:aws:s3:::%FIREHOSE_BUCKET_NAME%
                     - arn:aws:s3:::%FIREHOSE_BUCKET_NAME%/*
                 - Effect: Allow
@@ -139,7 +147,7 @@ resources:
       Type: AWS::Kinesis::Stream
       # DeletionPolicy: Retain
       Properties:
-        Name: ${self:service}-event-stream-1-${self:provider.stage}
+        Name: ${self:service}-stream-1-${self:provider.stage}
         RetentionPeriodHours: ${file(./setting.yml):kinesis-1.retentionPeriodHours}
         ShardCount: ${file(./setting.yml):kinesis-1.shardCount}
     Firehose:
@@ -154,7 +162,7 @@ resources:
         DeliveryStreamName: ${self:service}-firehose-${self:provider.stage}
         DeliveryStreamType: KinesisStreamAsSource
         KinesisStreamSourceConfiguration:
-          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-event-stream-1-${self:provider.stage}
+          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-stream-1-${self:provider.stage}
           RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
         ExtendedS3DestinationConfiguration:
           BucketARN:
@@ -211,7 +219,7 @@ resources:
           TableType: EXTERNAL_TABLE
           StorageDescriptor:
             Compressed: false
-            Location: 's3://${self:service}-event-${self:provider.stage}/firehose/'
+            Location: 's3://${self:service}-${self:provider.stage}/firehose/'
             InputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
             OutputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
             Columns:

@@ -24,7 +24,13 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 const EventInsert = "INSERT"
 const eventRemove = "REMOVE"
 
-type Records = []*Record
+type Records []*Record
+
+func (a Records) Len() int      { return len(a) }
+func (a Records) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a Records) Less(i, j int) bool {
+	return a[i].DynamoDB.NewImage.EventMsg.TimeSeq < a[j].DynamoDB.NewImage.EventMsg.TimeSeq
+}
 
 type DynamoDBStreamEvent struct {
 	Records Records `json:"Records"`

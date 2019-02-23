@@ -27,7 +27,7 @@ func getDB() *DynamoDBEventStore {
 			panic(err)
 		}
 
-		_db = New(sess, "gocqrs-eventstore-dev", "gocqrs-snapshot-dev")
+		_db = New(sess, "gocqrs-eventstore-eventstore-dev", "gocqrs-eventstore-snapshot-dev")
 		err = _db.CreateSchema(true)
 		if err != nil {
 			panic(err)
@@ -35,6 +35,28 @@ func getDB() *DynamoDBEventStore {
 	}
 
 	return _db
+}
+
+func TestXXX(t *testing.T) {
+	db := getDB()
+	db.Truncate()
+
+	es := eventstore.NewEventStore(db)
+
+	metadata := &eventstore.Metadata{
+		UserID: "u1",
+	}
+
+	id := eid.GenerateID()
+	st := domain.NewStockItem()
+	st.Create(id, "1", 0)
+	st.Add(10)
+	st.Sub(5)
+	st.Add(2)
+	st.Add(3)
+
+	err := es.SaveWithMetadata(st, metadata)
+	require.NoError(t, err)
 }
 
 func TestSaveAndGet(t *testing.T) {

@@ -4,7 +4,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"testing"
+
+	"github.com/golang/snappy"
 
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +18,9 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	p64 := base64.StdEncoding.EncodeToString(p)
+	var dst []byte
+	dst = snappy.Encode(dst, p)
+	p64 := base64.StdEncoding.EncodeToString(dst)
 
 	payload := fmt.Sprintf(`
 	{
@@ -46,13 +51,16 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						"v": {
 							"N": "10"
 						},
-						"e": {
+						"b": {
 							"S": "domain.aggregate.event"
 						},
 						"s": {
-							"N": "10001"
+							"N": "10002"
 						},
-						"d": {
+						"x": {
+							"N": "10002"
+						},
+						"e": {
 							"B": "%s"
 						}
 					},
@@ -84,13 +92,16 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 					"v": {
 						"N": "10"
 					},
-					"e": {
+					"b": {
 						"S": "domain.aggregate.event"
 					},
 					"s": {
 						"N": "10001"
 					},
-					"d": {
+					"x": {
+						"N": "10001"
+					},
+					"e": {
 						"B": "%s"
 					}
 				},
@@ -109,16 +120,19 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 
 	event := &DynamoDBStreamEvent{}
 	err = json.Unmarshal([]byte(payload), event)
+	sort.Sort(event.Records)
 	require.NoError(t, err)
 	require.Len(t, event.Records, 2)
-	require.Equal(t, EventInsert, event.Records[0].EventName)
-	require.Equal(t, eventRemove, event.Records[1].EventName)
+	require.Equal(t, eventRemove, event.Records[0].EventName)
+	require.Equal(t, int64(10001), event.Records[0].DynamoDB.NewImage.EventMsg.Seq)
+	require.Equal(t, EventInsert, event.Records[1].EventName)
+	require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
 
 	xx, _ := json.Marshal(event.Records[0].DynamoDB.NewImage.EventMsg)
 	fmt.Println(string(xx))
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].DynamoDB.NewImage.EventMsg.Event, pp)
+	event.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)

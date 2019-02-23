@@ -16,4 +16,5 @@ dev.env
 bin
 setting.yml
 .serverless
+setup/projection
 

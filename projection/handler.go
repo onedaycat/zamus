@@ -5,22 +5,22 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/lambdastream/dynamostream"
+	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
 
-type EventHandler = dynamostream.EventMessagesHandler
-type ErrorHandler = dynamostream.EventMessagesErrorHandler
+type EventHandler = kinesisstream.EventMessagesHandler
+type ErrorHandler = kinesisstream.EventMessagesErrorHandler
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
-type LambdaEvent = dynamostream.DynamoDBStreamEvent
+type LambdaEvent = kinesisstream.KinesisStreamEvent
 
 type Handler struct {
-	gropcon *dynamostream.GroupConcurrency
+	gropcon *kinesisstream.GroupConcurrency
 }
 
 func NewHandler() *Handler {
 	return &Handler{
-		gropcon: dynamostream.NewGroupConcurrency(),
+		gropcon: kinesisstream.NewGroupConcurrency(),
 	}
 }
 

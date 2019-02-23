@@ -6,7 +6,6 @@ import (
 
 type GroupConcurrency struct {
 	wg            sync.WaitGroup
-	partitions    map[string]EventMsgs
 	errorHandlers []EventMessagesErrorHandler
 	handler       EventMessagesHandler
 	eventTypes    map[string]struct{}
@@ -16,7 +15,6 @@ type GroupConcurrency struct {
 
 func NewGroupConcurrency() *GroupConcurrency {
 	return &GroupConcurrency{
-		partitions: make(map[string]EventMsgs, 100),
 		eventTypes: make(map[string]struct{}, 20),
 	}
 }
@@ -46,6 +44,7 @@ func (c *GroupConcurrency) RegisterHandler(handler EventMessagesHandler) {
 func (c *GroupConcurrency) Process(records Records) {
 	var eventType string
 	var pk string
+	partitions := make(map[string]EventMsgs, 100)
 
 	for _, record := range records {
 		eventType = record.Kinesis.Data.EventMsg.EventType
@@ -54,16 +53,16 @@ func (c *GroupConcurrency) Process(records Records) {
 		}
 
 		pk = record.Kinesis.PartitionKey
-		if _, ok := c.partitions[pk]; !ok {
-			c.partitions[pk] = make(EventMsgs, 0, 100)
+		if _, ok := partitions[pk]; !ok {
+			partitions[pk] = make(EventMsgs, 0, 100)
 		}
 
-		c.partitions[pk] = append(c.partitions[pk], record.Kinesis.Data.EventMsg)
+		partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
 	}
 
-	c.wg.Add(len(c.partitions))
+	c.wg.Add(len(partitions))
 
-	for _, ghs := range c.partitions {
+	for _, ghs := range partitions {
 		go c.handle(ghs)
 	}
 }

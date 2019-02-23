@@ -18,17 +18,15 @@ import (
 func TestJSONSize(t *testing.T) {
 	var err error
 	data := eventstore.EventMsg{
-		EventID:       "bhh9lvkrtr33vbmh6djg1",
-		PartitionKey:  "bhh9lvkrtr33vbmh6djg",
-		EventType:     "domain.subdomain.aggregate.StockItemCreated",
-		AggregateID:   "bhh9lvkrtr33vbmh6djg",
-		AggregateType: "domain.subdomain.aggregate",
-		Seq:           10,
-		Time:          1549966068,
-		TimeSeq:       154996606800001,
+		EventID:     "bhh9lvkrtr33vbmh6djg1",
+		EventType:   "domain.subdomain.aggregate.StockItemCreated",
+		AggregateID: "bhh9lvkrtr33vbmh6djg",
+		Seq:         10,
+		Time:        1549966068,
+		TimeSeq:     154996606800001,
 	}
 
-	data.Data, err = json.Marshal(map[string]interface{}{
+	data.Event, err = json.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -43,17 +41,15 @@ func TestJSONSize(t *testing.T) {
 func TestSizeProto(t *testing.T) {
 	var err error
 	data := eventstore.EventMsg{
-		EventID:       "bhh9lvkrtr33vbmh6djg1",
-		PartitionKey:  "bhh9lvkrtr33vbmh6djg",
-		EventType:     "domain.subdomain.aggregate.StockItemCreated",
-		AggregateID:   "bhh9lvkrtr33vbmh6djg",
-		AggregateType: "domain.subdomain.aggregate",
-		Seq:           10,
-		Time:          1549966068,
-		TimeSeq:       154996606800001,
+		EventID:     "bhh9lvkrtr33vbmh6djg1",
+		EventType:   "domain.subdomain.aggregate.StockItemCreated",
+		AggregateID: "bhh9lvkrtr33vbmh6djg",
+		Seq:         10,
+		Time:        1549966068,
+		TimeSeq:     154996606800001,
 	}
 
-	data.Data, err = json.Marshal(map[string]interface{}{
+	data.Event, err = json.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -77,14 +73,13 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 	}`)
 
 	data := eventstore.EventMsg{
-		AggregateID:   "a1",
-		AggregateType: "domain.aggregate",
-		Seq:           10,
-		EventType:     "domain.aggregate.event",
-		TimeSeq:       10001,
+		AggregateID: "a1",
+		Seq:         10,
+		EventType:   "domain.aggregate.event",
+		TimeSeq:     10001,
 	}
 
-	data.Data, err = json.Marshal(map[string]interface{}{
+	data.Event, err = json.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -147,13 +142,12 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 	err = json.Unmarshal(bpayload, event)
 	require.NoError(t, err)
 	require.Len(t, event.Records, 2)
-	require.Equal(t, "domain.aggregate", event.Records[0].Kinesis.Data.EventMsg.AggregateType)
 	require.Equal(t, "domain.aggregate.event", event.Records[0].Kinesis.Data.EventMsg.EventType)
 	require.Equal(t, int64(10), event.Records[0].Kinesis.Data.EventMsg.Seq)
 	require.Equal(t, int64(11), event.Records[1].Kinesis.Data.EventMsg.Seq)
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMsg.Data, pp)
+	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)
