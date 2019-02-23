@@ -113,13 +113,12 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	require.Len(t, event.Records, 2)
 	require.Equal(t, EventInsert, event.Records[0].EventName)
 	require.Equal(t, eventRemove, event.Records[1].EventName)
-	require.Equal(t, "domain.aggregate", event.Records[0].DynamoDB.NewImage.EventMsg.AggregateType)
 
 	xx, _ := json.Marshal(event.Records[0].DynamoDB.NewImage.EventMsg)
 	fmt.Println(string(xx))
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].DynamoDB.NewImage.EventMsg.Data, pp)
+	err = json.Unmarshal(event.Records[0].DynamoDB.NewImage.EventMsg.Event, pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)

@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"errors"
-	"math"
 	"os"
-	"runtime"
-	"sync"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -14,65 +12,22 @@ import (
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/dynamostream"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
+)
+
+const (
+	delim = ","
 )
 
 var (
-	ks         *kinesis.Kinesis
-	streamName = os.Getenv("KINESIS_STREAM_NAME")
-	numCore    = runtime.NumCPU() * 2
+	streamList  []string
+	ks          *kinesis.Kinesis
+	streamNames = os.Getenv("KINESIS_STREAM_NAMES")
 )
 
-func work(records dynamostream.Records, result *[]*kinesis.PutRecordsRequestEntry, wg *sync.WaitGroup) {
-	var event *eventstore.EventMsg
-	for i := 0; i < len(records); i++ {
-		if records[i].DynamoDB.NewImage == nil {
-			continue
-		}
-		event = records[i].DynamoDB.NewImage.EventMessage
-
-		data, _ := event.Marshal()
-		*result = append(*result, &kinesis.PutRecordsRequestEntry{
-			Data:         data,
-			PartitionKey: &event.PartitionKey,
-		})
-	}
-
-	wg.Done()
-}
-
-func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
-	n := len(stream.Records)
-	if n <= numCore {
-		return handlerIterator(ctx, stream)
-	}
-
-	wg := &sync.WaitGroup{}
-	wg.Add(numCore)
-	numOfWork := int(math.Ceil(float64(n) / float64(numCore)))
-	dataSets := make([][]*kinesis.PutRecordsRequestEntry, numCore)
-
-	for i := 0; i < numCore; i++ {
-		dataSets[i] = make([]*kinesis.PutRecordsRequestEntry, 0, numOfWork)
-		if (i+1)*numOfWork > n {
-			go work(stream.Records[i*numOfWork:n], &dataSets[i], wg)
-			break
-		}
-		go work(stream.Records[i*numOfWork:(i+1)*numOfWork], &dataSets[i], wg)
-	}
-	wg.Wait()
-
-	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
-
-	for i := 0; i < numCore; i++ {
-		result = append(result, dataSets[i]...)
-	}
-
-	if len(result) == 0 {
-		return nil
-	}
-
+func publish(streamName string, records []*kinesis.PutRecordsRequestEntry) error {
 	out, err := ks.PutRecords(&kinesis.PutRecordsInput{
-		Records:    result,
+		Records:    records,
 		StreamName: &streamName,
 	})
 
@@ -87,21 +42,22 @@ func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) erro
 	return nil
 }
 
-func handlerIterator(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
+func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
 	n := len(stream.Records)
 	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
 
 	var event *eventstore.EventMsg
 	for i := 0; i < n; i++ {
-		if stream.Records[i].DynamoDB.NewImage == nil {
+		if stream.Records[i].EventName != dynamostream.EventInsert || stream.Records[i].DynamoDB.NewImage == nil {
 			continue
 		}
-		event = stream.Records[i].DynamoDB.NewImage.EventMessage
+
+		event = stream.Records[i].DynamoDB.NewImage.EventMsg
 
 		data, _ := event.Marshal()
 		result = append(result, &kinesis.PutRecordsRequestEntry{
 			Data:         data,
-			PartitionKey: &event.PartitionKey,
+			PartitionKey: &event.AggregateID,
 		})
 	}
 
@@ -109,20 +65,14 @@ func handlerIterator(ctx context.Context, stream *dynamostream.DynamoDBStreamEve
 		return nil
 	}
 
-	out, err := ks.PutRecords(&kinesis.PutRecordsInput{
-		Records:    result,
-		StreamName: &streamName,
-	})
-
-	if err != nil {
-		return err
+	wg := errgroup.Group{}
+	for _, streamName := range streamList {
+		wg.Go(func() error {
+			return publish(streamName, result)
+		})
 	}
 
-	if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
-		return errors.New("One or more events published failed")
-	}
-
-	return nil
+	return wg.Wait()
 }
 
 func init() {
@@ -131,9 +81,10 @@ func init() {
 		log.Panic().Msg("AWS Session error: " + err.Error())
 	}
 
+	streamList = strings.Split(streamNames, delim)
 	ks = kinesis.New(sess)
 }
 
 func main() {
-	lambda.Start(handlerIterator)
+	lambda.Start(handler)
 }

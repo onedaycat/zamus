@@ -3,15 +3,27 @@ package eventstore;
 
 // protoc --gofast_out=. event.proto
 
+message Metadata {
+  map<string,string> extra = 1;
+  string userID = 2;
+  string ip = 3;
+  string correlationID = 4;
+  string trnasactionID = 5;
+}
+
 message EventMsg {
   string eventID = 1;
   string eventType = 2;
-  string aggregateID = 3;
-  string aggregateType = 4;
-  string partitionKey = 5;  // Unique ID number for this person.
-  bytes data = 6;
-  int64 time = 7;
-  int64 seq = 8;
-  int64 timeSeq = 9;
-  string userID = 10;
+  string eventVersion = 3;
+  string aggregateID = 4;
+  bytes event = 5;
+  int64 time = 6;
+  int64 seq = 7;
+  int64 timeSeq = 8;
+  int64 expired = 9;
+  Metadata metadata = 10;
+}
+
+message EventMsgList {
+  repeated EventMsg eventMsgs = 1;
 }

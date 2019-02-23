@@ -19,7 +19,7 @@ functions:
   dynamodb-kinesis:
     handler: dynamokinesis/bin/app
     environment:
-      KINESIS_STREAM_NAME: ${self:service}-event-stream-${self:provider.stage}
+      KINESIS_STREAM_NAMES: ${self:service}-event-stream-1-${self:provider.stage}
     memorySize: ${file(./setting.yml):dynamokinesis.memorySize}
     timeout: ${file(./setting.yml):dynamokinesis.timeout}
     events:
@@ -46,22 +46,6 @@ functions:
 
 resources:
   Resources:
-    # FanoutStore:
-    #   Type: 'AWS::DynamoDB::Table'
-    #   # DeletionPolicy: Retain
-    #   Properties:
-    #     AttributeDefinitions:
-    #       - AttributeName: k
-    #         AttributeType: S
-    #       - AttributeName: x
-    #         AttributeType: 'N'
-    #     KeySchema:
-    #       - AttributeName: h
-    #         KeyType: HASH
-    #       - AttributeName: x
-    #         KeyType: RANGE
-    #     BillingMode: PAY_PER_REQUEST
-    #     TableName: ${self:service}-fanout-${self:provider.stage}
     EventstoreEvent:
       Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
@@ -80,18 +64,6 @@ resources:
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-eventstore-${self:provider.stage}
-    EventstoreAggregate:
-      Type: 'AWS::DynamoDB::Table'
-      # DeletionPolicy: Retain
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: a
-            AttributeType: S
-        KeySchema:
-          - AttributeName: a
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:service}-aggregate-${self:provider.stage}
     EventstoreSnapshot:
       Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
@@ -99,13 +71,9 @@ resources:
         AttributeDefinitions:
           - AttributeName: a
             AttributeType: S
-          - AttributeName: x
-            AttributeType: 'N'
         KeySchema:
           - AttributeName: a
             KeyType: HASH
-          - AttributeName: x
-            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-snapshot-${self:provider.stage}
     S3Event:
@@ -137,7 +105,7 @@ resources:
                     - kinesis:DescribeStream
                     - kinesis:GetShardIterator
                     - kinesis:GetRecords
-                  Resource: { 'Fn::GetAtt': ['Kinesis', 'Arn'] }
+                  Resource: '*'
                 - Effect: Allow
                   Action:
                     - s3:AbortMultipartUpload
@@ -161,18 +129,19 @@ resources:
                   Action:
                     - logs:PutLogEvents
                   Resource:
-                    - arn:aws:logs:${self:provider.region}:${file(./setting.yml):account}:log-group:/aws/kinesisfirehose/${self:service}-firehose-${self:provider.stage}:log-stream:*
+                    '*'
+                    # - arn:aws:logs:${self:provider.region}:${file(./setting.yml):account}:log-group:/aws/kinesisfirehose/${self:service}-firehose-${self:provider.stage}:log-stream:*
                 - Effect: Allow
                   Action:
                     - glue:GetTableVersions
                   Resource: '*'
-    Kinesis:
+    Kinesis_1:
       Type: AWS::Kinesis::Stream
       # DeletionPolicy: Retain
       Properties:
-        Name: ${self:service}-event-stream-${self:provider.stage}
-        RetentionPeriodHours: ${file(./setting.yml):kinesis.retentionPeriodHours}
-        ShardCount: ${file(./setting.yml):kinesis.shardCount}
+        Name: ${self:service}-event-stream-1-${self:provider.stage}
+        RetentionPeriodHours: ${file(./setting.yml):kinesis_1.retentionPeriodHours}
+        ShardCount: ${file(./setting.yml):kinesis_1.shardCount}
     Firehose:
       Type: AWS::KinesisFirehose::DeliveryStream
       DependsOn:
@@ -185,7 +154,7 @@ resources:
         DeliveryStreamName: ${self:service}-firehose-${self:provider.stage}
         DeliveryStreamType: KinesisStreamAsSource
         KinesisStreamSourceConfiguration:
-          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-event-stream-${self:provider.stage}
+          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-event-stream-1-${self:provider.stage}
           RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
         ExtendedS3DestinationConfiguration:
           BucketARN:
@@ -246,17 +215,15 @@ resources:
             InputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
             OutputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
             Columns:
-              - { Name: h, Type: string }
-              - { Name: x, Type: bigint }
               - { Name: i, Type: string }
-              - { Name: e, Type: string }
-              - { Name: a, Type: string }
               - { Name: b, Type: string }
-              - { Name: k, Type: string }
-              - { Name: d, Type: string }
-              - { Name: t, Type: timestamp }
+              - { Name: v, Type: string }
+              - { Name: a, Type: string }
+              - { Name: e, Type: string }
+              - { Name: t, Type: bigint }
               - { Name: s, Type: bigint }
-              - { Name: u, Type: string }
+              - { Name: x, Type: bigint }
+              - { Name: m, Type: string }
             SerdeInfo:
               SerializationLibrary: 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
               Parameters:

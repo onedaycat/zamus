@@ -5,21 +5,6 @@ import (
 	"github.com/onedaycat/zamus/eventstore"
 )
 
-type AccountProfile struct {
-	*eventstore.AggregateBase
-	AccountID string
-	Fullname  string
-	Country   string
-}
-
-func (a *AccountProfile) GetPartitionKey() string {
-	return a.AccountID
-}
-
-func (a *AccountProfile) GetAggregateType() string {
-	return "SellConnect.Account.AccountProfile"
-}
-
 type StockItem struct {
 	*eventstore.AggregateBase
 	ProductID string
@@ -31,14 +16,6 @@ func NewStockItem() *StockItem {
 	return &StockItem{
 		AggregateBase: eventstore.InitAggregate(),
 	}
-}
-
-func (st *StockItem) GetPartitionKey() string {
-	return st.ProductID
-}
-
-func (st *StockItem) GetAggregateType() string {
-	return "domain.subdomain.aggregate"
 }
 
 func (st *StockItem) Create(id, productID string, qty Qty) {
@@ -55,7 +32,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) error {
 	switch msg.EventType {
 	case StockItemCreatedEvent:
 		event := &StockItemCreated{}
-		if err := msg.UnmarshalPayload(event); err != nil {
+		if err := msg.UnmarshalEvent(event); err != nil {
 			return err
 		}
 
@@ -63,7 +40,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) error {
 		st.Qty = Qty(event.Qty)
 	case StockItemUpdatedEvent:
 		event := &StockItemUpdated{}
-		if err := msg.UnmarshalPayload(event); err != nil {
+		if err := msg.UnmarshalEvent(event); err != nil {
 			return err
 		}
 
@@ -71,7 +48,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) error {
 		st.Qty = Qty(event.Qty)
 	case StockItemRemovedEvent:
 		event := &StockItemRemoved{}
-		if err := msg.UnmarshalPayload(event); err != nil {
+		if err := msg.UnmarshalEvent(event); err != nil {
 			return err
 		}
 

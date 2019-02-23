@@ -1,13 +1,10 @@
-package dynamodb
+package memory
 
 import (
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/eventstore"
@@ -15,23 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var _db *DynamoDBEventStore
+var _db *MemoryEventStore
 
-func getDB() *DynamoDBEventStore {
+func getDB() *MemoryEventStore {
 	if _db == nil {
-		sess, err := session.NewSession(&aws.Config{
-			Credentials: credentials.NewEnvCredentials(),
-			Region:      aws.String("ap-southeast-1"),
-		})
-		if err != nil {
-			panic(err)
-		}
-
-		_db = New(sess, "gocqrs-eventstore-dev", "gocqrs-snapshot-dev")
-		err = _db.CreateSchema(true)
-		if err != nil {
-			panic(err)
-		}
+		_db = New()
 	}
 
 	return _db
@@ -67,6 +52,7 @@ func TestSaveAndGet(t *testing.T) {
 	// GetGetEvents
 	st.Add(2)
 	st.Remove()
+	require.True(t, st.IsRemoved())
 
 	clock.Freeze(now2)
 	err = es.Save(st)
@@ -75,7 +61,6 @@ func TestSaveAndGet(t *testing.T) {
 	events, err := es.GetEvents(st.GetAggregateID(), eventstore.TimeSeq(now2.Unix(), 0))
 	require.NoError(t, err)
 	require.Len(t, events, 2)
-	require.True(t, st.IsRemoved())
 	require.Equal(t, domain.StockItemUpdatedEvent, events[0].EventType)
 	require.Equal(t, int64(6), events[0].Seq)
 	require.Equal(t, domain.StockItemRemovedEvent, events[1].EventType)

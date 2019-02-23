@@ -30,6 +30,17 @@ type DynamoDBStreamEvent struct {
 	Records Records `json:"Records"`
 }
 
+func (r *DynamoDBStreamEvent) Add(eventMsg *EventMsg) {
+	r.Records = append(r.Records, &Record{
+		EventName: EventInsert,
+		DynamoDB: &DynamoDBRecord{
+			NewImage: &Payload{
+				EventMsg: eventMsg,
+			},
+		},
+	})
+}
+
 type Record struct {
 	EventName string          `json:"eventName"`
 	DynamoDB  *DynamoDBRecord `json:"dynamodb"`
@@ -39,16 +50,14 @@ func (r *Record) add(key, eid, etype string) {
 	r.DynamoDB = &DynamoDBRecord{
 		NewImage: &Payload{
 			EventMsg: &EventMsg{
-				PartitionKey: key,
-				EventID:      eid,
-				EventType:    etype,
+				AggregateID: key,
+				EventID:     eid,
+				EventType:   etype,
 			},
 		},
 	}
 }
 
 type DynamoDBRecord struct {
-	Keys     map[string]*dynamodb.AttributeValue `json:"Keys"`
-	NewImage *Payload                            `json:"NewImage"`
-	OldImage *Payload                            `json:"OldImage"`
+	NewImage *Payload `json:"NewImage"`
 }

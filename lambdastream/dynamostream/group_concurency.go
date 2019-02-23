@@ -53,7 +53,7 @@ func (c *GroupConcurrency) Process(records Records) {
 			continue
 		}
 
-		pk = record.DynamoDB.NewImage.EventMsg.PartitionKey
+		pk = record.DynamoDB.NewImage.EventMsg.AggregateID
 		if _, ok := c.partitions[pk]; !ok {
 			c.partitions[pk] = make(EventMsgs, 0, 100)
 		}
