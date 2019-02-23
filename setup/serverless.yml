@@ -135,19 +135,19 @@ resources:
                   Action:
                     - glue:GetTableVersions
                   Resource: '*'
-    Kinesis_1:
+    KinesisOne:
       Type: AWS::Kinesis::Stream
       # DeletionPolicy: Retain
       Properties:
         Name: ${self:service}-event-stream-1-${self:provider.stage}
-        RetentionPeriodHours: ${file(./setting.yml):kinesis_1.retentionPeriodHours}
-        ShardCount: ${file(./setting.yml):kinesis_1.shardCount}
+        RetentionPeriodHours: ${file(./setting.yml):kinesis-1.retentionPeriodHours}
+        ShardCount: ${file(./setting.yml):kinesis-1.shardCount}
     Firehose:
       Type: AWS::KinesisFirehose::DeliveryStream
       DependsOn:
         - S3Event
         - FirehoseToS3Role
-        - Kinesis
+        - KinesisOne
         - GlueCreateTable
       # DeletionPolicy: Retain
       Properties:
