@@ -47,6 +47,7 @@ func (c *GroupConcurrency) Process(records Records) {
 	partitions := make(map[string]EventMsgs, 100)
 
 	for _, record := range records {
+		// fmt.Println("###", record.Kinesis.Data.EventMsg.EventID, record.Kinesis.Data.EventMsg.Seq)
 		eventType = record.Kinesis.Data.EventMsg.EventType
 		if _, ok := c.eventTypes[eventType]; !ok {
 			continue

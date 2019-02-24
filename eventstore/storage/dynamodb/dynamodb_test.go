@@ -1,6 +1,7 @@
 package dynamodb
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -176,6 +177,13 @@ func TestConcurency(t *testing.T) {
 
 	wg.Wait()
 
-	require.Equal(t, eventstore.ErrVersionInconsistency, err1)
-	require.Nil(t, err2)
+	fmt.Println("err1", err1)
+	fmt.Println("err2", err2)
+	if err1 != nil {
+		require.Equal(t, eventstore.ErrVersionInconsistency, err1)
+		require.Nil(t, err2)
+	} else {
+		require.Equal(t, eventstore.ErrVersionInconsistency, err2)
+		require.Nil(t, err1)
+	}
 }

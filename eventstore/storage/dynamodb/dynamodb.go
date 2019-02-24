@@ -223,7 +223,7 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID string) (*eventstore.Snapshot, er
 	return snapshot, nil
 }
 
-func (d *DynamoDBEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (d *DynamoDBEventStore) SaveV1(msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
 	var err error
 
 	var putES []*dynamodb.TransactWriteItem
@@ -280,4 +280,57 @@ func (d *DynamoDBEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventst
 	}
 
 	return nil
+}
+
+func (d *DynamoDBEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+	var err error
+
+	var payloadReq map[string]*dynamodb.AttributeValue
+	for i := 0; i < len(msgs); i++ {
+		payloadReq, err = dynamodbattribute.MarshalMap(msgs[i])
+		if err != nil {
+			return err
+		}
+
+		_, err = d.db.PutItem(&dynamodb.PutItemInput{
+			TableName:           &d.eventstoreTable,
+			ConditionExpression: saveCond,
+			Item:                payloadReq,
+		})
+
+		if err != nil {
+			aerr := err.(awserr.Error)
+			if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+				return eventstore.ErrVersionInconsistency
+			}
+
+			return err
+		}
+	}
+
+	if snapshot == nil {
+		return nil
+	}
+
+	var snapshotReq map[string]*dynamodb.AttributeValue
+	snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
+	if err != nil {
+		return err
+	}
+
+	_, err = d.db.PutItem(&dynamodb.PutItemInput{
+		TableName: &d.snapshotTable,
+		Item:      snapshotReq,
+	})
+
+	if err != nil {
+		aerr := err.(awserr.Error)
+		if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
+			return eventstore.ErrVersionInconsistency
+		}
+
+		return err
+	}
+
+	return err
 }

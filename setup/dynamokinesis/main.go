@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -48,23 +47,26 @@ func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) erro
 	n := len(stream.Records)
 	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
 	records := make(dynamostream.Records, 0, len(stream.Records))
-	fmt.Println("Start@@@@@@")
 
 	for i := 0; i < n; i++ {
 		if stream.Records[i].EventName != dynamostream.EventInsert || stream.Records[i].DynamoDB.NewImage == nil {
 			continue
 		}
 
-		fmt.Println("@@@", stream.Records[i].DynamoDB.NewImage.EventMsg.Seq)
+		// fmt.Println("@@@", stream.Records[i].DynamoDB.NewImage.EventMsg.AggregateID, stream.Records[i].DynamoDB.NewImage.EventMsg.Seq)
 
 		records = append(records, stream.Records[i])
 	}
-	fmt.Println("")
+
+	if len(records) == 0 {
+		return nil
+	}
 
 	sort.Sort(records)
 	var msg *eventstore.EventMsg
 	for i := 0; i < len(records); i++ {
 		msg = records[i].DynamoDB.NewImage.EventMsg
+		// fmt.Println("###", msg.AggregateID, msg.Seq)
 
 		data, _ := msg.Marshal()
 		result = append(result, &kinesis.PutRecordsRequestEntry{
