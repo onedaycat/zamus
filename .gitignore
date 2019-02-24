@@ -17,4 +17,4 @@ bin
 setting.yml
 .serverless
 setup/projection
-
+vendor
