@@ -2,12 +2,15 @@ package kinesisstream
 
 import (
 	"sync"
+
+	"github.com/onedaycat/errors"
+	"golang.org/x/sync/errgroup"
 )
 
 type GroupConcurrency struct {
 	wg            sync.WaitGroup
 	errorHandlers []EventMessagesErrorHandler
-	handler       EventMessagesHandler
+	handlers      []EventMessagesHandler
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -37,11 +40,11 @@ func (c *GroupConcurrency) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *GroupConcurrency) RegisterHandler(handler EventMessagesHandler) {
-	c.handler = handler
+func (c *GroupConcurrency) RegisterHandlers(handlers ...EventMessagesHandler) {
+	c.handlers = handlers
 }
 
-func (c *GroupConcurrency) Process(records Records) {
+func (c *GroupConcurrency) Process(records Records) error {
 	var eventType string
 	var pk string
 	partitions := make(map[string]EventMsgs, 100)
@@ -61,40 +64,96 @@ func (c *GroupConcurrency) Process(records Records) {
 		partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
 	}
 
-	c.wg.Add(len(partitions))
+	wg := errgroup.Group{}
 
 	for _, ghs := range partitions {
-		go c.handle(ghs)
+		ghs := ghs
+		wg.Go(func() error {
+			return c.handle(ghs)
+		})
 	}
+
+	return wg.Wait()
 }
 
-func (c *GroupConcurrency) handle(msgs EventMsgs) {
-	var err error
+func (c *GroupConcurrency) doPreHandlers(msgs EventMsgs) (err error) {
+	defer c.recover(msgs, &err)
 	for _, ph := range c.preHandlers {
 		if err = ph(msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
 				errhandler(msgs, err)
 			}
+
+			return err
 		}
 	}
 
-	if err = c.handler(msgs); err != nil {
-		for _, errhandler := range c.errorHandlers {
-			errhandler(msgs, err)
-		}
-	}
+	return
+}
 
+func (c *GroupConcurrency) doPostHandler(msgs EventMsgs) (err error) {
+	defer c.recover(msgs, &err)
 	for _, ph := range c.postHandlers {
 		if err = ph(msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
 				errhandler(msgs, err)
 			}
 		}
+
+		return err
 	}
 
-	c.wg.Done()
+	return
 }
 
-func (c *GroupConcurrency) Wait() {
-	c.wg.Wait()
+func (c *GroupConcurrency) doHandlers(msgs EventMsgs) (err error) {
+	wg := errgroup.Group{}
+	for _, handler := range c.handlers {
+		handler := handler
+		wg.Go(func() (aerr error) {
+			defer c.recover(msgs, &aerr)
+			if err := handler(msgs); err != nil {
+				for _, errhandler := range c.errorHandlers {
+					errhandler(msgs, err)
+				}
+				return err
+			}
+
+			return
+		})
+	}
+	if err = wg.Wait(); err != nil {
+		return err
+	}
+
+	return
+}
+
+func (c *GroupConcurrency) handle(msgs EventMsgs) (err error) {
+	if err = c.doPreHandlers(msgs); err != nil {
+		return err
+	}
+
+	if err = c.doHandlers(msgs); err != nil {
+		return err
+	}
+
+	if err = c.doPostHandler(msgs); err != nil {
+		return err
+	}
+
+	return
+}
+
+func (c *GroupConcurrency) recover(msgs EventMsgs, err *error) {
+	if r := recover(); r != nil {
+		cause, ok := r.(error)
+		if ok {
+			appErr := errors.InternalError("PANIC", cause.Error()).WithCallerSkip(6)
+			for _, errhandler := range c.errorHandlers {
+				errhandler(msgs, appErr)
+			}
+			*err = appErr
+		}
+	}
 }

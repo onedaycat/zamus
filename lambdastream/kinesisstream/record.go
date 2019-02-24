@@ -23,8 +23,9 @@ func (r *Record) add(pk, eid, etype string) {
 		PartitionKey: pk,
 		Data: &Payload{
 			EventMsg: &EventMsg{
-				EventID:   eid,
-				EventType: etype,
+				AggregateID: pk,
+				EventID:     eid,
+				EventType:   etype,
 			},
 		},
 	}

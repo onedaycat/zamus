@@ -72,6 +72,5 @@ func (s *KinesisStream) CreateGroupConcurencyHandler(handler EventMessagesHandle
 		cm := NewGroupConcurrency()
 
 		cm.Process(event.Records)
-		cm.Wait()
 	}
 }

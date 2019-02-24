@@ -5,39 +5,39 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/lambdastream/dynamostream"
+	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
 
-type EventHandler = dynamostream.EventMessagesHandler
-type ErrorHandler = dynamostream.EventMessagesErrorHandler
+type EventHandler = kinesisstream.EventMessagesHandler
+type ErrorHandler = kinesisstream.EventMessagesErrorHandler
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
-type LambdaEvent = dynamostream.DynamoDBStreamEvent
+type LambdaEvent = kinesisstream.KinesisStreamEvent
 
 type Handler struct {
-	gropcon *dynamostream.GroupConcurrency
+	gropcon *kinesisstream.GroupConcurrency
 }
 
 func NewHandler() *Handler {
 	return &Handler{
-		gropcon: dynamostream.NewGroupConcurrency(),
+		gropcon: kinesisstream.NewGroupConcurrency(),
 	}
 }
 
-func (h *Handler) PreHandler(handlers ...EventHandler) {
+func (h *Handler) PreHandlers(handlers ...EventHandler) {
 	h.gropcon.PreHandlers(handlers...)
 }
 
-func (h *Handler) PostHandler(handlers ...EventHandler) {
+func (h *Handler) PostHandlers(handlers ...EventHandler) {
 	h.gropcon.PostHandlers(handlers...)
 }
 
-func (h *Handler) ErrorHandler(handlers ...ErrorHandler) {
+func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
 	h.gropcon.ErrorHandlers(handlers...)
 }
 
-func (h *Handler) RegisterHandler(handler EventHandler) {
-	h.gropcon.RegisterHandler(handler)
+func (h *Handler) RegisterHandlers(handlers ...EventHandler) {
+	h.gropcon.RegisterHandlers(handlers...)
 }
 
 func (h *Handler) FilterEvents(eventTypes ...string) {
@@ -46,7 +46,6 @@ func (h *Handler) FilterEvents(eventTypes ...string) {
 
 func (h *Handler) handler(ctx context.Context, event *LambdaEvent) {
 	h.gropcon.Process(event.Records)
-	h.gropcon.Wait()
 }
 
 func (h *Handler) StartLambda() {

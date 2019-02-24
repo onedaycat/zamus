@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"sort"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -44,27 +43,16 @@ func publish(streamName string, records []*kinesis.PutRecordsRequestEntry) error
 }
 
 func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
-	n := len(stream.Records)
+	records := stream.Records
+	n := len(records)
 	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
-	records := make(dynamostream.Records, 0, len(stream.Records))
 
+	var msg *eventstore.EventMsg
 	for i := 0; i < n; i++ {
-		if stream.Records[i].EventName != dynamostream.EventInsert || stream.Records[i].DynamoDB.NewImage == nil {
+		if records[i].EventName != dynamostream.EventInsert || records[i].DynamoDB.NewImage == nil {
 			continue
 		}
 
-		// fmt.Println("@@@", stream.Records[i].DynamoDB.NewImage.EventMsg.AggregateID, stream.Records[i].DynamoDB.NewImage.EventMsg.Seq)
-
-		records = append(records, stream.Records[i])
-	}
-
-	if len(records) == 0 {
-		return nil
-	}
-
-	sort.Sort(records)
-	var msg *eventstore.EventMsg
-	for i := 0; i < len(records); i++ {
 		msg = records[i].DynamoDB.NewImage.EventMsg
 		// fmt.Println("###", msg.AggregateID, msg.Seq)
 

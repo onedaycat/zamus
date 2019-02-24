@@ -24,29 +24,28 @@ func NewHandler() *Handler {
 	}
 }
 
-func (h *Handler) PreHandler(handlers ...EventHandler) {
+func (h *Handler) PreHandlers(handlers ...EventHandler) {
 	h.gropcon.PreHandlers(handlers...)
 }
 
-func (h *Handler) PostHandler(handlers ...EventHandler) {
+func (h *Handler) PostHandlers(handlers ...EventHandler) {
 	h.gropcon.PostHandlers(handlers...)
 }
 
-func (h *Handler) ErrorHandler(handlers ...ErrorHandler) {
+func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
 	h.gropcon.ErrorHandlers(handlers...)
 }
 
-func (h *Handler) RegisterHandler(handler EventHandler) {
-	h.gropcon.RegisterHandler(handler)
+func (h *Handler) RegisterHandlers(handlers ...EventHandler) {
+	h.gropcon.RegisterHandlers(handlers...)
 }
 
 func (h *Handler) FilterEvents(eventTypes ...string) {
 	h.gropcon.FilterEvents(eventTypes...)
 }
 
-func (h *Handler) handler(ctx context.Context, event *LambdaEvent) {
-	h.gropcon.Process(event.Records)
-	h.gropcon.Wait()
+func (h *Handler) handler(ctx context.Context, event *LambdaEvent) error {
+	return h.gropcon.Process(event.Records)
 }
 
 func (h *Handler) StartLambda() {
