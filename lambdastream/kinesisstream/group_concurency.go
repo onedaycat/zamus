@@ -149,7 +149,7 @@ func (c *GroupConcurrency) recover(msgs EventMsgs, err *error) {
 	if r := recover(); r != nil {
 		cause, ok := r.(error)
 		if ok {
-			appErr := errors.InternalError("PANIC", cause.Error()).WithCallerSkip(6)
+			appErr := errors.InternalError("PANIC", "Server Error").WithCause(cause).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
 				errhandler(msgs, appErr)
 			}

@@ -90,7 +90,11 @@ func (h *Handler) handler(ctx context.Context, event *Query) (QueryResult, error
 
 	result, err := info.handler(ctx, event)
 	if err != nil {
-		return nil, makeError(err)
+		err = makeError(err)
+		for _, errHandler := range h.errHandlers {
+			errHandler(ctx, event, err)
+		}
+		return nil, err
 	}
 
 	for _, handler := range h.postHandlers {

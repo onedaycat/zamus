@@ -16,5 +16,5 @@ func makeError(err error) error {
 		return err
 	}
 
-	return errors.InternalError("UNKNOWN_COMMAND", err.Error())
+	return errors.InternalError("UNKNOWN_COMMAND", "Unknown error").WithCause(err).WithCaller()
 }
