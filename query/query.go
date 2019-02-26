@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 )
 
@@ -26,15 +26,15 @@ type queryinfo struct {
 func WithPermission(pm string) QueryHandler {
 	return func(ctx context.Context, query *Query) (QueryResult, error) {
 		if query.Identity == nil {
-			return nil, ErrPermissionDenied
+			return nil, errors.ErrPermissionDenied
 		}
 
 		if query.Identity.Claims.Permissions == nil {
-			return nil, ErrPermissionDenied
+			return nil, errors.ErrPermissionDenied
 		}
 
 		if ok := query.Identity.Claims.Permissions.Has(query.PermissionKey, pm); !ok {
-			return nil, ErrPermissionDenied
+			return nil, errors.ErrPermissionDenied
 		}
 
 		return nil, nil
@@ -57,7 +57,7 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 	if firstChar == firstCharArray {
 		invokes := make([]*invoke.InvokeEvent, 0, 5)
 		if err = json.Unmarshal(b, &invokes); err != nil {
-			return ErrUnableParseQuery.WithCause(err).WithCaller()
+			return errors.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 
 		if len(invokes) == 0 {
@@ -97,7 +97,7 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 	} else if firstChar == firstCharObject {
 		invoke := &invoke.InvokeEvent{}
 		if err = json.Unmarshal(b, invoke); err != nil {
-			return ErrUnableParseQuery.WithCause(err).WithCaller()
+			return errors.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 
 		q.Function = invoke.Function
@@ -110,5 +110,5 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 		return nil
 	}
 
-	return errors.InternalError("QUERY_JSON_PARSE", "Unable to parse request").WithInput(errors.Input{"input": string(b)}).WithCaller()
+	return errors.ErrUnableParseQuery.WithInput(string(b)).WithCaller()
 }

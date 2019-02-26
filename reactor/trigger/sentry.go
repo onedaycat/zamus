@@ -17,7 +17,7 @@ func Sentry(ctx context.Context, id string, err error) {
 	case errors.InternalErrorStatus:
 		log.Error().
 			Interface("input", appErr.Input).
-			Msgf("%+v\n", appErr)
+			Msg(appErr.Error())
 	default:
 		return
 	}
@@ -41,9 +41,7 @@ func Sentry(ctx context.Context, id string, err error) {
 		})
 	}
 
-	funcName := ctx.Value(lambdacontext.FunctionName).(string)
-	packet.AddTag("lambda", funcName)
-
+	packet.AddTag("lambda", lambdacontext.FunctionName)
 	packet.AddStackTrace(appErr.StackTrace())
 	sentry.CaptureAndWait(packet)
 }

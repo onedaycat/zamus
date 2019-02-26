@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/plimble/goconf.v1"
-
 	"github.com/onedaycat/zamus/zamus/cmd"
 	"github.com/onedaycat/zamus/zamus/config"
+	"github.com/plimble/goconf"
 	"github.com/spf13/cobra"
 )
 
@@ -44,24 +43,4 @@ func initConfig() {
 			os.Exit(1)
 		}
 	}
-
-	// viper.SetEnvPrefix("zamus")
-	// viper.AutomaticEnv()
-	// viper.SetConfigType("yaml")
-	// if cfgFile != "" {
-	// 	viper.SetConfigFile(cfgFile)
-	// } else {
-	// 	viper.SetConfigName("zamus")
-	// 	viper.AddConfigPath(".")
-	// }
-
-	// if err := viper.ReadInConfig(); err != nil {
-	// 	fmt.Println("Can't read config:", err)
-	// 	os.Exit(1)
-	// }
-
-	// if err := viper.Unmarshal(&config.C); err != nil {
-	// 	fmt.Println("Can't read config:", err)
-	// 	os.Exit(1)
-	// }
 }

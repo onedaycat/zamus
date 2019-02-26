@@ -3,6 +3,7 @@ package memory
 import (
 	"sync"
 
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -53,7 +54,7 @@ func (d *MemoryEventStore) GetSnapshot(aggID string) (*eventstore.Snapshot, erro
 
 	snap, ok := d.snapshot[aggID]
 	if !ok {
-		return nil, eventstore.ErrNotFound
+		return nil, errors.ErrNotFound
 	}
 
 	return snap, nil
@@ -77,7 +78,7 @@ func (d *MemoryEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventstor
 
 	for _, msg := range msgs {
 		if lastSeq == msg.Seq {
-			return eventstore.ErrVersionInconsistency
+			return errors.ErrVersionInconsistency
 		}
 	}
 

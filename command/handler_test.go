@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/stretchr/testify/require"
 )
@@ -58,7 +58,7 @@ func TestCommandNotFound(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), cmd)
 
-	require.Error(t, ErrCommandNotFound("xxxxxx"), err)
+	require.Error(t, errors.ErrCommandNotFound("xxxxxx"), err)
 	require.Nil(t, resp)
 	require.False(t, checkFunc)
 }
@@ -123,7 +123,7 @@ func TestCommandPreHandlerError(t *testing.T) {
 
 	fPreErr := func(ctx context.Context, cmd *Command) (interface{}, error) {
 		nFPreErr++
-		return nil, errors.New("err")
+		return nil, errors.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, cmd *Command, err error) {
@@ -138,7 +138,7 @@ func TestCommandPreHandlerError(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), cmd)
 
-	require.Error(t, err)
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Equal(t, nil, resp)
 	require.Equal(t, 0, nH)
 	require.Equal(t, 0, nFPre)
@@ -208,7 +208,7 @@ func TestErrorHandler(t *testing.T) {
 	f := func(ctx context.Context, cmd *Command) (interface{}, error) {
 		require.False(t, checkFunc)
 		checkFunc = true
-		return nil, errors.BadRequest("60000", "Invalidation workspaceID")
+		return nil, errors.ErrUnknown
 	}
 
 	fError := func(ctx context.Context, cmd *Command, err error) {
@@ -221,8 +221,7 @@ func TestErrorHandler(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), cmd)
 
-	require.Error(t, err)
-	require.Equal(t, "60000: Invalidation workspaceID", err.Error())
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)
@@ -264,7 +263,7 @@ func TestPanicHandler(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), cmd)
 
-	require.Error(t, err)
+	require.Equal(t, errors.ErrPanic, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)
@@ -324,7 +323,7 @@ func TestCommandPostHandlerError(t *testing.T) {
 
 	fPost1 := func(ctx context.Context, cmd *Command) (interface{}, error) {
 		nFPost1++
-		return nil, errors.New("err")
+		return nil, errors.ErrUnknown
 	}
 
 	fPost2 := func(ctx context.Context, cmd *Command) (interface{}, error) {
@@ -343,7 +342,7 @@ func TestCommandPostHandlerError(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), cmd)
 
-	require.Error(t, err)
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nH)
 	require.Equal(t, 1, nH)

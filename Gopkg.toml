@@ -75,11 +75,11 @@
 
 [[constraint]]
   branch = "master"
-  name = "github.com/spf13/viper"
+  name = "github.com/go-sql-driver/mysql"
 
 [[constraint]]
   branch = "master"
-  name = "github.com/go-sql-driver/mysql"
+  name = "github.com/plimble/goconf"
 
 [prune]
   go-tests = true

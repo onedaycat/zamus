@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/onedaycat/zamus/eventstore/storage/memory"
-
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
+	"github.com/onedaycat/zamus/eventstore/storage/memory"
 	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/require"
 )
@@ -89,7 +89,7 @@ func TestNotFound(t *testing.T) {
 	st := domain.NewStockItem()
 	st.SetAggregateID("1x")
 	err := es.GetAggregate(st.GetAggregateID(), st)
-	require.Equal(t, eventstore.ErrNotFound, err)
+	require.Equal(t, errors.ErrNotFound, err)
 	require.True(t, st.IsNew())
 
 	// GetEvents
@@ -100,7 +100,7 @@ func TestNotFound(t *testing.T) {
 
 	st4 := domain.NewStockItem()
 	err = es.GetAggregateByTimeSeq(st.GetAggregateID(), st4, eventstore.TimeSeq(clock.Now().Unix(), 1))
-	require.Equal(t, eventstore.ErrNotFound, err)
+	require.Equal(t, errors.ErrNotFound, err)
 	require.True(t, st4.IsNew())
 }
 
@@ -142,10 +142,10 @@ func TestConcurency(t *testing.T) {
 	wg.Wait()
 
 	if err1 != nil {
-		require.Equal(t, eventstore.ErrVersionInconsistency, err1)
+		require.Equal(t, errors.ErrVersionInconsistency, err1)
 		require.Nil(t, err2)
 	} else {
-		require.Equal(t, eventstore.ErrVersionInconsistency, err2)
+		require.Equal(t, errors.ErrVersionInconsistency, err2)
 		require.Nil(t, err1)
 	}
 

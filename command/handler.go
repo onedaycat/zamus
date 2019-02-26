@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/invoke"
 )
@@ -57,7 +57,7 @@ func (h *Handler) recovery(ctx context.Context, cmd *Command, err *error) {
 	if r := recover(); r != nil {
 		cause, ok := r.(error)
 		if ok {
-			appErr := errors.InternalError("PANIC", "Server Error").WithCause(cause).WithCallerSkip(4)
+			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(4).WithInput(cmd)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, cmd, appErr)
 			}
@@ -70,7 +70,7 @@ func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command
 	defer h.recovery(ctx, cmd, &err)
 	result, err = info.handler(ctx, cmd)
 	if err != nil {
-		err = makeError(err)
+		err = errors.Warp(err).WithCaller().WithInput(cmd)
 		for _, errHandler := range h.errHandlers {
 			errHandler(ctx, cmd, err)
 		}
@@ -83,13 +83,13 @@ func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command
 func (h *Handler) handler(ctx context.Context, cmd *Command) (interface{}, error) {
 	info, ok := h.commands[cmd.Function]
 	if !ok {
-		return nil, ErrCommandNotFound(cmd.Function)
+		return nil, errors.ErrCommandNotFound(cmd.Function)
 	}
 
 	for _, handler := range h.preHandlers {
 		result, err := handler(ctx, cmd)
 		if err != nil {
-			err = makeError(err)
+			err = errors.Warp(err).WithCaller().WithInput(cmd)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, cmd, err)
 			}
@@ -104,7 +104,7 @@ func (h *Handler) handler(ctx context.Context, cmd *Command) (interface{}, error
 	for _, handler := range info.prehandlers {
 		result, err := handler(ctx, cmd)
 		if err != nil {
-			err = makeError(err)
+			err = errors.Warp(err).WithCaller().WithInput(cmd)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, cmd, err)
 			}
@@ -124,7 +124,7 @@ func (h *Handler) handler(ctx context.Context, cmd *Command) (interface{}, error
 	for _, handler := range h.postHandlers {
 		result, err := handler(ctx, cmd)
 		if err != nil {
-			err = makeError(err)
+			err = errors.Warp(err).WithCaller().WithInput(cmd)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, cmd, err)
 			}

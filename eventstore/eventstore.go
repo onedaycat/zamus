@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 
 	"github.com/golang/snappy"
-
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
+	"github.com/onedaycat/zamus/errors"
 )
 
 //go:generate mockery -name=EventStore
@@ -53,7 +53,7 @@ func (es *eventStore) GetAggregateByTimeSeq(aggID string, agg AggregateRoot, tim
 	}
 
 	if len(msgs) == 0 {
-		return ErrNotFound
+		return errors.ErrNotFound
 	}
 
 	agg.SetAggregateID(aggID)
@@ -63,7 +63,7 @@ func (es *eventStore) GetAggregateByTimeSeq(aggID string, agg AggregateRoot, tim
 		agg.SetLastEventID(msg.EventID)
 		agg.SetLastEventTime(msg.Time)
 		if err = agg.Apply(msg); err != nil {
-			return err
+			return errors.Warp(err).WithCaller().WithInput(agg)
 		}
 	}
 
@@ -84,11 +84,11 @@ func (es *eventStore) GetAggregate(aggID string, agg AggregateRoot) error {
 	var dst []byte
 	dst, err = snappy.Decode(dst, snapshot.Aggregate)
 	if err != nil {
-		return err
+		return errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
 	if err = json.Unmarshal(dst, agg); err != nil {
-		return err
+		return errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
 	if es.snapshotn == 1 {
@@ -105,7 +105,7 @@ func (es *eventStore) GetAggregate(aggID string, agg AggregateRoot) error {
 		agg.SetLastEventID(msg.EventID)
 		agg.SetLastEventTime(msg.Time)
 		if err = agg.Apply(msg); err != nil {
-			return err
+			return errors.Warp(err).WithCaller().WithInput(agg)
 		}
 	}
 
@@ -127,12 +127,12 @@ func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) er
 		return nil
 	}
 
-	if n > 9 {
-		return ErrEventLimitExceed
+	if n > 10 {
+		return errors.ErrEventLimitExceed.WithCaller().WithInput(agg)
 	}
 
 	if agg.GetAggregateID() == emptyStr {
-		return ErrNoAggregateID
+		return errors.ErrNoAggregateID.WithCaller().WithInput(agg)
 	}
 
 	msgs := make([]*EventMsg, n)
@@ -154,7 +154,7 @@ func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) er
 		eid := eid.CreateEventID(aggid, seq)
 		eventData, err := json.Marshal(events[i])
 		if err != nil {
-			return err
+			return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller().WithInput(agg)
 		}
 
 		if !saveSnapshot && seq%es.snapshotn == 0 {
@@ -179,14 +179,14 @@ func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) er
 	lastEvent = msgs[len(msgs)-1]
 
 	if lastEvent.Seq == 0 {
-		return ErrInvalidVersionNotAllowed
+		return errors.ErrInvalidVersionNotAllowed.WithCaller().WithInput(agg)
 	}
 
 	var snapshot *Snapshot
 	if saveSnapshot {
 		aggData, err := json.Marshal(agg)
 		if err != nil {
-			return err
+			return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller().WithInput(agg)
 		}
 
 		var aggDataSnap []byte

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -54,7 +54,7 @@ func (h *Handler) recovery(ctx context.Context, query *Query, err *error) {
 	if r := recover(); r != nil {
 		cause, ok := r.(error)
 		if ok {
-			appErr := errors.InternalError("PANIC", "Server Error").WithCause(cause).WithCallerSkip(4)
+			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(4).WithInput(query)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, query, appErr)
 			}
@@ -67,7 +67,7 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) 
 	defer h.recovery(ctx, query, &err)
 	result, err = info.handler(ctx, query)
 	if err != nil {
-		err = makeError(err)
+		err = errors.Warp(err).WithCaller().WithInput(query)
 		for _, errHandler := range h.errHandlers {
 			errHandler(ctx, query, err)
 		}
@@ -75,7 +75,7 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) 
 	}
 
 	if query.NBatchSources > 0 && result.Len() != query.NBatchSources {
-		return nil, ErrQueryResultSizeNotMatch.WithCaller()
+		return nil, errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 	}
 
 	return
@@ -83,18 +83,18 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) 
 
 func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error) {
 	if query == nil {
-		return nil, ErrUnableParseQuery
+		return nil, errors.ErrUnableParseQuery
 	}
 
 	info, ok := h.quries[query.Function]
 	if !ok {
-		return nil, ErrQueryNotFound(query.Function)
+		return nil, errors.ErrQueryNotFound(query.Function)
 	}
 
 	for _, handler := range h.preHandlers {
 		result, err := handler(ctx, query)
 		if err != nil {
-			err = makeError(err)
+			err = errors.Warp(err).WithCaller().WithInput(query)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, query, err)
 			}
@@ -102,7 +102,7 @@ func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error
 		}
 
 		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			return nil, ErrQueryResultSizeNotMatch.WithCaller()
+			return nil, errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 		}
 
 		if result != nil {
@@ -113,7 +113,7 @@ func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error
 	for _, handler := range info.prehandlers {
 		result, err := handler(ctx, query)
 		if err != nil {
-			err = makeError(err)
+			err = errors.Warp(err).WithCaller().WithInput(query)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, query, err)
 			}
@@ -121,7 +121,7 @@ func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error
 		}
 
 		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			return nil, ErrQueryResultSizeNotMatch.WithCaller()
+			return nil, errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 		}
 
 		if result != nil {
@@ -137,7 +137,7 @@ func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error
 	for _, handler := range h.postHandlers {
 		result, err := handler(ctx, query)
 		if err != nil {
-			err = makeError(err)
+			err = errors.Warp(err).WithCaller().WithInput(query)
 			for _, errHandler := range h.errHandlers {
 				errHandler(ctx, query, err)
 			}
@@ -145,7 +145,7 @@ func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error
 		}
 
 		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			return nil, ErrQueryResultSizeNotMatch.WithCaller()
+			return nil, errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 		}
 
 		if result != nil {

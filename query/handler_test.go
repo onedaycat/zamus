@@ -2,9 +2,9 @@ package query
 
 import (
 	"context"
-	"errors"
 	"testing"
 
+	"github.com/onedaycat/zamus/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -39,7 +39,7 @@ func TestNoQueryHandler(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, ErrUnableParseQuery, err)
+	require.Equal(t, errors.ErrUnableParseQuery, err)
 	require.Nil(t, resp)
 }
 
@@ -81,7 +81,7 @@ func TestQueryNotFoundHandler(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, ErrQueryNotFound("q1"), err)
+	require.Equal(t, errors.ErrQueryNotFound("q1"), err)
 	require.Nil(t, resp)
 }
 
@@ -95,7 +95,7 @@ func TestInvokeHandlerError(t *testing.T) {
 
 	f := func(ctx context.Context, query *Query) (QueryResult, error) {
 		nF++
-		return nil, errors.New("error1")
+		return nil, errors.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, query *Query, err error) {
@@ -108,7 +108,7 @@ func TestInvokeHandlerError(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, "UNKNOWN_QUERY: Unknown error", err.Error())
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
 	require.Equal(t, 1, nErr)
@@ -139,7 +139,7 @@ func TestInvokeHandlerPanic(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, "PANIC: Server Error", err.Error())
+	require.Equal(t, errors.ErrPanic, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
 	require.Equal(t, 1, nErr)
@@ -199,7 +199,7 @@ func TestBatchInvokeHandlerNBatchSourcesMisMatched(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, ErrQueryResultSizeNotMatch, err)
+	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
 	require.Equal(t, 0, nErr)
@@ -260,7 +260,7 @@ func TestBatchInvokePreHandlerError(t *testing.T) {
 
 	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
 		nPre++
-		return nil, errors.New("error1")
+		return nil, errors.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, query *Query, err error) {
@@ -274,7 +274,7 @@ func TestBatchInvokePreHandlerError(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, "UNKNOWN_QUERY: Unknown error", err.Error())
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.Equal(t, 0, nF)
 	require.Equal(t, 1, nErr)
@@ -312,7 +312,7 @@ func TestBatchInvokePreHandlerNBatchSourcesMisMatched(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, ErrQueryResultSizeNotMatch, err)
+	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 0, nF)
 	require.Equal(t, 0, nErr)
@@ -412,7 +412,7 @@ func TestBatchInvokePostHandlerError(t *testing.T) {
 
 	fPost := func(ctx context.Context, query *Query) (QueryResult, error) {
 		nPost++
-		return nil, errors.New("error1")
+		return nil, errors.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, query *Query, err error) {
@@ -426,7 +426,7 @@ func TestBatchInvokePostHandlerError(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, "UNKNOWN_QUERY: Unknown error", err.Error())
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
 	require.Equal(t, 1, nErr)
@@ -466,7 +466,7 @@ func TestBatchInvokePostHandlerNBatchSourcesMisMatched(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, ErrQueryResultSizeNotMatch, err)
+	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
 	require.Equal(t, 0, nErr)
@@ -531,7 +531,7 @@ func TestBatchInvokePreHandlerEachHandlerError(t *testing.T) {
 
 	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
 		nPre++
-		return nil, errors.New("error1")
+		return nil, errors.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, query *Query, err error) {
@@ -544,7 +544,7 @@ func TestBatchInvokePreHandlerEachHandlerError(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, "UNKNOWN_QUERY: Unknown error", err.Error())
+	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.Equal(t, 0, nF)
 	require.Equal(t, 1, nErr)
@@ -581,7 +581,7 @@ func TestBatchInvokePreHandlerEachHandlerNBatchSourcesMisMatched(t *testing.T) {
 
 	resp, err := h.handler(context.Background(), query)
 
-	require.Equal(t, ErrQueryResultSizeNotMatch, err)
+	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 0, nF)
 	require.Equal(t, 0, nErr)

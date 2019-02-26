@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/stretchr/testify/require"
 )
@@ -56,7 +57,7 @@ func TestCommandPermission(t *testing.T) {
 
 		resp, err := h.handler(context.Background(), cmd)
 
-		require.Equal(t, ErrPermissionDenied, err)
+		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})
@@ -73,7 +74,7 @@ func TestCommandPermission(t *testing.T) {
 
 		resp, err := h.handler(context.Background(), cmd)
 
-		require.Equal(t, ErrPermissionDenied, err)
+		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})
@@ -86,7 +87,7 @@ func TestCommandPermission(t *testing.T) {
 
 		resp, err := h.handler(context.Background(), cmd)
 
-		require.Equal(t, ErrPermissionDenied, err)
+		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})
@@ -106,7 +107,7 @@ func TestCommandPermission(t *testing.T) {
 
 		resp, err := h.handler(context.Background(), cmd)
 
-		require.Equal(t, ErrPermissionDenied, err)
+		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})

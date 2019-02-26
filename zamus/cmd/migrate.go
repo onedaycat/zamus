@@ -24,9 +24,6 @@ var MigrateUpCmd = &cobra.Command{
 	Long:  `Migrate sql with tear-up`,
 	Run: func(cmd *cobra.Command, args []string) {
 		m := config.C.Migration
-		fmt.Println(m.Datasource)
-		fmt.Println(m.Dir)
-		return
 		datasource := m.Datasource
 		dir := m.Dir
 		fmt.Printf("Start migrating max(%d)\n", upMax)
