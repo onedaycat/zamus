@@ -81,6 +81,11 @@
   branch = "master"
   name = "github.com/plimble/goconf"
 
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/Pallinder/go-randomdata"
+
 [prune]
   go-tests = true
   unused-packages = true

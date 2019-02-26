@@ -3,6 +3,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:ddaeea4ba16546053455f7139c27b9efe16a6a739353043cc2af76a9437d73b2"
+  name = "github.com/Pallinder/go-randomdata"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "97a2356fcab20708fb8ae46cbbf69a5bc9feca63"
+
+[[projects]]
+  branch = "master"
   digest = "1:1e6f0273571cc6932989e8a30d5360e77cf4d27152981e5a906a9232f20ff663"
   name = "github.com/aws/aws-lambda-go"
   packages = [
@@ -287,6 +295,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/Pallinder/go-randomdata",
     "github.com/aws/aws-lambda-go/events",
     "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-lambda-go/lambdacontext",

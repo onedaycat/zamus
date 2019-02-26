@@ -80,7 +80,7 @@ func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command
 	return
 }
 
-func (h *Handler) handler(ctx context.Context, cmd *Command) (interface{}, error) {
+func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, error) {
 	info, ok := h.commands[cmd.Function]
 	if !ok {
 		return nil, errors.ErrCommandNotFound(cmd.Function)
@@ -140,5 +140,5 @@ func (h *Handler) handler(ctx context.Context, cmd *Command) (interface{}, error
 }
 
 func (h *Handler) StartLambda() {
-	lambda.Start(h.handler)
+	lambda.Start(h.Handle)
 }

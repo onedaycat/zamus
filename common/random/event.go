@@ -48,10 +48,23 @@ func (b *eventBuilder) AggregateID(aggid string) *eventBuilder {
 	return b
 }
 
-func (b *eventBuilder) NewEvent() *eventBuilder {
-	b.msg.Seq = 0
-	b.msg.TimeSeq = eventstore.TimeSeq(b.msg.Time, 0)
-	b.msg.EventID = eid.CreateEventID(b.msg.AggregateID, 0)
+func (b *eventBuilder) New() *eventBuilder {
+	b.Seq(0)
+
+	return b
+}
+
+func (b *eventBuilder) Seq(seq int64) *eventBuilder {
+	b.msg.Seq = seq
+	b.msg.TimeSeq = eventstore.TimeSeq(b.msg.Time, b.msg.Seq)
+	b.msg.EventID = eid.CreateEventID(b.msg.AggregateID, b.msg.Seq)
+
+	return b
+}
+
+func (b *eventBuilder) Time(t int64) *eventBuilder {
+	b.msg.Time = t
+	b.msg.TimeSeq = eventstore.TimeSeq(b.msg.Time, b.msg.Seq)
 
 	return b
 }
@@ -62,13 +75,20 @@ func (b *eventBuilder) Metadata(metadata *eventstore.Metadata) *eventBuilder {
 	return b
 }
 
-func (b *eventBuilder) Events(event interface{}) *eventBuilder {
+func (b *eventBuilder) Versionn(version string) *eventBuilder {
+	b.msg.EventVersion = version
+
+	return b
+}
+
+func (b *eventBuilder) Event(eventType string, event interface{}) *eventBuilder {
 	data, err := json.Marshal(event)
 	if err != nil {
 		panic(err)
 	}
 
 	b.msg.Event = data
+	b.msg.EventType = eventType
 
 	return b
 }

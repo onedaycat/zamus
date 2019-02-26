@@ -131,7 +131,7 @@ func TestQueryPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), query)
+		resp, err := h.Handle(context.Background(), query)
 
 		require.Nil(t, err)
 		require.Equal(t, newQueryResult(), resp)
@@ -152,7 +152,7 @@ func TestQueryPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), query)
+		resp, err := h.Handle(context.Background(), query)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -169,7 +169,7 @@ func TestQueryPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), query)
+		resp, err := h.Handle(context.Background(), query)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -182,7 +182,7 @@ func TestQueryPermission(t *testing.T) {
 			Function: "testHandlerCommandDenied",
 		}
 
-		resp, err := h.handler(context.Background(), query)
+		resp, err := h.Handle(context.Background(), query)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -202,7 +202,7 @@ func TestQueryPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), query)
+		resp, err := h.Handle(context.Background(), query)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)

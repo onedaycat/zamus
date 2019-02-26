@@ -81,7 +81,7 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) 
 	return
 }
 
-func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error) {
+func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, error) {
 	if query == nil {
 		return nil, errors.ErrUnableParseQuery
 	}
@@ -157,5 +157,5 @@ func (h *Handler) handler(ctx context.Context, query *Query) (QueryResult, error
 }
 
 func (h *Handler) StartLambda() {
-	lambda.Start(h.handler)
+	lambda.Start(h.Handle)
 }

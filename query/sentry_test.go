@@ -24,7 +24,7 @@ func TestSentry(t *testing.T) {
 		Function: "hello",
 	}
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Error(t, err)
 	require.Nil(t, resp)
@@ -48,7 +48,7 @@ func TestSentryWithAppError(t *testing.T) {
 		},
 	}
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Error(t, err)
 	require.Nil(t, resp)

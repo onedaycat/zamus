@@ -1,5 +1,0 @@
-package random
-
-func randomIndentity() {
-
-}

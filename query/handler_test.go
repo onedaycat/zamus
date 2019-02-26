@@ -37,7 +37,7 @@ func TestNoQueryHandler(t *testing.T) {
 
 	h := NewHandler()
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrUnableParseQuery, err)
 	require.Nil(t, resp)
@@ -64,7 +64,7 @@ func TestInvokeHandler(t *testing.T) {
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, newQueryResult(), resp)
@@ -79,7 +79,7 @@ func TestQueryNotFoundHandler(t *testing.T) {
 
 	h := NewHandler()
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrQueryNotFound("q1"), err)
 	require.Nil(t, resp)
@@ -106,7 +106,7 @@ func TestInvokeHandlerError(t *testing.T) {
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
@@ -137,7 +137,7 @@ func TestInvokeHandlerPanic(t *testing.T) {
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrPanic, err)
 	require.Nil(t, resp)
@@ -167,7 +167,7 @@ func TestBatchInvokeHandler(t *testing.T) {
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, newQueryResultList(), resp)
@@ -197,7 +197,7 @@ func TestBatchInvokeHandlerNBatchSourcesMisMatched(t *testing.T) {
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
@@ -234,7 +234,7 @@ func TestBatchInvokePreHandler(t *testing.T) {
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, newQueryResultList(), resp)
@@ -272,7 +272,7 @@ func TestBatchInvokePreHandlerError(t *testing.T) {
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
@@ -310,7 +310,7 @@ func TestBatchInvokePreHandlerNBatchSourcesMisMatched(t *testing.T) {
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
@@ -348,7 +348,7 @@ func TestBatchInvokePreHandlerReturn(t *testing.T) {
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, newQueryResultList(), resp)
@@ -386,7 +386,7 @@ func TestBatchInvokePostHandler(t *testing.T) {
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, newQueryResultList(), resp)
@@ -424,7 +424,7 @@ func TestBatchInvokePostHandlerError(t *testing.T) {
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
@@ -464,7 +464,7 @@ func TestBatchInvokePostHandlerNBatchSourcesMisMatched(t *testing.T) {
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
@@ -505,7 +505,7 @@ func TestBatchInvokePostHandlerReturn(t *testing.T) {
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, postList, resp)
@@ -542,7 +542,7 @@ func TestBatchInvokePreHandlerEachHandlerError(t *testing.T) {
 	h.RegisterQuery("q1", f, fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrUnknown, err)
 	require.Nil(t, resp)
@@ -579,7 +579,7 @@ func TestBatchInvokePreHandlerEachHandlerNBatchSourcesMisMatched(t *testing.T) {
 	h.RegisterQuery("q1", f, fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Equal(t, errors.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
@@ -616,7 +616,7 @@ func TestBatchInvokePreHandlerEachHandlerReturn(t *testing.T) {
 	h.RegisterQuery("q1", f, fPre, fPre)
 	h.ErrorHandlers(fErr)
 
-	resp, err := h.handler(context.Background(), query)
+	resp, err := h.Handle(context.Background(), query)
 
 	require.Nil(t, err)
 	require.Equal(t, newQueryResultList(), resp)

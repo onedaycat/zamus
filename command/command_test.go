@@ -34,7 +34,7 @@ func TestCommandPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), cmd)
+		resp, err := h.Handle(context.Background(), cmd)
 
 		require.Nil(t, err)
 		require.Nil(t, resp)
@@ -55,7 +55,7 @@ func TestCommandPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), cmd)
+		resp, err := h.Handle(context.Background(), cmd)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -72,7 +72,7 @@ func TestCommandPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), cmd)
+		resp, err := h.Handle(context.Background(), cmd)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -85,7 +85,7 @@ func TestCommandPermission(t *testing.T) {
 			Function: "testHandlerCommandDenied",
 		}
 
-		resp, err := h.handler(context.Background(), cmd)
+		resp, err := h.Handle(context.Background(), cmd)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -105,7 +105,7 @@ func TestCommandPermission(t *testing.T) {
 			},
 		}
 
-		resp, err := h.handler(context.Background(), cmd)
+		resp, err := h.Handle(context.Background(), cmd)
 
 		require.Equal(t, errors.ErrPermissionDenied, err)
 		require.Nil(t, resp)
