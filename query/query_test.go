@@ -1,6 +1,7 @@
 package query
 
 import (
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -72,27 +73,27 @@ func TestParseInvoke(t *testing.T) {
 	}{
 		{
 			`{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"testField1", []byte(`{"arg1": "1"}`), []byte(`{"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 1, "pemKey"},
+			&Query{"testField1", []byte(`{"arg1": "1"}`), []byte(`{"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey"},
 		},
 		// no field
 		{
 			`{"arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"", []byte(`{"arg1": "1"}`), []byte(`{"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 1, "pemKey"},
+			&Query{"", []byte(`{"arg1": "1"}`), []byte(`{"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey"},
 		},
 		// no args
 		{
 			`{"function": "testField1","source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"testField1", nil, []byte(`{"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 1, "pemKey"},
+			&Query{"testField1", nil, []byte(`{"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey"},
 		},
 		// no identity
 		{
 			`{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"pemKey":"pemKey"}`,
-			&Query{"testField1", []byte(`{"arg1": "1"}`), []byte(`{"namespace": "1"}`), nil, 1, "pemKey"},
+			&Query{"testField1", []byte(`{"arg1": "1"}`), []byte(`{"namespace": "1"}`), nil, 0, "pemKey"},
 		},
 		// no source
 		{
 			`{"function": "testField1","arguments": {"arg1": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"testField1", []byte(`{"arg1": "1"}`), nil, &invoke.Identity{Sub: "xx"}, 1, "pemKey"},
+			&Query{"testField1", []byte(`{"arg1": "1"}`), nil, &invoke.Identity{Sub: "xx"}, 0, "pemKey"},
 		},
 	}
 
@@ -102,4 +103,108 @@ func TestParseInvoke(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, testcase.expEvent, req, i)
 	}
+}
+
+func TestQueryPermission(t *testing.T) {
+	checkFunc := false
+
+	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+		checkFunc = true
+		return newQueryResult(), nil
+	}
+
+	h := NewHandler()
+	h.RegisterQuery("testHandlerCommandDenied", f, WithPermission("deleteWorkspace"))
+
+	t.Run("Passed", func(t *testing.T) {
+		checkFunc = false
+		query := &Query{
+			Function:      "testHandlerCommandDenied",
+			PermissionKey: "workspace_1",
+			Identity: &invoke.Identity{
+				Claims: invoke.Claims{
+					Permissions: invoke.Permissions{
+						"workspace_1": "deleteWorkspace",
+					},
+				},
+			},
+		}
+
+		resp, err := h.handler(context.Background(), query)
+
+		require.Nil(t, err)
+		require.Equal(t, newQueryResult(), resp)
+		require.True(t, checkFunc)
+	})
+
+	t.Run("Permission Denied", func(t *testing.T) {
+		checkFunc = false
+		query := &Query{
+			Function:      "testHandlerCommandDenied",
+			PermissionKey: "workspace_1",
+			Identity: &invoke.Identity{
+				Claims: invoke.Claims{
+					Permissions: invoke.Permissions{
+						"workspace_1": "readWorkspace",
+					},
+				},
+			},
+		}
+
+		resp, err := h.handler(context.Background(), query)
+
+		require.Equal(t, ErrPermissionDenied, err)
+		require.Nil(t, resp)
+		require.False(t, checkFunc)
+	})
+
+	t.Run("No Permission", func(t *testing.T) {
+		checkFunc = false
+		query := &Query{
+			Function:      "testHandlerCommandDenied",
+			PermissionKey: "workspace_1",
+			Identity: &invoke.Identity{
+				Claims: invoke.Claims{},
+			},
+		}
+
+		resp, err := h.handler(context.Background(), query)
+
+		require.Equal(t, ErrPermissionDenied, err)
+		require.Nil(t, resp)
+		require.False(t, checkFunc)
+	})
+
+	t.Run("No Identity", func(t *testing.T) {
+		checkFunc = false
+		query := &Query{
+			Function: "testHandlerCommandDenied",
+		}
+
+		resp, err := h.handler(context.Background(), query)
+
+		require.Equal(t, ErrPermissionDenied, err)
+		require.Nil(t, resp)
+		require.False(t, checkFunc)
+	})
+
+	t.Run("No PermissionKey", func(t *testing.T) {
+		checkFunc = false
+		query := &Query{
+			Function: "testHandlerCommandDenied",
+			Identity: &invoke.Identity{
+				Claims: invoke.Claims{
+					Permissions: invoke.Permissions{
+						"workspace_1": "readWorkspace",
+					},
+				},
+			},
+		}
+
+		resp, err := h.handler(context.Background(), query)
+
+		require.Equal(t, ErrPermissionDenied, err)
+		require.Nil(t, resp)
+		require.False(t, checkFunc)
+	})
 }

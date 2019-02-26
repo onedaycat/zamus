@@ -1,6 +1,8 @@
 package query
 
-import "github.com/onedaycat/errors"
+import (
+	"github.com/onedaycat/errors"
+)
 
 var (
 	ErrPermissionDenied        = errors.Forbidden("QUERY_FORBIDDEN", "You don't a permission to access this operation")

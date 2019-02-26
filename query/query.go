@@ -14,7 +14,7 @@ type Query struct {
 	Args          json.RawMessage  `json:"arguments"`
 	Sources       json.RawMessage  `json:"sources"`
 	Identity      *invoke.Identity `json:"identity"`
-	NSource       int              `json:"-"`
+	NBatchSources int              `json:"-"`
 	PermissionKey string           `json:"pemKey"`
 }
 
@@ -24,12 +24,16 @@ type queryinfo struct {
 }
 
 func WithPermission(pm string) QueryHandler {
-	return func(ctx context.Context, event *Query) (QueryResult, error) {
-		if event.Identity.Claims.Permissions == nil {
+	return func(ctx context.Context, query *Query) (QueryResult, error) {
+		if query.Identity == nil {
 			return nil, ErrPermissionDenied
 		}
 
-		if ok := event.Identity.Claims.Permissions.Has(event.PermissionKey, pm); !ok {
+		if query.Identity.Claims.Permissions == nil {
+			return nil, ErrPermissionDenied
+		}
+
+		if ok := query.Identity.Claims.Permissions.Has(query.PermissionKey, pm); !ok {
 			return nil, ErrPermissionDenied
 		}
 
@@ -83,7 +87,7 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 		q.Sources = b.Bytes()
 		q.Identity = invokes[0].Identity
 		q.PermissionKey = invokes[0].PermissionKey
-		q.NSource = n
+		q.NBatchSources = n
 
 		if len(q.Sources) == 2 {
 			q.Sources = nil
@@ -101,7 +105,7 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 		q.Sources = invoke.Source
 		q.Identity = invoke.Identity
 		q.PermissionKey = invoke.PermissionKey
-		q.NSource = 1
+		q.NBatchSources = 0
 
 		return nil
 	}

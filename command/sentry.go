@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func SentryError(dsn string, options ...sentry.Option) ErrorHandler {
+func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 	sentry.SetDSN(dsn)
 	sentry.SetOptions(options...)
 
-	return func(ctx context.Context, event *Command, err error) {
+	return func(ctx context.Context, cmd *Command, err error) {
 		var appErr *errors.AppError
 
 		appErr, _ = errors.FromError(err)
@@ -21,15 +21,15 @@ func SentryError(dsn string, options ...sentry.Option) ErrorHandler {
 		case errors.InternalErrorStatus:
 			log.Error().
 				Interface("input", appErr.Input).
-				Msgf("%+v\n", appErr)
+				Msg(appErr.Error())
 		default:
 			return
 		}
 
 		packet := sentry.NewPacket(err)
-		if event.Identity.GetID() != "" {
+		if cmd.Identity != nil && cmd.Identity.GetID() != "" {
 			packet.AddUser(&sentry.User{
-				ID: event.Identity.GetID(),
+				ID: cmd.Identity.GetID(),
 			})
 		}
 
@@ -45,9 +45,8 @@ func SentryError(dsn string, options ...sentry.Option) ErrorHandler {
 			})
 		}
 
-		funcName := ctx.Value(lambdacontext.FunctionName).(string)
-		packet.AddTag("lambda", funcName)
-		packet.AddTag("function", event.Function)
+		packet.AddTag("lambda", lambdacontext.FunctionName)
+		packet.AddTag("function", cmd.Function)
 
 		packet.AddStackTrace(appErr.StackTrace())
 		sentry.CaptureAndWait(packet)

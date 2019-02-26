@@ -4,16 +4,22 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/invoke"
 )
 
 type Command = invoke.InvokeEvent
 
-type ErrorHandler func(ctx context.Context, event *Command, err error)
-type CommandHandler func(ctx context.Context, event *Command) (interface{}, error)
+type ErrorHandler func(ctx context.Context, cmd *Command, err error)
+type CommandHandler func(ctx context.Context, cmd *Command) (interface{}, error)
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
+
+func init() {
+	common.PrettyLog()
+}
 
 type Handler struct {
 	commands     map[string]*commandinfo
@@ -28,15 +34,15 @@ func NewHandler() *Handler {
 	}
 }
 
-func (h *Handler) PreHandler(handlers ...CommandHandler) {
+func (h *Handler) PreHandlers(handlers ...CommandHandler) {
 	h.preHandlers = handlers
 }
 
-func (h *Handler) PostHandler(handlers ...CommandHandler) {
+func (h *Handler) PostHandlers(handlers ...CommandHandler) {
 	h.postHandlers = handlers
 }
 
-func (h *Handler) ErrorHandler(handlers ...ErrorHandler) {
+func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
 	h.errHandlers = handlers
 }
 
@@ -47,18 +53,45 @@ func (h *Handler) RegisterCommand(command string, handler CommandHandler, prehan
 	}
 }
 
-func (h *Handler) handler(ctx context.Context, event *Command) (interface{}, error) {
-	info, ok := h.commands[event.Function]
+func (h *Handler) recovery(ctx context.Context, cmd *Command, err *error) {
+	if r := recover(); r != nil {
+		cause, ok := r.(error)
+		if ok {
+			appErr := errors.InternalError("PANIC", "Server Error").WithCause(cause).WithCallerSkip(4)
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, cmd, appErr)
+			}
+			*err = appErr
+		}
+	}
+}
+
+func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err error) {
+	defer h.recovery(ctx, cmd, &err)
+	result, err = info.handler(ctx, cmd)
+	if err != nil {
+		err = makeError(err)
+		for _, errHandler := range h.errHandlers {
+			errHandler(ctx, cmd, err)
+		}
+		return nil, err
+	}
+
+	return
+}
+
+func (h *Handler) handler(ctx context.Context, cmd *Command) (interface{}, error) {
+	info, ok := h.commands[cmd.Function]
 	if !ok {
-		return nil, ErrCommandNotFound(event.Function)
+		return nil, ErrCommandNotFound(cmd.Function)
 	}
 
 	for _, handler := range h.preHandlers {
-		result, err := handler(ctx, event)
+		result, err := handler(ctx, cmd)
 		if err != nil {
 			err = makeError(err)
 			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, event, err)
+				errHandler(ctx, cmd, err)
 			}
 			return nil, err
 		}
@@ -69,11 +102,11 @@ func (h *Handler) handler(ctx context.Context, event *Command) (interface{}, err
 	}
 
 	for _, handler := range info.prehandlers {
-		result, err := handler(ctx, event)
+		result, err := handler(ctx, cmd)
 		if err != nil {
 			err = makeError(err)
 			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, event, err)
+				errHandler(ctx, cmd, err)
 			}
 			return nil, err
 		}
@@ -83,21 +116,17 @@ func (h *Handler) handler(ctx context.Context, event *Command) (interface{}, err
 		}
 	}
 
-	result, err := info.handler(ctx, event)
+	result, err := h.doHandler(info, ctx, cmd)
 	if err != nil {
-		err = makeError(err)
-		for _, errHandler := range h.errHandlers {
-			errHandler(ctx, event, err)
-		}
 		return nil, err
 	}
 
 	for _, handler := range h.postHandlers {
-		result, err := handler(ctx, event)
+		result, err := handler(ctx, cmd)
 		if err != nil {
 			err = makeError(err)
 			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, event, err)
+				errHandler(ctx, cmd, err)
 			}
 			return nil, err
 		}
