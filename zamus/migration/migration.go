@@ -7,12 +7,12 @@ import (
 	migrate "github.com/rubenv/sql-migrate"
 )
 
-func Up(db *sql.DB, dir string) (int, error) {
+func Up(db *sql.DB, dir string, max int) (int, error) {
 	migrations := &migrate.FileMigrationSource{
 		Dir: dir,
 	}
 
-	n, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
+	n, err := migrate.ExecMax(db, "mysql", migrations, migrate.Up, max)
 	if err != nil {
 		return 0, err
 	}
@@ -20,12 +20,12 @@ func Up(db *sql.DB, dir string) (int, error) {
 	return n, nil
 }
 
-func Down(db *sql.DB, dir string) (int, error) {
+func Down(db *sql.DB, dir string, max int) (int, error) {
 	migrations := &migrate.FileMigrationSource{
 		Dir: dir,
 	}
 
-	n, err := migrate.Exec(db, "mysql", migrations, migrate.Down)
+	n, err := migrate.ExecMax(db, "mysql", migrations, migrate.Down, max)
 	if err != nil {
 		return 0, err
 	}

@@ -1,7 +1,5 @@
-migrations:
-  - name: dev
-    dataSource: root@/dbname?parseTime=true
-    dir: "migration/dev"
-  - name: prod
-    dataSource: root@/dbname?parseTime=true
-    dir: "migration/prod"
+migration:
+  # ZAMUS_MIGRATION_DATASOURCE
+  datasource: root@/dbname?parseTime=true
+  # ZAMUS_MIGRATION_DIR
+  dir: "migration/prod"

@@ -3,11 +3,10 @@ package config
 var C Config
 
 type Config struct {
-	Migrations []Migration `yaml:"migrations"`
+	Migration *Migration `yaml:"migration"`
 }
 
 type Migration struct {
-	Name       string `yaml:"name"`
 	Datasource string `yaml:"datasource"`
 	Dir        string `yaml:"dir"`
 }
