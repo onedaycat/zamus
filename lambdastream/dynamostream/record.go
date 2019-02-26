@@ -36,17 +36,6 @@ type DynamoDBStreamEvent struct {
 	Records Records `json:"Records"`
 }
 
-func (r *DynamoDBStreamEvent) Add(eventMsg *EventMsg) {
-	r.Records = append(r.Records, &Record{
-		EventName: EventInsert,
-		DynamoDB: &DynamoDBRecord{
-			NewImage: &Payload{
-				EventMsg: eventMsg,
-			},
-		},
-	})
-}
-
 type Record struct {
 	EventName string          `json:"eventName"`
 	DynamoDB  *DynamoDBRecord `json:"dynamodb"`
