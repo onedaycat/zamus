@@ -13,9 +13,7 @@ type KinesisStreamEvent struct {
 }
 
 type Record struct {
-	EventID   string          `json:"eventID"`
-	EventName string          `json:"eventName"`
-	Kinesis   *KinesisPayload `json:"kinesis"`
+	Kinesis *KinesisPayload `json:"kinesis"`
 }
 
 func (r *Record) add(pk, eid, etype string) {
