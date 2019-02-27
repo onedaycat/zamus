@@ -1,9 +1,6 @@
 package random
 
 import (
-	"strconv"
-
-	"github.com/Pallinder/go-randomdata"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
@@ -20,16 +17,11 @@ func KinesisEvents() *kinesisBuilder {
 	}
 }
 
-func (k *kinesisBuilder) AddEvents(nPartitionKey int, events ...*eventstore.EventMsg) *kinesisBuilder {
-	pks := make([]string, nPartitionKey)
-	for i := 0; i < nPartitionKey; i++ {
-		pks[i] = "pk" + strconv.Itoa(i)
-	}
-
+func (k *kinesisBuilder) Add(partitionKey string, events ...*eventstore.EventMsg) *kinesisBuilder {
 	for _, event := range events {
 		k.event.Records = append(k.event.Records, &kinesisstream.Record{
 			Kinesis: &kinesisstream.KinesisPayload{
-				PartitionKey: randomdata.StringSample(pks...),
+				PartitionKey: partitionKey,
 				Data: &kinesisstream.Payload{
 					EventMsg: event,
 				},

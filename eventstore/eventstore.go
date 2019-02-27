@@ -10,7 +10,6 @@ import (
 )
 
 //go:generate mockery -name=EventStore
-//go:generate protoc --gofast_out=. event.proto
 
 // RetryHandler if return bool is true is allow retry,
 // if return bool is false no retry
