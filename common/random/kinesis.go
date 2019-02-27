@@ -17,6 +17,10 @@ func KinesisEvents() *kinesisBuilder {
 	}
 }
 
+func (k *kinesisBuilder) Build() *kinesisstream.KinesisStreamEvent {
+	return k.event
+}
+
 func (k *kinesisBuilder) Add(partitionKey string, events ...*eventstore.EventMsg) *kinesisBuilder {
 	for _, event := range events {
 		k.event.Records = append(k.event.Records, &kinesisstream.Record{
