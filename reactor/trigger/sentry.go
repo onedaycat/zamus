@@ -3,7 +3,6 @@ package trigger
 import (
 	"context"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/rs/zerolog/log"
@@ -41,7 +40,6 @@ func Sentry(ctx context.Context, id string, err error) {
 		})
 	}
 
-	packet.AddTag("lambda", lambdacontext.FunctionName)
 	packet.AddStackTrace(appErr.StackTrace())
 	sentry.CaptureAndWait(packet)
 }

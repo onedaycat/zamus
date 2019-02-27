@@ -1,7 +1,6 @@
 package sagas
 
 import (
-	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/rs/zerolog/log"
@@ -43,7 +42,6 @@ func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 			})
 		}
 
-		packet.AddTag("lambda", lambdacontext.FunctionName)
 		packet.AddStackTrace(appErr.StackTrace())
 		sentry.CaptureAndWait(packet)
 	}

@@ -44,10 +44,10 @@ func (h *Handler) FilterEvents(eventTypes ...string) {
 	h.gropcon.FilterEvents(eventTypes...)
 }
 
-func (h *Handler) handler(ctx context.Context, event *LambdaEvent) error {
+func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) error {
 	return h.gropcon.Process(event.Records)
 }
 
 func (h *Handler) StartLambda() {
-	lambda.Start(h.handler)
+	lambda.Start(h.Handle)
 }
