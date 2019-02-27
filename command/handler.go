@@ -11,6 +11,7 @@ import (
 )
 
 type Command = invoke.InvokeEvent
+type CommandInput = invoke.InvokeRequest
 
 type ErrorHandler func(ctx context.Context, cmd *Command, err error)
 type CommandHandler func(ctx context.Context, cmd *Command) (interface{}, error)
