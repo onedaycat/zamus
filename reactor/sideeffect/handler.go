@@ -19,9 +19,7 @@ type Handler struct {
 }
 
 func NewHandler() *Handler {
-	return &Handler{
-		streamer: kinesisstream.NewSimpleStrategy(),
-	}
+	return &Handler{}
 }
 
 func (h *Handler) StreamStrategy(streamStrategy kinesisstream.KinesisHandlerStrategy) {
