@@ -33,5 +33,5 @@ func (k *kinesisBuilder) Add(partitionKey string, events ...*eventstore.EventMsg
 		})
 	}
 
-	return nil
+	return k
 }
