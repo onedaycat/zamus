@@ -3,6 +3,7 @@ package kinesisstream
 import (
 	"sync"
 
+	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/errors"
 	"golang.org/x/sync/errgroup"
 )
@@ -147,13 +148,21 @@ func (c *GroupConcurrency) handle(msgs EventMsgs) (err error) {
 
 func (c *GroupConcurrency) recover(msgs EventMsgs, err *error) {
 	if r := recover(); r != nil {
-		cause, ok := r.(error)
-		if ok {
+		switch cause := r.(type) {
+		case error:
 			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
 				errhandler(msgs, appErr)
 			}
 			*err = appErr
+		case string:
+			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
+			for _, errhandler := range c.errorHandlers {
+				errhandler(msgs, appErr)
+			}
+			*err = appErr
+		default:
+			panic(cause)
 		}
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
@@ -56,13 +57,21 @@ func (h *Handler) RegisterCommand(command string, handler CommandHandler, prehan
 
 func (h *Handler) recovery(ctx context.Context, cmd *Command, err *error) {
 	if r := recover(); r != nil {
-		cause, ok := r.(error)
-		if ok {
-			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(4).WithInput(cmd)
-			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, cmd, appErr)
+		switch cause := r.(type) {
+		case error:
+			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
+			for _, errhandler := range h.errHandlers {
+				errhandler(ctx, cmd, appErr)
 			}
 			*err = appErr
+		case string:
+			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
+			for _, errhandler := range h.errHandlers {
+				errhandler(ctx, cmd, appErr)
+			}
+			*err = appErr
+		default:
+			panic(cause)
 		}
 	}
 }
