@@ -43,4 +43,12 @@ func TestEventMsgs(t *testing.T) {
 	require.Equal(t, metadataByte, msgs[2].Metadata)
 	require.Equal(t, now, msgs[3].Time)
 
+	msgsByte := EventMsgs().
+		Add("f1", event).
+		Add("f2", event, WithAggregateID("a1")).
+		Add("f3", event, WithMetadata(metadata)).
+		Add("f4", event, WithTime(now)).
+		BuildJSON()
+
+	require.NotNil(t, msgsByte)
 }

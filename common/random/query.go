@@ -87,3 +87,12 @@ func (b *queryBuilder) NoIdentity() *queryBuilder {
 func (b *queryBuilder) Build() *query.Query {
 	return b.query
 }
+
+func (b *queryBuilder) BuildJSON() []byte {
+	data, err := json.Marshal(b.query)
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}

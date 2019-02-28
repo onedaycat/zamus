@@ -87,3 +87,12 @@ func (b *commandBuilder) NoIdentity() *commandBuilder {
 func (b *commandBuilder) Build() *command.Command {
 	return b.cmd
 }
+
+func (b *commandBuilder) BuildJSON() []byte {
+	data, err := json.Marshal(b.cmd)
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}

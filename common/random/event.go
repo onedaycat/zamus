@@ -92,3 +92,12 @@ func (b *eventBuilder) Event(eventType string, event interface{}) *eventBuilder 
 
 	return b
 }
+
+func (b *eventBuilder) BuildJSON() []byte {
+	data, err := json.Marshal(b.msg)
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}

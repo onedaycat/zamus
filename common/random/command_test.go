@@ -53,4 +53,7 @@ func TestCommand(t *testing.T) {
 	cmd = Command().NoIdentity().Build()
 	require.Nil(t, cmd.Identity)
 	require.Empty(t, cmd.PermissionKey)
+
+	cmdByte := Command().BuildJSON()
+	require.NotNil(t, cmdByte)
 }

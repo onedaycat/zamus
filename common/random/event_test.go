@@ -61,4 +61,9 @@ func TestEventMsg(t *testing.T) {
 		Versionn("2").
 		Build()
 	require.Equal(t, "2", msg.EventVersion)
+
+	msgByte := EventMsg().
+		Versionn("2").
+		BuildJSON()
+	require.NotNil(t, msgByte)
 }

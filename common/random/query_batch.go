@@ -100,6 +100,15 @@ func (b *batchQueryBuilder) Build() *query.Query {
 	return b.query
 }
 
+func (b *batchQueryBuilder) BuildJSON() []byte {
+	data, err := json.Marshal(b.query)
+	if err != nil {
+		panic(err)
+	}
+
+	return data
+}
+
 type randomSource struct {
 	ID   string
 	Name string

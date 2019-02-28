@@ -53,4 +53,7 @@ func TestQuery(t *testing.T) {
 	query = Query().NoIdentity().Build()
 	require.Nil(t, query.Identity)
 	require.Empty(t, query.PermissionKey)
+
+	queryByte := Query().BuildJSON()
+	require.NotNil(t, queryByte)
 }

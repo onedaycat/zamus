@@ -12,10 +12,10 @@ import (
 type Query struct {
 	Function      string           `json:"function"`
 	Args          json.RawMessage  `json:"arguments"`
-	Sources       json.RawMessage  `json:"sources"`
-	Identity      *invoke.Identity `json:"identity"`
+	Sources       json.RawMessage  `json:"sources,omitempty"`
+	Identity      *invoke.Identity `json:"identity,omitempty"`
 	NBatchSources int              `json:"-"`
-	PermissionKey string           `json:"pemKey"`
+	PermissionKey string           `json:"pemKey,omitempty"`
 }
 
 type queryinfo struct {

@@ -1,6 +1,8 @@
 package random
 
 import (
+	"encoding/json"
+
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -70,4 +72,13 @@ func (b *eventsBuilder) Add(eventType string, event interface{}, options ...Even
 	b.seq++
 
 	return b
+}
+
+func (b *eventsBuilder) BuildJSON() []byte {
+	data, err := json.Marshal(b.msgs)
+	if err != nil {
+		panic(err)
+	}
+
+	return data
 }

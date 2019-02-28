@@ -6,18 +6,18 @@ import (
 
 type InvokeRequest struct {
 	Function      string      `json:"function"`
-	Args          interface{} `json:"arguments"`
-	Source        interface{} `json:"source"`
-	Identity      *Identity   `json:"identity"`
-	PermissionKey string      `json:"pemKey"`
+	Args          interface{} `json:"arguments,omitempty"`
+	Source        interface{} `json:"source,omitempty"`
+	Identity      *Identity   `json:"identity,omitempty"`
+	PermissionKey string      `json:"pemKey,omitempty"`
 }
 
 type InvokeEvent struct {
 	Function      string          `json:"function"`
-	Args          json.RawMessage `json:"arguments"`
-	Source        json.RawMessage `json:"source"`
-	Identity      *Identity       `json:"identity"`
-	PermissionKey string          `json:"pemKey"`
+	Args          json.RawMessage `json:"arguments,omitempty"`
+	Source        json.RawMessage `json:"source,omitempty"`
+	Identity      *Identity       `json:"identity,omitempty"`
+	PermissionKey string          `json:"pemKey,omitempty"`
 }
 
 func (e *InvokeEvent) ParseArgs(v interface{}) error {

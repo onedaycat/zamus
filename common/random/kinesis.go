@@ -1,6 +1,8 @@
 package random
 
 import (
+	"encoding/json"
+
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
@@ -19,6 +21,15 @@ func KinesisEvents() *kinesisBuilder {
 
 func (k *kinesisBuilder) Build() *kinesisstream.KinesisStreamEvent {
 	return k.event
+}
+
+func (b *kinesisBuilder) BuildJSON() []byte {
+	data, err := json.Marshal(b.event)
+	if err != nil {
+		panic(err)
+	}
+
+	return data
 }
 
 func (k *kinesisBuilder) Add(partitionKey string, events ...*eventstore.EventMsg) *kinesisBuilder {

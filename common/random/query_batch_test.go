@@ -59,4 +59,7 @@ func TestBatchQuery(t *testing.T) {
 	query = BatchQuery().InvalidPermission().Build()
 	require.NotNil(t, query.Identity.Claims.Permissions)
 	require.Len(t, query.Identity.Claims.Permissions, 1)
+
+	queryByte := BatchQuery().BuildJSON()
+	require.NotNil(t, queryByte)
 }

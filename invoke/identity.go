@@ -3,10 +3,10 @@ package invoke
 import "strings"
 
 type Claims struct {
-	Email       string      `json:"email"`
-	ExpiredAt   int         `json:"exp"`
-	CreatedAt   int         `json:"iat"`
-	Permissions Permissions `json:"pem"`
+	Email       string      `json:"email,omitempty"`
+	ExpiredAt   int         `json:"exp,omitempty"`
+	CreatedAt   int         `json:"iat,omitempty"`
+	Permissions Permissions `json:"pem,omitempty"`
 }
 
 type Permissions map[string]string
@@ -21,17 +21,17 @@ func (p Permissions) Has(workspace, permission string) bool {
 }
 
 type Identity struct {
-	Sub                   string   `json:"sub"`
-	AccountId             string   `json:"accountId"`
-	CognitoIdentityPoolId string   `json:"cognitoIdentityPoolId"`
-	CognitoIdentityId     string   `json:"cognitoIdentityId"`
-	SourceIP              []string `json:"sourceIp"`
-	Groups                []string `json:"groups"`
-	Username              string   `json:"username"`
-	UserArn               string   `json:"userArn"`
-	Issuer                string   `json:"issuer"`
-	Claims                Claims   `json:"claims"`
-	DefaultAuthStrategy   string   `json:"defaultAuthStrategy"`
+	Sub                   string   `json:"sub,omitempty"`
+	AccountId             string   `json:"accountId,omitempty"`
+	CognitoIdentityPoolId string   `json:"cognitoIdentityPoolId,omitempty"`
+	CognitoIdentityId     string   `json:"cognitoIdentityId,omitempty"`
+	SourceIP              []string `json:"sourceIp,omitempty"`
+	Groups                []string `json:"groups,omitempty"`
+	Username              string   `json:"username,omitempty"`
+	UserArn               string   `json:"userArn,omitempty"`
+	Issuer                string   `json:"issuer,omitempty"`
+	Claims                Claims   `json:"claims,omitempty"`
+	DefaultAuthStrategy   string   `json:"defaultAuthStrategy,omitempty"`
 }
 
 func (id *Identity) GetID() string {
