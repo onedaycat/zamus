@@ -77,6 +77,13 @@ func (b *commandBuilder) InvalidPermission() *commandBuilder {
 	return b
 }
 
+func (b *commandBuilder) NoIdentity() *commandBuilder {
+	b.cmd.PermissionKey = ""
+	b.cmd.Identity = nil
+
+	return b
+}
+
 func (b *commandBuilder) Build() *command.Command {
 	return b.cmd
 }

@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/onedaycat/zamus/invoke"
-
 	"github.com/onedaycat/zamus/command"
+	"github.com/onedaycat/zamus/invoke"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,4 +49,8 @@ func TestCommand(t *testing.T) {
 	cmd = Command().InvalidPermission().Build()
 	require.NotNil(t, cmd.Identity.Claims.Permissions)
 	require.Len(t, cmd.Identity.Claims.Permissions, 1)
+
+	cmd = Command().NoIdentity().Build()
+	require.Nil(t, cmd.Identity)
+	require.Empty(t, cmd.PermissionKey)
 }

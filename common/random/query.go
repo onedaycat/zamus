@@ -77,6 +77,13 @@ func (b *queryBuilder) InvalidPermission() *queryBuilder {
 	return b
 }
 
+func (b *queryBuilder) NoIdentity() *queryBuilder {
+	b.query.PermissionKey = ""
+	b.query.Identity = nil
+
+	return b
+}
+
 func (b *queryBuilder) Build() *query.Query {
 	return b.query
 }

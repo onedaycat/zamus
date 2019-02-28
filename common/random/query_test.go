@@ -6,7 +6,6 @@ import (
 
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/query"
-
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,4 +49,8 @@ func TestQuery(t *testing.T) {
 	query = Query().InvalidPermission().Build()
 	require.NotNil(t, query.Identity.Claims.Permissions)
 	require.Len(t, query.Identity.Claims.Permissions, 1)
+
+	query = Query().NoIdentity().Build()
+	require.Nil(t, query.Identity)
+	require.Empty(t, query.PermissionKey)
 }
