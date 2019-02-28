@@ -15,7 +15,7 @@ func (s Set) Has(key string) bool {
 	return ok
 }
 
-func (s Set) List(key string) []string {
+func (s Set) List() []string {
 	i := 0
 	keys := make([]string, len(s))
 	for key := range s {
