@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestGroupConcurency(t *testing.T) {
+func TestSimpleStrategy(t *testing.T) {
 	nError := 0
 	h1ET1 := 0
 	h1ET2 := 0
@@ -48,7 +48,7 @@ func TestGroupConcurency(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler1, handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -80,7 +80,7 @@ func TestGroupConcurency(t *testing.T) {
 	require.Equal(t, 3, h2ET3)
 }
 
-func TestGroupConcurencyError(t *testing.T) {
+func TestSimpleStrategyError(t *testing.T) {
 	nError := 0
 	h1ET1 := 0
 	h1ET2 := 0
@@ -123,7 +123,7 @@ func TestGroupConcurencyError(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler1, handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -152,10 +152,10 @@ func TestGroupConcurencyError(t *testing.T) {
 	require.Equal(t, 3, h1ET3)
 	require.Equal(t, 2, h2ET1)
 	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 3, h2ET3)
+	require.Equal(t, 2, h2ET3)
 }
 
-func TestGroupConcurencyPanic(t *testing.T) {
+func TestSimpleStrategyPanic(t *testing.T) {
 	nError := 0
 	h1ET1 := 0
 	h1ET2 := 0
@@ -200,7 +200,7 @@ func TestGroupConcurencyPanic(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler1, handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -229,10 +229,10 @@ func TestGroupConcurencyPanic(t *testing.T) {
 	require.Equal(t, 3, h1ET3)
 	require.Equal(t, 2, h2ET1)
 	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 3, h2ET3)
+	require.Equal(t, 2, h2ET3)
 }
 
-func TestGroupConcurencyPanicPre(t *testing.T) {
+func TestSimpleStrategyPanicPre(t *testing.T) {
 	nError := 0
 	isPre := false
 	prehandler := func(msgs EventMsgs) error {
@@ -254,7 +254,7 @@ func TestGroupConcurencyPanicPre(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
@@ -282,7 +282,7 @@ func TestGroupConcurencyPanicPre(t *testing.T) {
 	require.True(t, isPre)
 }
 
-func TestGroupConcurencyPanicPost(t *testing.T) {
+func TestSimpleStrategyPanicPost(t *testing.T) {
 	isError := false
 	isPost := false
 	posthandler := func(msgs EventMsgs) error {
@@ -304,7 +304,7 @@ func TestGroupConcurencyPanicPost(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
@@ -332,7 +332,7 @@ func TestGroupConcurencyPanicPost(t *testing.T) {
 	require.True(t, isPost)
 }
 
-func TestGroupConcurencyPanicPreWithPost(t *testing.T) {
+func TestSimpleStrategyPanicPreWithPost(t *testing.T) {
 	isError := false
 	isPost := false
 	isPre := false
@@ -365,7 +365,7 @@ func TestGroupConcurencyPanicPreWithPost(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
@@ -395,7 +395,7 @@ func TestGroupConcurencyPanicPreWithPost(t *testing.T) {
 	require.False(t, isPost)
 }
 
-func TestGroupConcurencyPanicPostWithPre(t *testing.T) {
+func TestSimpleStrategyPanicPostWithPre(t *testing.T) {
 	isError := false
 	isPost := false
 	isPre := false
@@ -424,7 +424,7 @@ func TestGroupConcurencyPanicPostWithPre(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewGroupConcurrency()
+	cm := NewSimpleStrategy()
 	cm.RegisterHandlers(handler)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)

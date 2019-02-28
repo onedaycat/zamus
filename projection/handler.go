@@ -15,37 +15,41 @@ type EventMsgs = []*eventstore.EventMsg
 type LambdaEvent = kinesisstream.KinesisStreamEvent
 
 type Handler struct {
-	gropcon *kinesisstream.GroupConcurrency
+	streamer kinesisstream.KinesisHandlerStrategy
 }
 
 func NewHandler() *Handler {
 	return &Handler{
-		gropcon: kinesisstream.NewGroupConcurrency(),
+		streamer: kinesisstream.NewSimpleStrategy(),
 	}
 }
 
+func (h *Handler) StreamStrategy(streamStrategy kinesisstream.KinesisHandlerStrategy) {
+	h.streamer = streamStrategy
+}
+
 func (h *Handler) PreHandlers(handlers ...EventHandler) {
-	h.gropcon.PreHandlers(handlers...)
+	h.streamer.PreHandlers(handlers...)
 }
 
 func (h *Handler) PostHandlers(handlers ...EventHandler) {
-	h.gropcon.PostHandlers(handlers...)
+	h.streamer.PostHandlers(handlers...)
 }
 
 func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
-	h.gropcon.ErrorHandlers(handlers...)
+	h.streamer.ErrorHandlers(handlers...)
 }
 
 func (h *Handler) RegisterHandlers(handlers ...EventHandler) {
-	h.gropcon.RegisterHandlers(handlers...)
+	h.streamer.RegisterHandlers(handlers...)
 }
 
 func (h *Handler) FilterEvents(eventTypes ...string) {
-	h.gropcon.FilterEvents(eventTypes...)
+	h.streamer.FilterEvents(eventTypes...)
 }
 
 func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) error {
-	return h.gropcon.Process(event.Records)
+	return h.streamer.Process(event.Records)
 }
 
 func (h *Handler) StartLambda() {

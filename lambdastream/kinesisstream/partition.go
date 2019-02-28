@@ -8,7 +8,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type GroupConcurrency struct {
+type partitionStrategy struct {
 	wg            sync.WaitGroup
 	errorHandlers []EventMessagesErrorHandler
 	handlers      []EventMessagesHandler
@@ -17,35 +17,35 @@ type GroupConcurrency struct {
 	postHandlers  []EventMessagesHandler
 }
 
-func NewGroupConcurrency() *GroupConcurrency {
-	return &GroupConcurrency{
+func NewPartitionStrategy() KinesisHandlerStrategy {
+	return &partitionStrategy{
 		eventTypes: make(map[string]struct{}, 20),
 	}
 }
 
-func (c *GroupConcurrency) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
+func (c *partitionStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
 	c.errorHandlers = handlers
 }
 
-func (c *GroupConcurrency) FilterEvents(eventTypes ...string) {
+func (c *partitionStrategy) FilterEvents(eventTypes ...string) {
 	for _, eventType := range eventTypes {
 		c.eventTypes[eventType] = struct{}{}
 	}
 }
 
-func (c *GroupConcurrency) PreHandlers(handlers ...EventMessagesHandler) {
+func (c *partitionStrategy) PreHandlers(handlers ...EventMessagesHandler) {
 	c.preHandlers = handlers
 }
 
-func (c *GroupConcurrency) PostHandlers(handlers ...EventMessagesHandler) {
+func (c *partitionStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *GroupConcurrency) RegisterHandlers(handlers ...EventMessagesHandler) {
+func (c *partitionStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
 	c.handlers = handlers
 }
 
-func (c *GroupConcurrency) Process(records Records) error {
+func (c *partitionStrategy) Process(records Records) error {
 	var eventType string
 	var pk string
 	partitions := make(map[string]EventMsgs, 100)
@@ -69,6 +69,10 @@ func (c *GroupConcurrency) Process(records Records) error {
 
 	for _, ghs := range partitions {
 		ghs := ghs
+		if len(ghs) == 0 {
+			continue
+		}
+
 		wg.Go(func() error {
 			return c.handle(ghs)
 		})
@@ -77,7 +81,7 @@ func (c *GroupConcurrency) Process(records Records) error {
 	return wg.Wait()
 }
 
-func (c *GroupConcurrency) doPreHandlers(msgs EventMsgs) (err error) {
+func (c *partitionStrategy) doPreHandlers(msgs EventMsgs) (err error) {
 	defer c.recover(msgs, &err)
 	for _, ph := range c.preHandlers {
 		if err = ph(msgs); err != nil {
@@ -92,7 +96,7 @@ func (c *GroupConcurrency) doPreHandlers(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *GroupConcurrency) doPostHandler(msgs EventMsgs) (err error) {
+func (c *partitionStrategy) doPostHandler(msgs EventMsgs) (err error) {
 	defer c.recover(msgs, &err)
 	for _, ph := range c.postHandlers {
 		if err = ph(msgs); err != nil {
@@ -107,7 +111,7 @@ func (c *GroupConcurrency) doPostHandler(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *GroupConcurrency) doHandlers(msgs EventMsgs) (err error) {
+func (c *partitionStrategy) doHandlers(msgs EventMsgs) (err error) {
 	wg := errgroup.Group{}
 	for _, handler := range c.handlers {
 		handler := handler
@@ -130,7 +134,7 @@ func (c *GroupConcurrency) doHandlers(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *GroupConcurrency) handle(msgs EventMsgs) (err error) {
+func (c *partitionStrategy) handle(msgs EventMsgs) (err error) {
 	if err = c.doPreHandlers(msgs); err != nil {
 		return err
 	}
@@ -146,7 +150,7 @@ func (c *GroupConcurrency) handle(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *GroupConcurrency) recover(msgs EventMsgs, err *error) {
+func (c *partitionStrategy) recover(msgs EventMsgs, err *error) {
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
