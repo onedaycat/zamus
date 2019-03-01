@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/golang/snappy"
+
 	random "github.com/Pallinder/go-randomdata"
 	"github.com/onedaycat/gocqrs/common/eid"
 	"github.com/onedaycat/zamus/eventstore"
@@ -87,7 +89,10 @@ func (b *eventBuilder) Event(eventType string, event interface{}) *eventBuilder 
 		panic(err)
 	}
 
-	b.msg.Event = data
+	var eventDataSnap []byte
+	eventDataSnap = snappy.Encode(eventDataSnap, data)
+
+	b.msg.Event = eventDataSnap
 	b.msg.EventType = eventType
 
 	return b
