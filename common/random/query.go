@@ -84,6 +84,13 @@ func (b *queryBuilder) NoIdentity() *queryBuilder {
 	return b
 }
 
+func (b *queryBuilder) Identity(userID, email string) *queryBuilder {
+	b.query.Identity.Username = userID
+	b.query.Identity.Claims.Email = email
+
+	return b
+}
+
 func (b *queryBuilder) Build() *query.Query {
 	return b.query
 }
