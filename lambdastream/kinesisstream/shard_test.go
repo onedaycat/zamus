@@ -71,7 +71,7 @@ func TestShardStrategy(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler1, handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -146,7 +146,7 @@ func TestShardStrategyError(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler1, handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -223,7 +223,7 @@ func TestShardStrategyPanic(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler1, handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -277,7 +277,7 @@ func TestShardStrategyPanicPre(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
@@ -327,7 +327,7 @@ func TestShardStrategyPanicPost(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
@@ -388,7 +388,7 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
@@ -447,7 +447,7 @@ func TestShardStrategyPanicPostWithPre(t *testing.T) {
 	}
 
 	n := 10
-	cm := NewShardStrategy(3)
+	cm := NewShardStrategy(10)
 	cm.RegisterHandlers(handler)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
