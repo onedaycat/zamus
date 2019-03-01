@@ -20,7 +20,7 @@ type Handler struct {
 
 func NewHandler() *Handler {
 	return &Handler{
-		streamer: kinesisstream.NewSimpleStrategy(),
+		streamer: kinesisstream.NewPartitionStrategy(),
 	}
 }
 
