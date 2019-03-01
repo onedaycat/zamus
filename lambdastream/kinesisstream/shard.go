@@ -53,6 +53,10 @@ func (c *shardStrategy) Process(records Records) error {
 	shards := make([]EventMsgs, c.nShard)
 	pkPos := make(map[string]int, 100)
 
+	for i := 0; i < c.nShard; i++ {
+		shards[i] = make(EventMsgs, 0, 100)
+	}
+
 	for i, record := range records {
 		eventType = record.Kinesis.Data.EventMsg.EventType
 		if _, ok := c.eventTypes[eventType]; !ok {
@@ -65,9 +69,6 @@ func (c *shardStrategy) Process(records Records) error {
 		if !ok {
 			pkPos[pk] = shardPos
 			pos = shardPos
-		}
-		if shards[pos] == nil {
-			shards[pos] = make(EventMsgs, 0, 100)
 		}
 
 		shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
@@ -90,7 +91,8 @@ func (c *shardStrategy) Process(records Records) error {
 	return wg.Wait()
 }
 
-func (c *shardStrategy) handle(msgs EventMsgs) (err error) {
+func (c *shardStrategy) doPreHandlers(msgs EventMsgs) (err error) {
+	defer c.recover(msgs, &err)
 	for _, ph := range c.preHandlers {
 		if err = ph(msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
@@ -101,6 +103,25 @@ func (c *shardStrategy) handle(msgs EventMsgs) (err error) {
 		}
 	}
 
+	return
+}
+
+func (c *shardStrategy) doPostHandler(msgs EventMsgs) (err error) {
+	defer c.recover(msgs, &err)
+	for _, ph := range c.postHandlers {
+		if err = ph(msgs); err != nil {
+			for _, errhandler := range c.errorHandlers {
+				errhandler(msgs, err)
+			}
+		}
+
+		return err
+	}
+
+	return
+}
+
+func (c *shardStrategy) doHandlers(msgs EventMsgs) (err error) {
 	wg := errgroup.Group{}
 	for _, handler := range c.handlers {
 		handler := handler
@@ -120,13 +141,19 @@ func (c *shardStrategy) handle(msgs EventMsgs) (err error) {
 		return err
 	}
 
-	for _, ph := range c.postHandlers {
-		if err = ph(msgs); err != nil {
-			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
-			}
-		}
+	return
+}
 
+func (c *shardStrategy) handle(msgs EventMsgs) (err error) {
+	if err = c.doPreHandlers(msgs); err != nil {
+		return err
+	}
+
+	if err = c.doHandlers(msgs); err != nil {
+		return err
+	}
+
+	if err = c.doPostHandler(msgs); err != nil {
 		return err
 	}
 

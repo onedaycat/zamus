@@ -2,8 +2,10 @@ package kinesisstream
 
 import (
 	"fmt"
+	"runtime"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/onedaycat/errors"
 	"github.com/stretchr/testify/require"
@@ -31,6 +33,91 @@ import (
 // 	ks.Process(ksevent.Records)
 
 // }
+
+func init() {
+	runtime.GOMAXPROCS(12)
+}
+
+func BenchmarkShard(b *testing.B) {
+	handler := func(msgs EventMsgs) error {
+		time.Sleep(time.Millisecond * 20)
+		return nil
+	}
+
+	records := make(Records, 100)
+	for i := 0; i < 100; i++ {
+		rec := &Record{}
+		istr := strconv.Itoa(i)
+		rec.add(istr, istr, "et1")
+		records[i] = rec
+	}
+
+	h := NewShardStrategy(3)
+	h.RegisterHandlers(handler, handler, handler)
+	h.FilterEvents("et1")
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		h.Process(records)
+	}
+}
+
+func BenchmarkPartition(b *testing.B) {
+
+	handler := func(msgs EventMsgs) error {
+		time.Sleep(time.Millisecond * 20)
+		return nil
+	}
+
+	records := make(Records, 100)
+	for i := 0; i < 100; i++ {
+		rec := &Record{}
+		istr := strconv.Itoa(i)
+		pkstr := strconv.Itoa(i % 10)
+		rec.add(pkstr, istr, "et1")
+		records[i] = rec
+	}
+
+	h := NewPartitionStrategy()
+	h.RegisterHandlers(handler, handler, handler)
+	h.FilterEvents("et1")
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		h.Process(records)
+	}
+}
+
+func BenchmarkSimple(b *testing.B) {
+
+	handler := func(msgs EventMsgs) error {
+		time.Sleep(time.Millisecond * 20)
+		return nil
+	}
+
+	records := make(Records, 100)
+	for i := 0; i < 100; i++ {
+		rec := &Record{}
+		istr := strconv.Itoa(i)
+		rec.add(istr, istr, "et1")
+		records[i] = rec
+	}
+
+	h := NewSimpleStrategy()
+	h.RegisterHandlers(handler, handler, handler)
+	h.FilterEvents("et1")
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		h.Process(records)
+	}
+}
 
 func TestShardStrategy(t *testing.T) {
 	nError := 0

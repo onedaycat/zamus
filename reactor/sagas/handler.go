@@ -2,7 +2,6 @@ package sagas
 
 import (
 	"context"
-	"runtime"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/onedaycat/zamus/eventstore"
@@ -20,10 +19,8 @@ type Handler struct {
 }
 
 func NewHandler() *Handler {
-	shard := runtime.NumCPU()
-	runtime.GOMAXPROCS(shard)
 	return &Handler{
-		streamer: kinesisstream.NewShardStrategy(shard),
+		streamer: kinesisstream.NewSimpleStrategy(),
 	}
 }
 
