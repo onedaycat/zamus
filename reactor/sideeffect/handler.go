@@ -18,9 +18,9 @@ type Handler struct {
 	streamer kinesisstream.KinesisHandlerStrategy
 }
 
-func NewHandler() *Handler {
+func NewHandler(streamer kinesisstream.KinesisHandlerStrategy) *Handler {
 	return &Handler{
-		streamer: kinesisstream.NewSimpleStrategy(),
+		streamer: streamer,
 	}
 }
 
