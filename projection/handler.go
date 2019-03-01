@@ -2,6 +2,7 @@ package projection
 
 import (
 	"context"
+	"runtime"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/onedaycat/zamus/eventstore"
@@ -18,9 +19,11 @@ type Handler struct {
 	streamer kinesisstream.KinesisHandlerStrategy
 }
 
-func NewHandler(streamStrategy kinesisstream.KinesisHandlerStrategy) *Handler {
+func NewHandler() *Handler {
+	shard := runtime.NumCPU()
+	runtime.GOMAXPROCS(shard)
 	return &Handler{
-		streamer: streamStrategy,
+		streamer: kinesisstream.NewShardStrategy(shard),
 	}
 }
 
