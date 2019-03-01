@@ -9,7 +9,7 @@ import (
 )
 
 type partitionStrategy struct {
-	wg            sync.WaitGroup
+	pkPool        sync.Pool
 	errorHandlers []EventMessagesErrorHandler
 	handlers      []EventMessagesHandler
 	eventTypes    map[string]struct{}
@@ -18,9 +18,17 @@ type partitionStrategy struct {
 }
 
 func NewPartitionStrategy() KinesisHandlerStrategy {
-	return &partitionStrategy{
+	ps := &partitionStrategy{
 		eventTypes: make(map[string]struct{}, 20),
 	}
+
+	ps.pkPool = sync.Pool{
+		New: func() interface{} {
+			return make(map[string]EventMsgs, 100)
+		},
+	}
+
+	return ps
 }
 
 func (c *partitionStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
@@ -48,7 +56,17 @@ func (c *partitionStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
 func (c *partitionStrategy) Process(records Records) error {
 	var eventType string
 	var pk string
-	partitions := make(map[string]EventMsgs, 100)
+	partitions := c.pkPool.Get().(map[string]EventMsgs)
+	defer func() {
+		for key := range partitions {
+			partitions[key] = make(EventMsgs, 0, 100)
+		}
+		for key := range partitions {
+			delete(partitions, key)
+		}
+		c.pkPool.Put(partitions)
+
+	}()
 
 	for _, record := range records {
 		// fmt.Println("###", record.Kinesis.Data.EventMsg.EventID, record.Kinesis.Data.EventMsg.Seq)
@@ -78,7 +96,11 @@ func (c *partitionStrategy) Process(records Records) error {
 		})
 	}
 
-	return wg.Wait()
+	if err := wg.Wait(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *partitionStrategy) doPreHandlers(msgs EventMsgs) (err error) {
