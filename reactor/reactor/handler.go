@@ -4,6 +4,9 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/aws/aws-xray-sdk-go/xraylog"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
@@ -13,6 +16,11 @@ type ErrorHandler = kinesisstream.EventMessagesErrorHandler
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 type LambdaEvent = kinesisstream.KinesisStreamEvent
+
+func init() {
+	common.PrettyLog()
+	xray.SetLogger(xraylog.NullLogger)
+}
 
 type Handler struct {
 	streamer kinesisstream.KinesisHandlerStrategy
@@ -49,7 +57,7 @@ func (h *Handler) FilterEvents(eventTypes ...string) {
 }
 
 func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) error {
-	return h.streamer.Process(event.Records)
+	return h.streamer.Process(ctx, event.Records)
 }
 
 func (h *Handler) StartLambda() {

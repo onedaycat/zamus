@@ -1,6 +1,7 @@
 package kinesisstream
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -17,7 +18,7 @@ func TestSimpleStrategy(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -30,7 +31,7 @@ func TestSimpleStrategy(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h2ET1++
@@ -43,7 +44,7 @@ func TestSimpleStrategy(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		nError++
 	}
 
@@ -69,7 +70,7 @@ func TestSimpleStrategy(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.NoError(t, err)
 	require.Equal(t, 0, nError)
 	require.Equal(t, 3, h1ET1)
@@ -88,7 +89,7 @@ func TestSimpleStrategyError(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -101,7 +102,7 @@ func TestSimpleStrategyError(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -117,7 +118,7 @@ func TestSimpleStrategyError(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -144,7 +145,7 @@ func TestSimpleStrategyError(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.Error(t, err)
 	require.Equal(t, 1, nError)
 	require.Equal(t, 3, h1ET1)
@@ -163,7 +164,7 @@ func TestSimpleStrategyPanic(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -176,7 +177,7 @@ func TestSimpleStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -194,7 +195,7 @@ func TestSimpleStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -221,7 +222,7 @@ func TestSimpleStrategyPanic(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.Error(t, err)
 	require.Equal(t, 1, nError)
 	require.Equal(t, 3, h1ET1)
@@ -235,7 +236,7 @@ func TestSimpleStrategyPanic(t *testing.T) {
 func TestSimpleStrategyPanicPre(t *testing.T) {
 	nError := 0
 	isPre := false
-	prehandler := func(msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -244,11 +245,11 @@ func TestSimpleStrategyPanicPre(t *testing.T) {
 		return nil
 	}
 
-	handler := func(msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) error {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -276,7 +277,7 @@ func TestSimpleStrategyPanicPre(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.Error(t, err)
 	require.Equal(t, 1, nError)
 	require.True(t, isPre)
@@ -285,7 +286,7 @@ func TestSimpleStrategyPanicPre(t *testing.T) {
 func TestSimpleStrategyPanicPost(t *testing.T) {
 	isError := false
 	isPost := false
-	posthandler := func(msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -294,11 +295,11 @@ func TestSimpleStrategyPanicPost(t *testing.T) {
 		return nil
 	}
 
-	handler := func(msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) error {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -326,7 +327,7 @@ func TestSimpleStrategyPanicPost(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.Error(t, err)
 	require.True(t, isError)
 	require.True(t, isPost)
@@ -337,7 +338,7 @@ func TestSimpleStrategyPanicPreWithPost(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -346,7 +347,7 @@ func TestSimpleStrategyPanicPreWithPost(t *testing.T) {
 		return nil
 	}
 
-	posthandler := func(msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -355,11 +356,11 @@ func TestSimpleStrategyPanicPreWithPost(t *testing.T) {
 		return nil
 	}
 
-	handler := func(msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) error {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -388,7 +389,7 @@ func TestSimpleStrategyPanicPreWithPost(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.Error(t, err)
 	require.True(t, isError)
 	require.True(t, isPre)
@@ -400,12 +401,12 @@ func TestSimpleStrategyPanicPostWithPre(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) error {
 		isPre = true
 		return nil
 	}
 
-	posthandler := func(msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -414,11 +415,11 @@ func TestSimpleStrategyPanicPostWithPre(t *testing.T) {
 		return nil
 	}
 
-	handler := func(msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) error {
 		return nil
 	}
 
-	onErr := func(msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -447,7 +448,7 @@ func TestSimpleStrategyPanicPostWithPre(t *testing.T) {
 		records[i] = rec
 	}
 
-	err := cm.Process(records)
+	err := cm.Process(context.Background(), records)
 	require.Error(t, err)
 	require.True(t, isError)
 	require.True(t, isPre)

@@ -1,6 +1,7 @@
 package kinesisstream
 
 import (
+	"context"
 	"sync"
 
 	errs "github.com/onedaycat/errors"
@@ -53,7 +54,7 @@ func (c *partitionStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
 	c.handlers = handlers
 }
 
-func (c *partitionStrategy) Process(records Records) error {
+func (c *partitionStrategy) Process(ctx context.Context, records Records) error {
 	var eventType string
 	var pk string
 	partitions := c.pkPool.Get().(map[string]EventMsgs)
@@ -92,7 +93,7 @@ func (c *partitionStrategy) Process(records Records) error {
 		}
 
 		wg.Go(func() error {
-			return c.handle(ghs)
+			return c.handle(ctx, ghs)
 		})
 	}
 
@@ -103,12 +104,12 @@ func (c *partitionStrategy) Process(records Records) error {
 	return nil
 }
 
-func (c *partitionStrategy) doPreHandlers(msgs EventMsgs) (err error) {
-	defer c.recover(msgs, &err)
+func (c *partitionStrategy) doPreHandlers(ctx context.Context, msgs EventMsgs) (err error) {
+	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
-		if err = ph(msgs); err != nil {
+		if err = ph(ctx, msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
+				errhandler(ctx, msgs, err)
 			}
 
 			return err
@@ -118,12 +119,12 @@ func (c *partitionStrategy) doPreHandlers(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *partitionStrategy) doPostHandler(msgs EventMsgs) (err error) {
-	defer c.recover(msgs, &err)
+func (c *partitionStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err error) {
+	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.postHandlers {
-		if err = ph(msgs); err != nil {
+		if err = ph(ctx, msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
+				errhandler(ctx, msgs, err)
 			}
 		}
 
@@ -133,15 +134,15 @@ func (c *partitionStrategy) doPostHandler(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *partitionStrategy) doHandlers(msgs EventMsgs) (err error) {
+func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err error) {
 	wg := errgroup.Group{}
 	for _, handler := range c.handlers {
 		handler := handler
 		wg.Go(func() (aerr error) {
-			defer c.recover(msgs, &aerr)
-			if err := handler(msgs); err != nil {
+			defer c.recover(ctx, msgs, &aerr)
+			if err := handler(ctx, msgs); err != nil {
 				for _, errhandler := range c.errorHandlers {
-					errhandler(msgs, err)
+					errhandler(ctx, msgs, err)
 				}
 				return err
 			}
@@ -156,35 +157,35 @@ func (c *partitionStrategy) doHandlers(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *partitionStrategy) handle(msgs EventMsgs) (err error) {
-	if err = c.doPreHandlers(msgs); err != nil {
+func (c *partitionStrategy) handle(ctx context.Context, msgs EventMsgs) (err error) {
+	if err = c.doPreHandlers(ctx, msgs); err != nil {
 		return err
 	}
 
-	if err = c.doHandlers(msgs); err != nil {
+	if err = c.doHandlers(ctx, msgs); err != nil {
 		return err
 	}
 
-	if err = c.doPostHandler(msgs); err != nil {
+	if err = c.doPostHandler(ctx, msgs); err != nil {
 		return err
 	}
 
 	return
 }
 
-func (c *partitionStrategy) recover(msgs EventMsgs, err *error) {
+func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *error) {
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
 			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, appErr)
+				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		case string:
 			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, appErr)
+				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		default:

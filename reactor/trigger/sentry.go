@@ -3,6 +3,7 @@ package trigger
 import (
 	"context"
 
+	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/rs/zerolog/log"
@@ -10,15 +11,20 @@ import (
 
 func Sentry(ctx context.Context, id string, err error) {
 	var appErr *errors.AppError
+	var ok bool
 
-	appErr, _ = errors.FromError(err)
-	switch errors.ErrStatus(err) {
-	case errors.InternalErrorStatus:
-		log.Error().
-			Interface("input", appErr.Input).
-			Msg(appErr.Error())
-	default:
-		return
+	if appErr, ok = errors.FromError(err); ok {
+		switch errors.ErrStatus(err) {
+		case errors.InternalErrorStatus:
+			log.Error().
+				Interface("input", appErr.Input).
+				Msg(appErr.Error())
+		default:
+			return
+		}
+	} else {
+		log.Error().Msg(err.Error())
+		appErr = errors.WithCaller(err)
 	}
 
 	packet := sentry.NewPacket(err)
@@ -34,12 +40,15 @@ func Sentry(ctx context.Context, id string, err error) {
 		})
 	}
 
-	if appErr.Cause != nil {
-		packet.AddExtra(sentry.Extra{
-			"cause": appErr.Cause.Error(),
-		})
+	if seg := xray.GetSegment(ctx); seg != nil {
+		seg.AddAnnotation("error", true)
+		seg.AddAnnotation("error_code", appErr.Code)
+		seg.AddAnnotation("error_msg", appErr.Error())
+		seg.Error = true
 	}
 
+	packet.SetFingerprint(appErr.Code)
+	packet.SetCulprit(appErr.Message)
 	packet.AddStackTrace(appErr.StackTrace())
 	sentry.CaptureAndWait(packet)
 }

@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/aws/aws-xray-sdk-go/xraylog"
 	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/errors"
@@ -21,6 +23,7 @@ type EventMsgs = []*eventstore.EventMsg
 
 func init() {
 	common.PrettyLog()
+	xray.SetLogger(xraylog.NullLogger)
 }
 
 type Handler struct {

@@ -1,6 +1,8 @@
 package kinesisstream
 
 import (
+	"context"
+
 	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/errors"
 	"golang.org/x/sync/errgroup"
@@ -42,7 +44,7 @@ func (c *simpleStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
 	c.handlers = handlers
 }
 
-func (c *simpleStrategy) Process(records Records) error {
+func (c *simpleStrategy) Process(ctx context.Context, records Records) error {
 	var eventType string
 	msgs := make(EventMsgs, 0, 100)
 
@@ -55,15 +57,15 @@ func (c *simpleStrategy) Process(records Records) error {
 		msgs = append(msgs, record.Kinesis.Data.EventMsg)
 	}
 
-	return c.handle(msgs)
+	return c.handle(ctx, msgs)
 }
 
-func (c *simpleStrategy) handle(msgs EventMsgs) (err error) {
-	defer c.recover(msgs, &err)
+func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err error) {
+	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
-		if err = ph(msgs); err != nil {
+		if err = ph(ctx, msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
+				errhandler(ctx, msgs, err)
 			}
 
 			return err
@@ -74,10 +76,10 @@ func (c *simpleStrategy) handle(msgs EventMsgs) (err error) {
 	for _, handler := range c.handlers {
 		handler := handler
 		wg.Go(func() (aerr error) {
-			defer c.recover(msgs, &aerr)
-			if err := handler(msgs); err != nil {
+			defer c.recover(ctx, msgs, &aerr)
+			if err := handler(ctx, msgs); err != nil {
 				for _, errhandler := range c.errorHandlers {
-					errhandler(msgs, err)
+					errhandler(ctx, msgs, err)
 				}
 				return err
 			}
@@ -90,9 +92,9 @@ func (c *simpleStrategy) handle(msgs EventMsgs) (err error) {
 	}
 
 	for _, ph := range c.postHandlers {
-		if err = ph(msgs); err != nil {
+		if err = ph(ctx, msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
+				errhandler(ctx, msgs, err)
 			}
 		}
 
@@ -102,19 +104,19 @@ func (c *simpleStrategy) handle(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *simpleStrategy) recover(msgs EventMsgs, err *error) {
+func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error) {
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
 			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, appErr)
+				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		case string:
 			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, appErr)
+				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		default:

@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/rs/zerolog/log"
@@ -15,15 +15,20 @@ func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 
 	return func(ctx context.Context, cmd *Command, err error) {
 		var appErr *errors.AppError
+		var ok bool
 
-		appErr, _ = errors.FromError(err)
-		switch errors.ErrStatus(err) {
-		case errors.InternalErrorStatus:
-			log.Error().
-				Interface("input", appErr.Input).
-				Msg(appErr.Error())
-		default:
-			return
+		if appErr, ok = errors.FromError(err); ok {
+			switch errors.ErrStatus(err) {
+			case errors.InternalErrorStatus:
+				log.Error().
+					Interface("input", appErr.Input).
+					Msg(appErr.Error())
+			default:
+				return
+			}
+		} else {
+			log.Error().Msg(err.Error())
+			appErr = errors.WithCaller(err)
 		}
 
 		packet := sentry.NewPacket(err)
@@ -39,15 +44,16 @@ func Sentry(dsn string, options ...sentry.Option) ErrorHandler {
 			})
 		}
 
-		if appErr.Cause != nil {
-			packet.AddExtra(sentry.Extra{
-				"cause": appErr.Cause.Error(),
-			})
+		if seg := xray.GetSegment(ctx); seg != nil {
+			seg.AddAnnotation("error", true)
+			seg.AddAnnotation("error_code", appErr.Code)
+			seg.AddAnnotation("error_msg", appErr.Error())
+			seg.Error = true
 		}
 
-		packet.AddTag("lambda", lambdacontext.FunctionName)
+		packet.SetFingerprint(appErr.Code)
 		packet.AddTag("function", cmd.Function)
-
+		packet.SetCulprit(appErr.Message)
 		packet.AddStackTrace(appErr.StackTrace())
 		sentry.CaptureAndWait(packet)
 	}

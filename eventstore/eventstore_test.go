@@ -1,6 +1,7 @@
 package eventstore_test
 
 import (
+	"context"
 	"sync"
 	"testing"
 	"time"
@@ -27,6 +28,8 @@ func getDB() *memory.MemoryEventStore {
 func TestSaveAndGet(t *testing.T) {
 	db := getDB()
 	db.Truncate()
+
+	ctx := context.Background()
 
 	es := eventstore.NewEventStore(db)
 

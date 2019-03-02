@@ -1,7 +1,10 @@
 package dynamodb
 
 import (
+	"context"
 	"strconv"
+
+	"github.com/aws/aws-xray-sdk-go/xray"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -34,8 +37,10 @@ type DynamoDBEventStore struct {
 }
 
 func New(sess *session.Session, eventstoreTable, snapshotTable string) *DynamoDBEventStore {
+	db := dynamodb.New(sess)
+	xray.AWS(db.Client)
 	return &DynamoDBEventStore{
-		db:              dynamodb.New(sess),
+		db:              db,
 		eventstoreTable: eventstoreTable,
 		snapshotTable:   snapshotTable,
 	}
@@ -165,7 +170,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *DynamoDBEventStore) GetEvents(aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
+func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
 	keyCond := getCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getKV: &dynamodb.AttributeValue{S: &aggID},
@@ -176,7 +181,7 @@ func (d *DynamoDBEventStore) GetEvents(aggID string, seq, limit int64) ([]*event
 		keyCond = getCondWithTime
 	}
 
-	output, err := d.db.Query(&dynamodb.QueryInput{
+	output, err := d.db.QueryWithContext(ctx, &dynamodb.QueryInput{
 		TableName:              &d.eventstoreTable,
 		KeyConditionExpression: keyCond,
 		// Limit:                     &limit,
@@ -208,8 +213,8 @@ func (d *DynamoDBEventStore) GetEvents(aggID string, seq, limit int64) ([]*event
 	return msgs, nil
 }
 
-func (d *DynamoDBEventStore) GetSnapshot(aggID string) (*eventstore.Snapshot, error) {
-	output, err := d.db.GetItem(&dynamodb.GetItemInput{
+func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, error) {
+	output, err := d.db.GetItemWithContext(ctx, &dynamodb.GetItemInput{
 		TableName:      &d.snapshotTable,
 		ConsistentRead: falseStrongRead,
 		Key: map[string]*dynamodb.AttributeValue{
@@ -234,7 +239,7 @@ func (d *DynamoDBEventStore) GetSnapshot(aggID string) (*eventstore.Snapshot, er
 	return snapshot, nil
 }
 
-func (d *DynamoDBEventStore) SaveV1(msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (d *DynamoDBEventStore) SaveV1(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
 	var err error
 
 	var putES []*dynamodb.TransactWriteItem
@@ -277,7 +282,7 @@ func (d *DynamoDBEventStore) SaveV1(msgs []*eventstore.EventMsg, snapshot *event
 		})
 	}
 
-	_, err = d.db.TransactWriteItems(&dynamodb.TransactWriteItemsInput{
+	_, err = d.db.TransactWriteItemsWithContext(ctx, &dynamodb.TransactWriteItemsInput{
 		TransactItems: putES,
 	})
 
@@ -293,7 +298,7 @@ func (d *DynamoDBEventStore) SaveV1(msgs []*eventstore.EventMsg, snapshot *event
 	return nil
 }
 
-func (d *DynamoDBEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
 	var err error
 
 	var payloadReq map[string]*dynamodb.AttributeValue
@@ -303,7 +308,7 @@ func (d *DynamoDBEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventst
 			return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 		}
 
-		_, err = d.db.PutItem(&dynamodb.PutItemInput{
+		_, err = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
 			TableName:           &d.eventstoreTable,
 			ConditionExpression: saveCond,
 			Item:                payloadReq,
@@ -329,7 +334,7 @@ func (d *DynamoDBEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventst
 		return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 	}
 
-	_, err = d.db.PutItem(&dynamodb.PutItemInput{
+	_, err = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
 		TableName: &d.snapshotTable,
 		Item:      snapshotReq,
 	})

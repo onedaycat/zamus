@@ -24,7 +24,7 @@
   revision = "ec2fec7cfe48fbf48ea1a6855a077c372bbb1b1c"
 
 [[projects]]
-  digest = "1:268d4a00833aad41bdf6c62939070809459b96ed32824597ba4d777e38a24676"
+  digest = "1:145fcd36cbfedf3cdcefbce07de70ee924dbb98383a816e07dafc6589210498d"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -57,15 +57,39 @@
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
+    "private/protocol/restjson",
     "private/protocol/xml/xmlutil",
     "service/dynamodb",
     "service/dynamodb/dynamodbattribute",
     "service/kinesis",
+    "service/lambda",
     "service/sts",
+    "service/xray",
   ]
   pruneopts = "UT"
-  revision = "b4d97e9cf75f3815bd694b8e0d6f9d81492c3586"
-  version = "v1.17.5"
+  revision = "f2bb620afb315242706942e6ca4c7d26ee5ed627"
+  version = "v1.17.9"
+
+[[projects]]
+  branch = "master"
+  digest = "1:e6129c15a2b2372c76e82a07596d12d0a347cddfad811fe01f92b1e64f3eee3c"
+  name = "github.com/aws/aws-xray-sdk-go"
+  packages = [
+    "daemoncfg",
+    "header",
+    "internal/logger",
+    "internal/plugins",
+    "pattern",
+    "resources",
+    "strategy/ctxmissing",
+    "strategy/exception",
+    "strategy/sampling",
+    "utils",
+    "xray",
+    "xraylog",
+  ]
+  pruneopts = "UT"
+  revision = "12231bd5f5882a4639c59da8de1531bcfbe9adfc"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -113,7 +137,7 @@
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "c823c79ea1570fb5ff454033735a8e68575d1d0f"
+  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
 
 [[projects]]
   branch = "master"
@@ -159,14 +183,30 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:96a45ca2517fe270564fd9c2944b7027363aa1663cd166fef24a551303c2380f"
+  digest = "1:a73b63abf2a894270f0d20130a216b8d51679bcadf6bc397b390c0de5ea05814"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "18db86a476070c6324c06bbfff546a2e3b7ce422"
+  revision = "dc76da224cde5466241568f1fd6ec93329c7802f"
+
+[[projects]]
+  branch = "master"
+  digest = "1:7af595f48e507f5f04d2af2f1dbd5b6a6b39b82b5beb3a6839df16c7820610ca"
+  name = "github.com/onedaycat/gocqrs"
+  packages = ["common/eid"]
+  pruneopts = "UT"
+  revision = "4cb9069aec0a2ce4d584117a94244a4e0b51da0d"
+
+[[projects]]
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
 
 [[projects]]
   branch = "master"
@@ -178,11 +218,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e0b4bdab692784c70b4292a3206c44a8f404844e6bfca38d6f679486686d6f86"
+  digest = "1:c1ccd4b194417bcfcf7d45ea419fb222f50d1d03f1eae8f6baadd7662c98ebc4"
   name = "github.com/plimble/mage"
   packages = ["mg"]
   pruneopts = "UT"
-  revision = "0afda4a3ee6517b367fa8bdd1f67f941b3b71a49"
+  revision = "c0f166d01ae1a6b5fa487f5e161ec16da4d730a9"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -202,7 +242,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:65622c99ceaecf43f1c0df94c626f78c9ee2973760ea262d187cd52118d58544"
+  digest = "1:b7f56ba81cef781b72bcfa56bb205e53550c7d3617da8ba9fe06041984942748"
   name = "github.com/rs/zerolog"
   packages = [
     ".",
@@ -211,7 +251,7 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "299ff038c1fb98b0d127137bc6a7a869b9f4ced5"
+  revision = "8e5449ab3506c7863b20b2445c8e09a0d3f29e4e"
 
 [[projects]]
   branch = "master"
@@ -241,15 +281,24 @@
   version = "v1.0.3"
 
 [[projects]]
+  digest = "1:ac83cf90d08b63ad5f7e020ef480d319ae890c208f8524622a2f3136e2686b02"
+  name = "github.com/stretchr/objx"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "477a77ecc69700c7cdeb1fa9e129548e1c1c393c"
+  version = "v0.1.1"
+
+[[projects]]
   branch = "master"
-  digest = "1:656570e9301c9ce00e7dada49b86b855b5d5bb4df83ba7549bd8f2c7f1ed1025"
+  digest = "1:f5235347aeacc55538e3e527a07c5b581dd337c5406638a15245ebbdef634656"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
+    "mock",
     "require",
   ]
   pruneopts = "UT"
-  revision = "3f658bd5ac42cc0b5de5b427e95a480d5726ea76"
+  revision = "21cb1c2932a2d04c6792d5ad106243c6e36a3a7d"
 
 [[projects]]
   branch = "master"
@@ -257,15 +306,15 @@
   name = "golang.org/x/sync"
   packages = ["errgroup"]
   pruneopts = "UT"
-  revision = "37e7f081c4d4c64e13b10787722085407fe5d15f"
+  revision = "e225da77a7e68af35c70ccbf71af2b83e6acac3c"
 
 [[projects]]
   branch = "master"
-  digest = "1:d0e9a312c4610a508569ab25e54d34600b1a96d19b1866ece104ffdf1c1b9d2c"
+  digest = "1:a2bc6cb1f4e1d0b512e1d47d392ead580006b5bdade6ffde16271759fe609b34"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "cc5685c2db1239775905f3911f0067c0fa74762f"
+  revision = "b6889370fb1098ed892bd3400d189bb6a3355813"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
@@ -302,15 +351,20 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
     "github.com/aws/aws-sdk-go/aws/credentials",
+    "github.com/aws/aws-sdk-go/aws/request",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/dynamodb",
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute",
     "github.com/aws/aws-sdk-go/service/kinesis",
+    "github.com/aws/aws-sdk-go/service/lambda",
+    "github.com/aws/aws-xray-sdk-go/xray",
+    "github.com/aws/aws-xray-sdk-go/xraylog",
     "github.com/go-sql-driver/mysql",
     "github.com/golang/protobuf/proto",
     "github.com/golang/snappy",
     "github.com/onedaycat/errors",
     "github.com/onedaycat/errors/sentry",
+    "github.com/onedaycat/gocqrs/common/eid",
     "github.com/plimble/goconf",
     "github.com/plimble/mage/mg",
     "github.com/rs/xid",
@@ -318,6 +372,7 @@
     "github.com/rs/zerolog/log",
     "github.com/rubenv/sql-migrate",
     "github.com/spf13/cobra",
+    "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",
     "golang.org/x/sync/errgroup",
   ]

@@ -3,6 +3,7 @@
 package dynamodb
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"testing"
@@ -44,6 +45,7 @@ func getDB() *DynamoDBEventStore {
 func TestXXX(t *testing.T) {
 	db := getDB()
 	db.Truncate()
+	ctx := context.Background()
 
 	es := eventstore.NewEventStore(db)
 
@@ -59,13 +61,14 @@ func TestXXX(t *testing.T) {
 	st.Add(2)
 	st.Add(3)
 
-	err := es.SaveWithMetadata(st, metadata)
+	err := es.SaveWithMetadata(ctx, st, metadata)
 	require.NoError(t, err)
 }
 
 func TestSaveAndGet(t *testing.T) {
 	db := getDB()
 	db.Truncate()
+	ctx := context.Background()
 
 	es := eventstore.NewEventStore(db)
 
@@ -85,12 +88,12 @@ func TestSaveAndGet(t *testing.T) {
 	st.Add(3)
 
 	clock.Freeze(now1)
-	err := es.Save(st)
+	err := es.Save(ctx, st)
 	require.NoError(t, err)
 
 	// GetAggregate
 	st2 := domain.NewStockItem()
-	err = es.GetAggregate(st.GetAggregateID(), st2)
+	err = es.GetAggregate(ctx, st.GetAggregateID(), st2)
 	require.NoError(t, err)
 	require.Equal(t, st, st2)
 
@@ -99,10 +102,10 @@ func TestSaveAndGet(t *testing.T) {
 	st.Remove()
 
 	clock.Freeze(now2)
-	err = es.SaveWithMetadata(st, metadata)
+	err = es.SaveWithMetadata(ctx, st, metadata)
 	require.NoError(t, err)
 
-	events, err := es.GetEvents(st.GetAggregateID(), eventstore.TimeSeq(now2.Unix(), 0))
+	events, err := es.GetEvents(ctx, st.GetAggregateID(), eventstore.TimeSeq(now2.Unix(), 0))
 	require.NoError(t, err)
 	require.Len(t, events, 2)
 	require.True(t, st.IsRemoved())
@@ -114,39 +117,41 @@ func TestSaveAndGet(t *testing.T) {
 
 	// GetAggregateByTimeSeq
 	st4 := domain.NewStockItem()
-	err = es.GetAggregateByTimeSeq(st.GetAggregateID(), st4, eventstore.TimeSeq(now2.Unix(), 0))
+	err = es.GetAggregateByTimeSeq(ctx, st.GetAggregateID(), st4, eventstore.TimeSeq(now2.Unix(), 0))
 	require.NoError(t, err)
 	require.Equal(t, st4, st)
 }
 
 func TestNotFound(t *testing.T) {
 	db := getDB()
+	ctx := context.Background()
 
 	es := eventstore.NewEventStore(db)
 
 	// GetAggregate
 	st := domain.NewStockItem()
 	st.SetAggregateID("1x")
-	err := es.GetAggregate(st.GetAggregateID(), st)
+	err := es.GetAggregate(ctx, st.GetAggregateID(), st)
 	require.Equal(t, errors.ErrNotFound, err)
 	require.True(t, st.IsNew())
 
 	// GetEvents
-	msgs, err := es.GetEvents(st.GetAggregateID(), 0)
+	msgs, err := es.GetEvents(ctx, st.GetAggregateID(), 0)
 	require.Nil(t, err)
 	require.Len(t, msgs, 0)
 	require.Nil(t, msgs)
 
 	st4 := domain.NewStockItem()
-	err = es.GetAggregateByTimeSeq(st.GetAggregateID(), st4, eventstore.TimeSeq(clock.Now().Unix(), 1))
+	err = es.GetAggregateByTimeSeq(ctx, st.GetAggregateID(), st4, eventstore.TimeSeq(clock.Now().Unix(), 1))
 	require.Equal(t, errors.ErrNotFound, err)
 	require.True(t, st4.IsNew())
 }
 
 func TestConcurency(t *testing.T) {
 	db := getDB()
-
 	db.Truncate()
+	ctx := context.Background()
+
 	es := eventstore.NewEventStore(db)
 
 	wg := sync.WaitGroup{}
@@ -162,7 +167,7 @@ func TestConcurency(t *testing.T) {
 		st.Add(2)
 		st.Add(3)
 
-		err1 = es.Save(st)
+		err1 = es.Save(ctx, st)
 
 		wg.Done()
 	}()
@@ -173,7 +178,7 @@ func TestConcurency(t *testing.T) {
 		st.Add(1)
 		st.Remove()
 
-		err2 = es.Save(st)
+		err2 = es.Save(ctx, st)
 
 		wg.Done()
 	}()

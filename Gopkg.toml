@@ -30,6 +30,10 @@
   branch = "master"
 
 [[constraint]]
+  name = "github.com/aws/aws-xray-sdk-go"
+  branch = "master"
+
+[[constraint]]
   name = "github.com/aws/aws-sdk-go"
   version = "1.17.4"
 

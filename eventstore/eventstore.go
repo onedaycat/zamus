@@ -1,6 +1,7 @@
 package eventstore
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/golang/snappy"
@@ -19,11 +20,11 @@ const emptyStr = ""
 
 type EventStore interface {
 	SetSnapshotEveryNEvents(n int64)
-	GetEvents(aggID string, timeSeq int64) ([]*EventMsg, error)
-	GetAggregate(aggID string, agg AggregateRoot) error
-	GetAggregateByTimeSeq(aggID string, agg AggregateRoot, timeSeq int64) error
-	Save(agg AggregateRoot) error
-	SaveWithMetadata(agg AggregateRoot, metadata *Metadata) error
+	GetEvents(ctx context.Context, aggID string, timeSeq int64) ([]*EventMsg, error)
+	GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) error
+	GetAggregateByTimeSeq(ctx context.Context, aggID string, agg AggregateRoot, timeSeq int64) error
+	Save(ctx context.Context, agg AggregateRoot) error
+	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) error
 }
 
 type eventStore struct {
@@ -45,8 +46,8 @@ func (es *eventStore) SetSnapshotEveryNEvents(n int64) {
 	es.snapshotn = n
 }
 
-func (es *eventStore) GetAggregateByTimeSeq(aggID string, agg AggregateRoot, timeSeq int64) error {
-	msgs, err := es.storage.GetEvents(aggID, timeSeq, 0)
+func (es *eventStore) GetAggregateByTimeSeq(ctx context.Context, aggID string, agg AggregateRoot, timeSeq int64) error {
+	msgs, err := es.storage.GetEvents(ctx, aggID, timeSeq, 0)
 	if err != nil {
 		return err
 	}
@@ -69,8 +70,8 @@ func (es *eventStore) GetAggregateByTimeSeq(aggID string, agg AggregateRoot, tim
 	return nil
 }
 
-func (es *eventStore) GetAggregate(aggID string, agg AggregateRoot) error {
-	snapshot, err := es.storage.GetSnapshot(aggID)
+func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) error {
+	snapshot, err := es.storage.GetSnapshot(ctx, aggID)
 	if err != nil {
 		return err
 	}
@@ -94,7 +95,7 @@ func (es *eventStore) GetAggregate(aggID string, agg AggregateRoot) error {
 		return nil
 	}
 
-	msgs, err := es.storage.GetEvents(aggID, snapshot.TimeSeq, 0)
+	msgs, err := es.storage.GetEvents(ctx, aggID, snapshot.TimeSeq, 0)
 	if err != nil {
 		return err
 	}
@@ -111,15 +112,15 @@ func (es *eventStore) GetAggregate(aggID string, agg AggregateRoot) error {
 	return nil
 }
 
-func (es *eventStore) GetEvents(id string, timeSeq int64) ([]*EventMsg, error) {
-	return es.storage.GetEvents(id, timeSeq, 0)
+func (es *eventStore) GetEvents(ctx context.Context, id string, timeSeq int64) ([]*EventMsg, error) {
+	return es.storage.GetEvents(ctx, id, timeSeq, 0)
 }
 
-func (es *eventStore) GetSnapshot(aggID string) (*Snapshot, error) {
-	return es.storage.GetSnapshot(aggID)
+func (es *eventStore) GetSnapshot(ctx context.Context, aggID string) (*Snapshot, error) {
+	return es.storage.GetSnapshot(ctx, aggID)
 }
 
-func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) error {
+func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) error {
 	events := agg.GetEvents()
 	n := len(events)
 	if n == 0 {
@@ -201,7 +202,7 @@ func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) er
 		}
 	}
 
-	if err := es.storage.Save(msgs, snapshot); err != nil {
+	if err := es.storage.Save(ctx, msgs, snapshot); err != nil {
 		return err
 	}
 
@@ -212,8 +213,8 @@ func (es *eventStore) SaveWithMetadata(agg AggregateRoot, metadata *Metadata) er
 	return nil
 }
 
-func (es *eventStore) Save(agg AggregateRoot) error {
-	return es.SaveWithMetadata(agg, nil)
+func (es *eventStore) Save(ctx context.Context, agg AggregateRoot) error {
+	return es.SaveWithMetadata(ctx, agg, nil)
 }
 
 func TimeSeq(time int64, seq int64) int64 {

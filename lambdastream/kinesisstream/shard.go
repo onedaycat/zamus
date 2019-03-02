@@ -1,6 +1,8 @@
 package kinesisstream
 
 import (
+	"context"
+
 	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/errors"
 	"golang.org/x/sync/errgroup"
@@ -44,7 +46,7 @@ func (c *shardStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
 	c.handlers = handlers
 }
 
-func (c *shardStrategy) Process(records Records) error {
+func (c *shardStrategy) Process(ctx context.Context, records Records) error {
 	var eventType string
 	var pk string
 	var shardPos int
@@ -83,20 +85,20 @@ func (c *shardStrategy) Process(records Records) error {
 		}
 
 		wg.Go(func() (err error) {
-			defer c.recover(shard, &err)
-			return c.handle(shard)
+			defer c.recover(ctx, shard, &err)
+			return c.handle(ctx, shard)
 		})
 	}
 
 	return wg.Wait()
 }
 
-func (c *shardStrategy) doPreHandlers(msgs EventMsgs) (err error) {
-	defer c.recover(msgs, &err)
+func (c *shardStrategy) doPreHandlers(ctx context.Context, msgs EventMsgs) (err error) {
+	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
-		if err = ph(msgs); err != nil {
+		if err = ph(ctx, msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
+				errhandler(ctx, msgs, err)
 			}
 
 			return err
@@ -106,12 +108,12 @@ func (c *shardStrategy) doPreHandlers(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *shardStrategy) doPostHandler(msgs EventMsgs) (err error) {
-	defer c.recover(msgs, &err)
+func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err error) {
+	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.postHandlers {
-		if err = ph(msgs); err != nil {
+		if err = ph(ctx, msgs); err != nil {
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, err)
+				errhandler(ctx, msgs, err)
 			}
 		}
 
@@ -121,15 +123,15 @@ func (c *shardStrategy) doPostHandler(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *shardStrategy) doHandlers(msgs EventMsgs) (err error) {
+func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err error) {
 	wg := errgroup.Group{}
 	for _, handler := range c.handlers {
 		handler := handler
 		wg.Go(func() (aerr error) {
-			defer c.recover(msgs, &aerr)
-			if err := handler(msgs); err != nil {
+			defer c.recover(ctx, msgs, &aerr)
+			if err := handler(ctx, msgs); err != nil {
 				for _, errhandler := range c.errorHandlers {
-					errhandler(msgs, err)
+					errhandler(ctx, msgs, err)
 				}
 				return err
 			}
@@ -144,35 +146,35 @@ func (c *shardStrategy) doHandlers(msgs EventMsgs) (err error) {
 	return
 }
 
-func (c *shardStrategy) handle(msgs EventMsgs) (err error) {
-	if err = c.doPreHandlers(msgs); err != nil {
+func (c *shardStrategy) handle(ctx context.Context, msgs EventMsgs) (err error) {
+	if err = c.doPreHandlers(ctx, msgs); err != nil {
 		return err
 	}
 
-	if err = c.doHandlers(msgs); err != nil {
+	if err = c.doHandlers(ctx, msgs); err != nil {
 		return err
 	}
 
-	if err = c.doPostHandler(msgs); err != nil {
+	if err = c.doPostHandler(ctx, msgs); err != nil {
 		return err
 	}
 
 	return
 }
 
-func (c *shardStrategy) recover(msgs EventMsgs, err *error) {
+func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *error) {
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
 			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, appErr)
+				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		case string:
 			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
 			for _, errhandler := range c.errorHandlers {
-				errhandler(msgs, appErr)
+				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		default:

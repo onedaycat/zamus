@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"context"
 	"sync"
 
 	"github.com/onedaycat/zamus/errors"
@@ -28,7 +29,7 @@ func (d *MemoryEventStore) Truncate() {
 	d.snapshot = make(map[string]*eventstore.Snapshot)
 }
 
-func (d *MemoryEventStore) GetEvents(aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
+func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
@@ -48,7 +49,7 @@ func (d *MemoryEventStore) GetEvents(aggID string, seq, limit int64) ([]*eventst
 	return msgs, nil
 }
 
-func (d *MemoryEventStore) GetSnapshot(aggID string) (*eventstore.Snapshot, error) {
+func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
@@ -60,7 +61,7 @@ func (d *MemoryEventStore) GetSnapshot(aggID string) (*eventstore.Snapshot, erro
 	return snap, nil
 }
 
-func (d *MemoryEventStore) Save(msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (d *MemoryEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
