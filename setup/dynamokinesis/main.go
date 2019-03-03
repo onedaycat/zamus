@@ -2,17 +2,19 @@ package main
 
 import (
 	"context"
-	"errors"
 	"os"
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	errs "github.com/onedaycat/errors"
+	"github.com/onedaycat/errors/errgroup"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/dynamostream"
+	"github.com/onedaycat/zamus/tracer"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -25,18 +27,24 @@ var (
 	streamNames = os.Getenv("KINESIS_STREAM_NAMES")
 )
 
-func publish(streamName string, records []*kinesis.PutRecordsRequestEntry) error {
-	out, err := ks.PutRecords(&kinesis.PutRecordsInput{
+func publish(ctx context.Context, streamName string, records []*kinesis.PutRecordsRequestEntry) errors.Error {
+	hctx, seg := tracer.BeginSubsegment(ctx, "publish-"+streamName)
+	defer tracer.Close(seg)
+	out, err := ks.PutRecordsWithContext(hctx, &kinesis.PutRecordsInput{
 		Records:    records,
 		StreamName: &streamName,
 	})
 
 	if err != nil {
-		return err
+		appErr := errors.ErrUnablePublishKinesis.WithCaller().WithCause(err)
+		tracer.AddError(seg, appErr)
+		return appErr
 	}
 
 	if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
-		return errors.New("One or more events published failed")
+		appErr := errors.ErrUnablePublishKinesis.WithCaller().WithCause(errs.New("One or more events published failed"))
+		tracer.AddError(seg, appErr)
+		return appErr
 	}
 
 	return nil
@@ -69,8 +77,12 @@ func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) erro
 
 	wg := errgroup.Group{}
 	for _, streamName := range streamList {
-		wg.Go(func() error {
-			return publish(streamName, result)
+		wg.Go(func() errors.Error {
+			if err := publish(ctx, streamName, result); err != nil {
+				return err
+			}
+
+			return nil
 		})
 	}
 
@@ -84,7 +96,10 @@ func init() {
 	}
 
 	streamList = strings.Split(streamNames, delim)
+
+	tracer.Enable = true
 	ks = kinesis.New(sess)
+	tracer.AWS(ks.Client)
 }
 
 func main() {

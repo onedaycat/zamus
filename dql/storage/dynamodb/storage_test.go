@@ -6,11 +6,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/onedaycat/zamus/common/eid"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/common/random"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"

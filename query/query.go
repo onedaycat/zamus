@@ -24,7 +24,7 @@ type queryinfo struct {
 }
 
 func WithPermission(pm string) QueryHandler {
-	return func(ctx context.Context, query *Query) (QueryResult, error) {
+	return func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		if query.Identity == nil {
 			return nil, errors.ErrPermissionDenied
 		}

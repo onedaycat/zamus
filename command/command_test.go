@@ -12,12 +12,14 @@ import (
 func TestCommandPermission(t *testing.T) {
 	checkFunc := false
 
-	f := func(ctx context.Context, cmd *Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 		checkFunc = true
 		return nil, nil
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{
+		SentryDNS: "test",
+	})
 	h.RegisterCommand("testHandlerCommandDenied", f, WithPermission("deleteWorkspace"))
 
 	t.Run("Passed", func(t *testing.T) {

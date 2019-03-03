@@ -4,10 +4,17 @@ import (
 	"context"
 
 	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/aws/aws-xray-sdk-go/xraylog"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+	"github.com/onedaycat/zamus/common"
 	"github.com/rs/zerolog/log"
 )
+
+func Init() {
+	common.PrettyLog()
+	xray.SetLogger(xraylog.NullLogger)
+}
 
 func Sentry(ctx context.Context, id string, err error) {
 	var appErr *errors.AppError

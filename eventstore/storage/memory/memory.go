@@ -29,7 +29,7 @@ func (d *MemoryEventStore) Truncate() {
 	d.snapshot = make(map[string]*eventstore.Snapshot)
 }
 
-func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
+func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, errors.Error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
@@ -49,7 +49,7 @@ func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, lim
 	return msgs, nil
 }
 
-func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, error) {
+func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, errors.Error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
@@ -61,7 +61,7 @@ func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string) (*even
 	return snap, nil
 }
 
-func (d *MemoryEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (d *MemoryEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 

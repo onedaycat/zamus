@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +36,9 @@ func (r *queryResultList) Len() int {
 func TestNoQueryHandler(t *testing.T) {
 	var query *Query
 
-	h := NewHandler()
+	h := NewHandler(&Config{
+		SentryDNS: "test",
+	})
 
 	resp, err := h.Handle(context.Background(), query)
 
@@ -51,16 +54,16 @@ func TestInvokeHandler(t *testing.T) {
 		Function: "q1",
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResult(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
@@ -77,7 +80,7 @@ func TestQueryNotFoundHandler(t *testing.T) {
 		Function: "q1",
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 
 	resp, err := h.Handle(context.Background(), query)
 
@@ -93,16 +96,17 @@ func TestInvokeHandlerError(t *testing.T) {
 		Function: "q1",
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return nil, errors.ErrUnknown
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
+		require.Equal(t, errors.ErrUnknown, err)
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
@@ -122,18 +126,19 @@ func TestInvokeHandlerPanic(t *testing.T) {
 		Function: "q1",
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		var q *Query
 		_ = q.NBatchSources
 		return newQueryResult(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
+		require.Equal(t, errors.ErrPanic, err)
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
@@ -145,6 +150,35 @@ func TestInvokeHandlerPanic(t *testing.T) {
 	require.Equal(t, 1, nErr)
 }
 
+func TestInvokeHandlerPanicString(t *testing.T) {
+	spy := common.Spy()
+
+	query := &Query{
+		Function: "q1",
+	}
+
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
+		spy.Called("f")
+		panic("hello")
+	}
+
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
+		require.Equal(t, errors.ErrPanic, err)
+		spy.Called("fErr")
+	}
+
+	h := NewHandler(&Config{})
+	h.RegisterQuery("q1", f)
+	h.ErrorHandlers(fErr)
+
+	resp, err := h.Handle(context.Background(), query)
+
+	require.Equal(t, errors.ErrPanic, err)
+	require.Nil(t, resp)
+	require.Equal(t, 1, spy.Count("f"))
+	require.Equal(t, 1, spy.Count("fErr"))
+}
+
 func TestBatchInvokeHandler(t *testing.T) {
 	nF := 0
 	nErr := 0
@@ -154,16 +188,16 @@ func TestBatchInvokeHandler(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
@@ -184,16 +218,16 @@ func TestBatchInvokeHandlerNBatchSourcesMisMatched(t *testing.T) {
 		NBatchSources: 2,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.ErrorHandlers(fErr)
 
@@ -215,21 +249,21 @@ func TestBatchInvokePreHandler(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return nil, nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
@@ -253,21 +287,21 @@ func TestBatchInvokePreHandlerError(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return nil, errors.ErrUnknown
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
@@ -291,21 +325,21 @@ func TestBatchInvokePreHandlerNBatchSourcesMisMatched(t *testing.T) {
 		NBatchSources: 2,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return newQueryResultList(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
@@ -329,21 +363,21 @@ func TestBatchInvokePreHandlerReturn(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return nil, nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return newQueryResultList(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PreHandlers(fPre, fPre)
 	h.ErrorHandlers(fErr)
@@ -367,21 +401,21 @@ func TestBatchInvokePostHandler(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPost := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPost := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPost++
 		return nil, nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
@@ -405,21 +439,21 @@ func TestBatchInvokePostHandlerError(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPost := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPost := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPost++
 		return nil, errors.ErrUnknown
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
@@ -443,23 +477,23 @@ func TestBatchInvokePostHandlerNBatchSourcesMisMatched(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPost := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPost := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPost++
 		list := newQueryResultList()
 		list.result = list.result[:2]
 		return list, nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
@@ -486,21 +520,21 @@ func TestBatchInvokePostHandlerReturn(t *testing.T) {
 	postList := newQueryResultList()
 	postList.result[0] = "10"
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPost := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPost := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPost++
 		return postList, nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f)
 	h.PostHandlers(fPost, fPost)
 	h.ErrorHandlers(fErr)
@@ -524,21 +558,21 @@ func TestBatchInvokePreHandlerEachHandlerError(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return nil, errors.ErrUnknown
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f, fPre, fPre)
 	h.ErrorHandlers(fErr)
 
@@ -561,21 +595,21 @@ func TestBatchInvokePreHandlerEachHandlerNBatchSourcesMisMatched(t *testing.T) {
 		NBatchSources: 2,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return newQueryResultList(), nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return newQueryResultList(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f, fPre, fPre)
 	h.ErrorHandlers(fErr)
 
@@ -598,21 +632,21 @@ func TestBatchInvokePreHandlerEachHandlerReturn(t *testing.T) {
 		NBatchSources: 3,
 	}
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nF++
 		return nil, nil
 	}
 
-	fPre := func(ctx context.Context, query *Query) (QueryResult, error) {
+	fPre := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		nPre++
 		return newQueryResultList(), nil
 	}
 
-	fErr := func(ctx context.Context, query *Query, err error) {
+	fErr := func(ctx context.Context, query *Query, err errors.Error) {
 		nErr++
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("q1", f, fPre, fPre)
 	h.ErrorHandlers(fErr)
 

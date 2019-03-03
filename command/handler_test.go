@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/onedaycat/zamus/command"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/random"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
@@ -13,74 +14,71 @@ import (
 )
 
 func TestCommandHandler(t *testing.T) {
-	checkFunc := false
+	spy := common.Spy()
 
 	cmd := random.Command().
 		ValidPermission("w1", "deleteWorkspace").
 		Build()
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		require.False(t, checkFunc)
-		checkFunc = true
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("f")
 		return nil, nil
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 	h.RegisterCommand(cmd.Function, f, command.WithPermission("deleteWorkspace"))
 
 	resp, err := h.Handle(context.Background(), cmd)
 
 	require.Nil(t, err)
 	require.Nil(t, resp)
-	require.True(t, checkFunc)
+	require.True(t, spy.Has("f"))
 }
 
 func TestCommandNotFound(t *testing.T) {
-	checkFunc := false
+	spy := common.Spy()
 
 	cmd := &command.Command{
 		Function: "xxxxxx",
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		checkFunc = true
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("f")
 		return nil, nil
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 	h.RegisterCommand("testHandlerCommand", f)
 
 	resp, err := h.Handle(context.Background(), cmd)
 
 	require.Error(t, errors.ErrCommandNotFound("xxxxxx"), err)
 	require.Nil(t, resp)
-	require.False(t, checkFunc)
+	require.False(t, spy.Has("f"))
 }
 
 func TestCommandPreHandler(t *testing.T) {
-	nH := 0
-	nFPre := 0
-	nFErr := 0
+	spy := common.Spy()
 
 	cmd := &command.Command{
 		Function: "testHandlerCommand",
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nH++
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("f")
 		return nil, nil
 	}
 
-	fPre := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nFPre++
+	fPre := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("fPre")
 		return nil, nil
 	}
 
-	fErr := func(ctx context.Context, cmd *command.Command, err error) {
-		nFErr++
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
+		spy.Called("fErr")
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 
 	h.PreHandlers(fPre, fPre)
 	h.RegisterCommand("testHandlerCommand", f)
@@ -90,41 +88,38 @@ func TestCommandPreHandler(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Equal(t, nil, resp)
-	require.Equal(t, 1, nH)
-	require.Equal(t, 2, nFPre)
-	require.Equal(t, 0, nFErr)
+	require.Equal(t, 1, spy.Count("f"))
+	require.Equal(t, 2, spy.Count("fPre"))
+	require.Equal(t, 0, spy.Count("fErr"))
 }
 
 func TestCommandPreHandlerError(t *testing.T) {
-	nH := 0
-	nFPre := 0
-	nFPreErr := 0
-	nFErr := 0
+	spy := common.Spy()
 
 	cmd := &command.Command{
 		Function: "testHandlerCommand",
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nH++
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("f")
 		return nil, nil
 	}
 
-	fPre := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nFPre++
+	fPre := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("fPre")
 		return nil, nil
 	}
 
-	fPreErr := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nFPreErr++
+	fPreErr := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("fPreErr")
 		return nil, errors.ErrUnknown
 	}
 
-	fErr := func(ctx context.Context, cmd *command.Command, err error) {
-		nFErr++
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
+		spy.Called("fErr")
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 
 	h.PreHandlers(fPreErr, fPre)
 	h.RegisterCommand("testHandlerCommand", f)
@@ -134,41 +129,39 @@ func TestCommandPreHandlerError(t *testing.T) {
 
 	require.Equal(t, errors.ErrUnknown, err)
 	require.Equal(t, nil, resp)
-	require.Equal(t, 0, nH)
-	require.Equal(t, 0, nFPre)
-	require.Equal(t, 1, nFPreErr)
-	require.Equal(t, 1, nFErr)
+	require.Equal(t, 0, spy.Count("f"))
+	require.Equal(t, 0, spy.Count("fPre"))
+	require.Equal(t, 1, spy.Count("fPreErr"))
+	require.Equal(t, 1, spy.Count("fErr"))
 }
 
 func TestCommandPreHandlerResult(t *testing.T) {
-	nH := 0
-	nFPre := 0
-	nFErr := 0
+	spy := common.Spy()
 
 	cmd := &command.Command{
 		Function: "testHandlerCommand",
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nH++
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("f")
 		return nil, nil
 	}
 
-	fPre := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nFPre++
+	fPre := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("fPre")
 		return nil, nil
 	}
 
-	fPre2 := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
-		nFPre++
+	fPre2 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		spy.Called("fPre")
 		return 1, nil
 	}
 
-	fErr := func(ctx context.Context, cmd *command.Command, err error) {
-		nFErr++
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
+		spy.Called("fErr")
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 
 	h.PreHandlers(fPre, fPre2)
 	h.RegisterCommand("testHandlerCommand", f)
@@ -178,9 +171,9 @@ func TestCommandPreHandlerResult(t *testing.T) {
 
 	require.Nil(t, err)
 	require.Equal(t, 1, resp)
-	require.Equal(t, 0, nH)
-	require.Equal(t, 2, nFPre)
-	require.Equal(t, 0, nFErr)
+	require.Equal(t, 0, spy.Count("f"))
+	require.Equal(t, 2, spy.Count("fPre"))
+	require.Equal(t, 0, spy.Count("fErr"))
 }
 
 func TestErrorHandler(t *testing.T) {
@@ -199,19 +192,19 @@ func TestErrorHandler(t *testing.T) {
 		},
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		require.False(t, checkFunc)
 		checkFunc = true
 		return nil, errors.ErrUnknown
 	}
 
-	fError := func(ctx context.Context, cmd *command.Command, err error) {
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
 		errorFunc = true
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 	h.RegisterCommand("testHandlerCommandError", f, command.WithPermission("deleteWorkspace"))
-	h.ErrorHandlers(fError)
+	h.ErrorHandlers(fErr)
 
 	resp, err := h.Handle(context.Background(), cmd)
 
@@ -237,7 +230,7 @@ func TestPanicHandler(t *testing.T) {
 		},
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		require.False(t, checkFunc)
 		checkFunc = true
 		var e *command.Command
@@ -246,14 +239,53 @@ func TestPanicHandler(t *testing.T) {
 		return nil, nil
 	}
 
-	fError := func(ctx context.Context, cmd *command.Command, err error) {
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
 		errorFunc = true
 		fmt.Println(err)
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 	h.RegisterCommand("testHandlerCommandError", f, command.WithPermission("deleteWorkspace"))
-	h.ErrorHandlers(fError)
+	h.ErrorHandlers(fErr)
+
+	resp, err := h.Handle(context.Background(), cmd)
+
+	require.Equal(t, errors.ErrPanic, err)
+	require.Nil(t, resp)
+	require.True(t, checkFunc)
+	require.True(t, errorFunc)
+}
+
+func TestPanicStringHandler(t *testing.T) {
+	checkFunc := false
+	errorFunc := false
+
+	cmd := &command.Command{
+		Function:      "testHandlerCommandError",
+		PermissionKey: "workspace_1",
+		Identity: &invoke.Identity{
+			Claims: invoke.Claims{
+				Permissions: invoke.Permissions{
+					"workspace_1": "deleteWorkspace",
+				},
+			},
+		},
+	}
+
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		require.False(t, checkFunc)
+		checkFunc = true
+		panic("hello")
+	}
+
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
+		errorFunc = true
+		fmt.Println(err)
+	}
+
+	h := command.NewHandler(&command.Config{})
+	h.RegisterCommand("testHandlerCommandError", f, command.WithPermission("deleteWorkspace"))
+	h.ErrorHandlers(fErr)
 
 	resp, err := h.Handle(context.Background(), cmd)
 
@@ -272,22 +304,22 @@ func TestCommandPostHandler(t *testing.T) {
 		Function: "testHandlerCommand",
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nH++
 		return nil, nil
 	}
 
-	fPost1 := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	fPost1 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nFPost1++
 		return 1, nil
 	}
 
-	fPost2 := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	fPost2 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nFPost2++
 		return nil, nil
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 	h.PostHandlers(fPost1, fPost2)
 	h.RegisterCommand("testHandlerCommand", f)
 
@@ -310,26 +342,26 @@ func TestCommandPostHandlerError(t *testing.T) {
 		Function: "testHandlerCommand",
 	}
 
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nH++
 		return nil, nil
 	}
 
-	fPost1 := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	fPost1 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nFPost1++
 		return nil, errors.ErrUnknown
 	}
 
-	fPost2 := func(ctx context.Context, cmd *command.Command) (interface{}, error) {
+	fPost2 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nFPost2++
 		return nil, nil
 	}
 
-	fErr := func(ctx context.Context, cmd *command.Command, err error) {
+	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
 		nFErr++
 	}
 
-	h := command.NewHandler()
+	h := command.NewHandler(&command.Config{})
 	h.PostHandlers(fPost1, fPost2)
 	h.ErrorHandlers(fErr)
 	h.RegisterCommand("testHandlerCommand", f)

@@ -3,10 +3,10 @@ package kinesisstream
 import (
 	"context"
 
-	errs "github.com/onedaycat/errors"
+	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"
-	"golang.org/x/sync/errgroup"
+	"github.com/onedaycat/zamus/tracer"
 )
 
 type simpleStrategy struct {
@@ -50,7 +50,7 @@ func (c *simpleStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
 	c.handlers = handlers
 }
 
-func (c *simpleStrategy) Process(ctx context.Context, records Records) error {
+func (c *simpleStrategy) Process(ctx context.Context, records Records) errors.Error {
 	var eventType string
 	msgs := make(EventMsgs, 0, 100)
 
@@ -79,12 +79,12 @@ DQLRetry:
 	return nil
 }
 
-func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err error) {
+func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
 		if err = ph(ctx, msgs); err != nil {
 			if c.dql != nil {
-				c.dql.AddError(errors.Warp(err))
+				c.dql.AddError(err)
 			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
@@ -97,14 +97,17 @@ func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err error)
 	wg := errgroup.Group{}
 	for _, handler := range c.handlers {
 		handler := handler
-		wg.Go(func() (aerr error) {
-			defer c.recover(ctx, msgs, &aerr)
-			if aerr = handler(ctx, msgs); aerr != nil {
+		wg.Go(func() (aerr errors.Error) {
+			hctx, seg := tracer.BeginSubsegment(ctx, "handler")
+			defer tracer.Close(seg)
+			defer c.recover(hctx, msgs, &aerr)
+			if aerr = handler(hctx, msgs); aerr != nil {
+				tracer.AddError(seg, aerr)
 				if c.dql != nil {
-					c.dql.AddError(errors.Warp(aerr))
+					c.dql.AddError(aerr)
 				}
 				for _, errhandler := range c.errorHandlers {
-					errhandler(ctx, msgs, aerr)
+					errhandler(hctx, msgs, aerr)
 				}
 				return aerr
 			}
@@ -119,7 +122,7 @@ func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err error)
 	for _, ph := range c.postHandlers {
 		if err = ph(ctx, msgs); err != nil {
 			if c.dql != nil {
-				c.dql.AddError(errors.Warp(err))
+				c.dql.AddError(err)
 			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
@@ -132,29 +135,29 @@ func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err error)
 	return
 }
 
-func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error) {
+func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors.Error) {
 	if r := recover(); r != nil {
+		seg := tracer.GetSegment(ctx)
+		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
+			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
 			if c.dql != nil {
-				c.dql.AddError(appErr)
+				c.dql.AddError(*err)
 			}
 			for _, errhandler := range c.errorHandlers {
-				errhandler(ctx, msgs, appErr)
+				errhandler(ctx, msgs, *err)
 			}
-			*err = appErr
-		case string:
-			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
-			if c.dql != nil {
-				c.dql.AddError(appErr)
-			}
-			for _, errhandler := range c.errorHandlers {
-				errhandler(ctx, msgs, appErr)
-			}
-			*err = appErr
+			tracer.AddError(seg, *err)
 		default:
-			panic(cause)
+			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6)
+			if c.dql != nil {
+				c.dql.AddError(*err)
+			}
+			for _, errhandler := range c.errorHandlers {
+				errhandler(ctx, msgs, *err)
+			}
+			tracer.AddError(seg, *err)
 		}
 	}
 }

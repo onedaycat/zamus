@@ -3,6 +3,7 @@
 package mocks
 
 import context "context"
+import errors "github.com/onedaycat/errors"
 import eventstore "github.com/onedaycat/zamus/eventstore"
 import mock "github.com/stretchr/testify/mock"
 
@@ -12,79 +13,89 @@ type EventStore struct {
 }
 
 // GetAggregate provides a mock function with given fields: ctx, aggID, agg
-func (_m *EventStore) GetAggregate(ctx context.Context, aggID string, agg eventstore.AggregateRoot) error {
+func (_m *EventStore) GetAggregate(ctx context.Context, aggID string, agg eventstore.AggregateRoot) errors.Error {
 	ret := _m.Called(ctx, aggID, agg)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, eventstore.AggregateRoot) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string, eventstore.AggregateRoot) errors.Error); ok {
 		r0 = rf(ctx, aggID, agg)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0
 }
 
-// GetAggregateByTimeSeq provides a mock function with given fields: ctx, aggID, agg, timeSeq
-func (_m *EventStore) GetAggregateByTimeSeq(ctx context.Context, aggID string, agg eventstore.AggregateRoot, timeSeq int64) error {
-	ret := _m.Called(ctx, aggID, agg, timeSeq)
+// GetAggregateBySeq provides a mock function with given fields: ctx, aggID, agg, seq
+func (_m *EventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg eventstore.AggregateRoot, seq int64) errors.Error {
+	ret := _m.Called(ctx, aggID, agg, seq)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, eventstore.AggregateRoot, int64) error); ok {
-		r0 = rf(ctx, aggID, agg, timeSeq)
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string, eventstore.AggregateRoot, int64) errors.Error); ok {
+		r0 = rf(ctx, aggID, agg, seq)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0
 }
 
-// GetEvents provides a mock function with given fields: ctx, aggID, timeSeq
-func (_m *EventStore) GetEvents(ctx context.Context, aggID string, timeSeq int64) ([]*eventstore.EventMsg, error) {
-	ret := _m.Called(ctx, aggID, timeSeq)
+// GetEvents provides a mock function with given fields: ctx, aggID, seq
+func (_m *EventStore) GetEvents(ctx context.Context, aggID string, seq int64) ([]*eventstore.EventMsg, errors.Error) {
+	ret := _m.Called(ctx, aggID, seq)
 
 	var r0 []*eventstore.EventMsg
 	if rf, ok := ret.Get(0).(func(context.Context, string, int64) []*eventstore.EventMsg); ok {
-		r0 = rf(ctx, aggID, timeSeq)
+		r0 = rf(ctx, aggID, seq)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]*eventstore.EventMsg)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, int64) error); ok {
-		r1 = rf(ctx, aggID, timeSeq)
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64) errors.Error); ok {
+		r1 = rf(ctx, aggID, seq)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // Save provides a mock function with given fields: ctx, agg
-func (_m *EventStore) Save(ctx context.Context, agg eventstore.AggregateRoot) error {
+func (_m *EventStore) Save(ctx context.Context, agg eventstore.AggregateRoot) errors.Error {
 	ret := _m.Called(ctx, agg)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot) errors.Error); ok {
 		r0 = rf(ctx, agg)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0
 }
 
 // SaveWithMetadata provides a mock function with given fields: ctx, agg, metadata
-func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg eventstore.AggregateRoot, metadata *eventstore.Metadata) error {
+func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg eventstore.AggregateRoot, metadata *eventstore.Metadata) errors.Error {
 	ret := _m.Called(ctx, agg, metadata)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot, *eventstore.Metadata) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot, *eventstore.Metadata) errors.Error); ok {
 		r0 = rf(ctx, agg, metadata)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0

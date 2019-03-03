@@ -7,11 +7,11 @@ type zamusKey struct{}
 var zamuscontextKey = &zamusKey{}
 
 type ZamusContext struct {
+	AppStage       string
 	Service        string
 	LambdaFunction string
 	LambdaVersion  string
 	Version        string
-	SentryRelease  string
 }
 
 func NewContext(parent context.Context, zc *ZamusContext) context.Context {

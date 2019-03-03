@@ -109,12 +109,12 @@ func TestParseInvoke(t *testing.T) {
 func TestQueryPermission(t *testing.T) {
 	checkFunc := false
 
-	f := func(ctx context.Context, query *Query) (QueryResult, error) {
+	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 		checkFunc = true
 		return newQueryResult(), nil
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterQuery("testHandlerCommandDenied", f, WithPermission("deleteWorkspace"))
 
 	t.Run("Passed", func(t *testing.T) {

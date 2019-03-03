@@ -2,6 +2,8 @@ package invoke
 
 import (
 	"encoding/json"
+
+	"github.com/onedaycat/zamus/errors"
 )
 
 type InvokeRequest struct {
@@ -20,10 +22,18 @@ type InvokeEvent struct {
 	PermissionKey string          `json:"pemKey,omitempty"`
 }
 
-func (e *InvokeEvent) ParseArgs(v interface{}) error {
-	return json.Unmarshal(e.Args, v)
+func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {
+	if err := json.Unmarshal(e.Args, v); err != nil {
+		return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+	}
+
+	return nil
 }
 
-func (e *InvokeEvent) ParseSource(v interface{}) error {
-	return json.Unmarshal(e.Source, v)
+func (e *InvokeEvent) ParseSource(v interface{}) errors.Error {
+	if err := json.Unmarshal(e.Source, v); err != nil {
+		return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+	}
+
+	return nil
 }

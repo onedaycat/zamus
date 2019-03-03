@@ -40,7 +40,7 @@ func init() {
 }
 
 func BenchmarkShard(b *testing.B) {
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		time.Sleep(time.Millisecond * 20)
 		return nil
 	}
@@ -67,7 +67,7 @@ func BenchmarkShard(b *testing.B) {
 
 func BenchmarkPartition(b *testing.B) {
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		time.Sleep(time.Millisecond * 20)
 		return nil
 	}
@@ -95,7 +95,7 @@ func BenchmarkPartition(b *testing.B) {
 
 func BenchmarkSimple(b *testing.B) {
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		time.Sleep(time.Millisecond * 20)
 		return nil
 	}
@@ -128,7 +128,7 @@ func TestShardStrategy(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -141,7 +141,7 @@ func TestShardStrategy(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h2ET1++
@@ -154,7 +154,7 @@ func TestShardStrategy(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 	}
 
@@ -199,7 +199,7 @@ func TestShardStrategyError(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -212,7 +212,7 @@ func TestShardStrategyError(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -228,7 +228,7 @@ func TestShardStrategyError(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -274,7 +274,7 @@ func TestShardStrategyPanic(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -287,7 +287,7 @@ func TestShardStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -305,7 +305,7 @@ func TestShardStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -346,7 +346,7 @@ func TestShardStrategyPanic(t *testing.T) {
 func TestShardStrategyPanicPre(t *testing.T) {
 	nError := 0
 	isPre := false
-	prehandler := func(ctx context.Context, msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -355,11 +355,11 @@ func TestShardStrategyPanicPre(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -396,7 +396,7 @@ func TestShardStrategyPanicPre(t *testing.T) {
 func TestShardStrategyPanicPost(t *testing.T) {
 	isError := false
 	isPost := false
-	posthandler := func(ctx context.Context, msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -405,11 +405,11 @@ func TestShardStrategyPanicPost(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -448,7 +448,7 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(ctx context.Context, msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -457,7 +457,7 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 		return nil
 	}
 
-	posthandler := func(ctx context.Context, msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -466,11 +466,11 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -511,12 +511,12 @@ func TestShardStrategyPanicPostWithPre(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(ctx context.Context, msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPre = true
 		return nil
 	}
 
-	posthandler := func(ctx context.Context, msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -525,11 +525,11 @@ func TestShardStrategyPanicPostWithPre(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}

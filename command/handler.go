@@ -3,21 +3,27 @@ package command
 import (
 	"context"
 
+	"github.com/aws/aws-lambda-go/lambdacontext"
+
+	"github.com/onedaycat/errors/sentry"
+
+	"github.com/onedaycat/zamus/zamuscontext"
+
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-xray-sdk-go/xray"
 	"github.com/aws/aws-xray-sdk-go/xraylog"
-	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/invoke"
+	"github.com/onedaycat/zamus/tracer"
 )
 
 type Command = invoke.InvokeEvent
 type CommandInput = invoke.InvokeRequest
 
-type ErrorHandler func(ctx context.Context, cmd *Command, err error)
-type CommandHandler func(ctx context.Context, cmd *Command) (interface{}, error)
+type ErrorHandler func(ctx context.Context, cmd *Command, err errors.Error)
+type CommandHandler func(ctx context.Context, cmd *Command) (interface{}, errors.Error)
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
@@ -26,15 +32,48 @@ func init() {
 	xray.SetLogger(xraylog.NullLogger)
 }
 
+type Config struct {
+	AppStage      string
+	Service       string
+	Version       string
+	SentryRelease string
+	SentryDNS     string
+	EnableTrace   bool
+}
+
 type Handler struct {
 	commands     map[string]*commandinfo
 	preHandlers  []CommandHandler
 	postHandlers []CommandHandler
 	errHandlers  []ErrorHandler
+	zcctx        *zamuscontext.ZamusContext
 }
 
-func NewHandler() *Handler {
+func NewHandler(config *Config) *Handler {
+	if config.SentryDNS != "" {
+		sentry.SetDSN(config.SentryDNS)
+		sentry.SetOptions(
+			sentry.WithEnv(config.AppStage),
+			sentry.WithRelease(config.SentryRelease),
+			sentry.WithServerName(lambdacontext.FunctionName),
+			sentry.WithServiceName(config.Service),
+			sentry.WithVersion(config.Version),
+			sentry.WithTags(sentry.Tags{
+				{"lambdaVersion", lambdacontext.FunctionVersion},
+			}),
+		)
+	}
+
+	tracer.Enable = config.EnableTrace
+
 	return &Handler{
+		zcctx: &zamuscontext.ZamusContext{
+			AppStage:       config.AppStage,
+			Service:        config.Service,
+			LambdaFunction: lambdacontext.FunctionName,
+			LambdaVersion:  lambdacontext.FunctionVersion,
+			Version:        config.Version,
+		},
 		commands: make(map[string]*commandinfo, 30),
 	}
 }
@@ -58,95 +97,136 @@ func (h *Handler) RegisterCommand(command string, handler CommandHandler, prehan
 	}
 }
 
-func (h *Handler) recovery(ctx context.Context, cmd *Command, err *error) {
+func (h *Handler) recovery(ctx context.Context, cmd *Command, err *errors.Error) {
 	if r := recover(); r != nil {
+		seg := tracer.GetSegment(ctx)
+		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
+			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
-				errhandler(ctx, cmd, appErr)
+				errhandler(ctx, cmd, *err)
 			}
-			*err = appErr
-		case string:
-			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
-			for _, errhandler := range h.errHandlers {
-				errhandler(ctx, cmd, appErr)
-			}
-			*err = appErr
+			tracer.AddError(seg, *err)
 		default:
-			panic(cause)
+			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6).WithPanic()
+			for _, errhandler := range h.errHandlers {
+				errhandler(ctx, cmd, *err)
+			}
+			tracer.AddError(seg, *err)
 		}
 	}
 }
 
-func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err error) {
-	defer h.recovery(ctx, cmd, &err)
-	result, err = info.handler(ctx, cmd)
+func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+	hctx, seg := tracer.BeginSubsegment(ctx, "handler")
+	defer tracer.Close(seg)
+	defer h.recovery(hctx, cmd, &err)
+	result, err = info.handler(hctx, cmd)
 	if err != nil {
-		err = errors.Warp(err).WithCaller().WithInput(cmd)
+		err.WithCaller().WithInput(cmd)
 		for _, errHandler := range h.errHandlers {
-			errHandler(ctx, cmd, err)
+			errHandler(hctx, cmd, err)
 		}
+		tracer.AddError(seg, err)
 		return nil, err
 	}
 
-	return
+	return result, nil
 }
 
-func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, error) {
+func (h *Handler) doPreHandler(ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+	defer h.recovery(ctx, cmd, &err)
+	for _, handler := range h.preHandlers {
+		result, err = handler(ctx, cmd)
+		if err != nil {
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, cmd, err)
+			}
+			return nil, err
+		}
+
+		if result != nil {
+			return result, nil
+		}
+	}
+
+	return result, nil
+}
+
+func (h *Handler) doInPreHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+	defer h.recovery(ctx, cmd, &err)
+	for _, handler := range info.prehandlers {
+		result, err = handler(ctx, cmd)
+		if err != nil {
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, cmd, err)
+			}
+			return nil, err
+		}
+
+		if result != nil {
+			return result, nil
+		}
+	}
+
+	return result, nil
+}
+
+func (h *Handler) doPostHandler(ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+	defer h.recovery(ctx, cmd, &err)
+	for _, handler := range h.postHandlers {
+		result, err = handler(ctx, cmd)
+		if err != nil {
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, cmd, err)
+			}
+			return nil, err
+		}
+
+		if result != nil {
+			return result, nil
+		}
+	}
+
+	return result, nil
+}
+
+func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 	info, ok := h.commands[cmd.Function]
 	if !ok {
 		return nil, errors.ErrCommandNotFound(cmd.Function)
 	}
 
-	for _, handler := range h.preHandlers {
-		result, err := handler(ctx, cmd)
-		if err != nil {
-			err = errors.Warp(err).WithCaller().WithInput(cmd)
-			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, cmd, err)
-			}
-			return nil, err
-		}
+	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 
-		if result != nil {
-			return result, nil
-		}
+	result, err := h.doPreHandler(zmctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	if result != nil {
+		return result, nil
 	}
 
-	for _, handler := range info.prehandlers {
-		result, err := handler(ctx, cmd)
-		if err != nil {
-			err = errors.Warp(err).WithCaller().WithInput(cmd)
-			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, cmd, err)
-			}
-			return nil, err
-		}
-
-		if result != nil {
-			return result, nil
-		}
+	result, err = h.doInPreHandler(info, zmctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	if result != nil {
+		return result, nil
 	}
 
-	result, err := h.doHandler(info, ctx, cmd)
+	result, err = h.doHandler(info, zmctx, cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, handler := range h.postHandlers {
-		result, err := handler(ctx, cmd)
-		if err != nil {
-			err = errors.Warp(err).WithCaller().WithInput(cmd)
-			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, cmd, err)
-			}
-			return nil, err
-		}
-
-		if result != nil {
-			return result, nil
-		}
+	postresult, err := h.doPostHandler(zmctx, cmd)
+	if err != nil {
+		return nil, err
+	}
+	if postresult != nil {
+		return postresult, nil
 	}
 
 	return result, nil

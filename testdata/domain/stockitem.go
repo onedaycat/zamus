@@ -2,6 +2,7 @@ package domain
 
 import (
 	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -28,12 +29,12 @@ func (st *StockItem) Create(id, productID string, qty Qty) {
 	})
 }
 
-func (st *StockItem) Apply(msg *eventstore.EventMsg) error {
+func (st *StockItem) Apply(msg *eventstore.EventMsg) errors.Error {
 	switch msg.EventType {
 	case StockItemCreatedEvent:
 		event := &StockItemCreated{}
 		if err := msg.UnmarshalEvent(event); err != nil {
-			return err
+			return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
 		}
 
 		st.ProductID = event.ProductID
@@ -41,7 +42,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) error {
 	case StockItemUpdatedEvent:
 		event := &StockItemUpdated{}
 		if err := msg.UnmarshalEvent(event); err != nil {
-			return err
+			return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
 		}
 
 		st.ProductID = event.ProductID
@@ -49,7 +50,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) error {
 	case StockItemRemovedEvent:
 		event := &StockItemRemoved{}
 		if err := msg.UnmarshalEvent(event); err != nil {
-			return err
+			return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
 		}
 
 		st.ProductID = event.ProductID

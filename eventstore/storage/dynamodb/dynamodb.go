@@ -166,7 +166,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, error) {
+func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, errors.Error) {
 	keyCond := getCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getKV: &dynamodb.AttributeValue{S: &aggID},
@@ -209,7 +209,7 @@ func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq, l
 	return msgs, nil
 }
 
-func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, error) {
+func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, errors.Error) {
 	output, err := d.db.GetItemWithContext(ctx, &dynamodb.GetItemInput{
 		TableName:      &d.snapshotTable,
 		ConsistentRead: falseStrongRead,
@@ -218,7 +218,7 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string) (*ev
 		},
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
 	if len(output.Item) == 0 {
@@ -235,66 +235,66 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string) (*ev
 	return snapshot, nil
 }
 
-func (d *DynamoDBEventStore) SaveV1(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
-	var err error
+// func (d *DynamoDBEventStore) SaveV1(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
+// 	var err error
 
-	var putES []*dynamodb.TransactWriteItem
-	var payloadReq map[string]*dynamodb.AttributeValue
+// 	var putES []*dynamodb.TransactWriteItem
+// 	var payloadReq map[string]*dynamodb.AttributeValue
 
-	if snapshot != nil {
-		var snapshotReq map[string]*dynamodb.AttributeValue
-		snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
-		if err != nil {
-			return err
-		}
+// 	if snapshot != nil {
+// 		var snapshotReq map[string]*dynamodb.AttributeValue
+// 		snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		putES = make([]*dynamodb.TransactWriteItem, 0, len(msgs)+1)
-		putES = append(putES, &dynamodb.TransactWriteItem{
-			Put: &dynamodb.Put{
-				TableName: &d.snapshotTable,
-				// ConditionExpression: saveSnapCond,
-				// ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-				// 	seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(snapshot.TimeSeq, 10))},
-				// },
-				Item: snapshotReq,
-			},
-		})
-	} else {
-		putES = make([]*dynamodb.TransactWriteItem, 0, len(msgs))
-	}
+// 		putES = make([]*dynamodb.TransactWriteItem, 0, len(msgs)+1)
+// 		putES = append(putES, &dynamodb.TransactWriteItem{
+// 			Put: &dynamodb.Put{
+// 				TableName: &d.snapshotTable,
+// 				// ConditionExpression: saveSnapCond,
+// 				// ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
+// 				// 	seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(snapshot.TimeSeq, 10))},
+// 				// },
+// 				Item: snapshotReq,
+// 			},
+// 		})
+// 	} else {
+// 		putES = make([]*dynamodb.TransactWriteItem, 0, len(msgs))
+// 	}
 
-	for i := 0; i < len(msgs); i++ {
-		payloadReq, err = dynamodbattribute.MarshalMap(msgs[i])
-		if err != nil {
-			return err
-		}
+// 	for i := 0; i < len(msgs); i++ {
+// 		payloadReq, err = dynamodbattribute.MarshalMap(msgs[i])
+// 		if err != nil {
+// 			return err
+// 		}
 
-		putES = append(putES, &dynamodb.TransactWriteItem{
-			Put: &dynamodb.Put{
-				TableName:           &d.eventstoreTable,
-				ConditionExpression: saveCond,
-				Item:                payloadReq,
-			},
-		})
-	}
+// 		putES = append(putES, &dynamodb.TransactWriteItem{
+// 			Put: &dynamodb.Put{
+// 				TableName:           &d.eventstoreTable,
+// 				ConditionExpression: saveCond,
+// 				Item:                payloadReq,
+// 			},
+// 		})
+// 	}
 
-	_, err = d.db.TransactWriteItemsWithContext(ctx, &dynamodb.TransactWriteItemsInput{
-		TransactItems: putES,
-	})
+// 	_, err = d.db.TransactWriteItemsWithContext(ctx, &dynamodb.TransactWriteItemsInput{
+// 		TransactItems: putES,
+// 	})
 
-	if err != nil {
-		aerr := err.(awserr.Error)
-		if aerr.Code() == dynamodb.ErrCodeTransactionCanceledException {
-			return errors.ErrVersionInconsistency.WithCaller()
-		}
+// 	if err != nil {
+// 		aerr := err.(awserr.Error)
+// 		if aerr.Code() == dynamodb.ErrCodeTransactionCanceledException {
+// 			return errors.ErrVersionInconsistency.WithCaller()
+// 		}
 
-		return errors.Warp(err).WithCaller()
-	}
+// 		return errors.Warp(err).WithCaller()
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
 	var err error
 
 	var payloadReq map[string]*dynamodb.AttributeValue
@@ -344,5 +344,5 @@ func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventM
 		return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 	}
 
-	return err
+	return nil
 }

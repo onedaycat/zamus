@@ -22,7 +22,7 @@ func TestPartitionStrategy(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -35,7 +35,7 @@ func TestPartitionStrategy(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h2ET1++
@@ -48,7 +48,7 @@ func TestPartitionStrategy(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 	}
 
@@ -93,7 +93,7 @@ func TestPartitionStrategyError(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -106,7 +106,7 @@ func TestPartitionStrategyError(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -122,7 +122,7 @@ func TestPartitionStrategyError(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -168,7 +168,7 @@ func TestPartitionStrategyPanic(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -181,7 +181,7 @@ func TestPartitionStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -199,7 +199,7 @@ func TestPartitionStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -240,7 +240,7 @@ func TestPartitionStrategyPanic(t *testing.T) {
 func TestPartitionStrategyPanicPre(t *testing.T) {
 	nError := 0
 	isPre := false
-	prehandler := func(ctx context.Context, msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -249,11 +249,11 @@ func TestPartitionStrategyPanicPre(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -290,7 +290,7 @@ func TestPartitionStrategyPanicPre(t *testing.T) {
 func TestPartitionStrategyPanicPost(t *testing.T) {
 	isError := false
 	isPost := false
-	posthandler := func(ctx context.Context, msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -299,11 +299,11 @@ func TestPartitionStrategyPanicPost(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -342,7 +342,7 @@ func TestPartitionStrategyPanicPreWithPost(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(ctx context.Context, msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -351,7 +351,7 @@ func TestPartitionStrategyPanicPreWithPost(t *testing.T) {
 		return nil
 	}
 
-	posthandler := func(ctx context.Context, msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -360,11 +360,11 @@ func TestPartitionStrategyPanicPreWithPost(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -405,12 +405,12 @@ func TestPartitionStrategyPanicPostWithPre(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(ctx context.Context, msgs EventMsgs) error {
+	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPre = true
 		return nil
 	}
 
-	posthandler := func(ctx context.Context, msgs EventMsgs) error {
+	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
 			var x *KinesisStreamEvent
@@ -419,11 +419,11 @@ func TestPartitionStrategyPanicPostWithPre(t *testing.T) {
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) error {
+	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
@@ -467,7 +467,7 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -480,7 +480,7 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -496,7 +496,7 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -548,7 +548,7 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -561,7 +561,7 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -577,7 +577,7 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
@@ -629,7 +629,7 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) error {
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -642,7 +642,7 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) error {
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -660,7 +660,7 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err error) {
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}

@@ -20,11 +20,11 @@ const emptyStr = ""
 
 type EventStore interface {
 	SetSnapshotEveryNEvents(n int64)
-	GetEvents(ctx context.Context, aggID string, seq int64) ([]*EventMsg, error)
-	GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) error
-	GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) error
-	Save(ctx context.Context, agg AggregateRoot) error
-	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) error
+	GetEvents(ctx context.Context, aggID string, seq int64) ([]*EventMsg, errors.Error)
+	GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) errors.Error
+	GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) errors.Error
+	Save(ctx context.Context, agg AggregateRoot) errors.Error
+	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) errors.Error
 }
 
 type eventStore struct {
@@ -46,7 +46,7 @@ func (es *eventStore) SetSnapshotEveryNEvents(n int64) {
 	es.snapshotn = n
 }
 
-func (es *eventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) error {
+func (es *eventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) errors.Error {
 	msgs, err := es.storage.GetEvents(ctx, aggID, seq, 0)
 	if err != nil {
 		return err
@@ -63,14 +63,15 @@ func (es *eventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg A
 		agg.SetLastEventID(msg.EventID)
 		agg.SetLastEventTime(msg.Time)
 		if err = agg.Apply(msg); err != nil {
-			return errors.Warp(err).WithCaller().WithInput(agg)
+			err.WithCaller().WithInput(agg)
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) error {
+func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) errors.Error {
 	snapshot, err := es.storage.GetSnapshot(ctx, aggID)
 	if err != nil {
 		return err
@@ -82,12 +83,13 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 	agg.SetLastEventTime(snapshot.Time)
 
 	var dst []byte
-	dst, err = snappy.Decode(dst, snapshot.Aggregate)
-	if err != nil {
+	var serr error
+	dst, serr = snappy.Decode(dst, snapshot.Aggregate)
+	if serr != nil {
 		return errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
-	if err = json.Unmarshal(dst, agg); err != nil {
+	if serr = json.Unmarshal(dst, agg); err != nil {
 		return errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
@@ -105,22 +107,23 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 		agg.SetLastEventID(msg.EventID)
 		agg.SetLastEventTime(msg.Time)
 		if err = agg.Apply(msg); err != nil {
-			return errors.Warp(err).WithCaller().WithInput(agg)
+			err.WithCaller().WithInput(agg)
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (es *eventStore) GetEvents(ctx context.Context, id string, seq int64) ([]*EventMsg, error) {
+func (es *eventStore) GetEvents(ctx context.Context, id string, seq int64) ([]*EventMsg, errors.Error) {
 	return es.storage.GetEvents(ctx, id, seq, 0)
 }
 
-func (es *eventStore) GetSnapshot(ctx context.Context, aggID string) (*Snapshot, error) {
+func (es *eventStore) GetSnapshot(ctx context.Context, aggID string) (*Snapshot, errors.Error) {
 	return es.storage.GetSnapshot(ctx, aggID)
 }
 
-func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) error {
+func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) errors.Error {
 	events := agg.GetEvents()
 	n := len(events)
 	if n == 0 {
@@ -211,6 +214,6 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 	return nil
 }
 
-func (es *eventStore) Save(ctx context.Context, agg AggregateRoot) error {
+func (es *eventStore) Save(ctx context.Context, agg AggregateRoot) errors.Error {
 	return es.SaveWithMetadata(ctx, agg, nil)
 }

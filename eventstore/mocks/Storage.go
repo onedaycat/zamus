@@ -3,6 +3,7 @@
 package mocks
 
 import context "context"
+import errors "github.com/onedaycat/errors"
 import eventstore "github.com/onedaycat/zamus/eventstore"
 import mock "github.com/stretchr/testify/mock"
 
@@ -12,7 +13,7 @@ type Storage struct {
 }
 
 // GetEvents provides a mock function with given fields: ctx, aggID, seq, limit
-func (_m *Storage) GetEvents(ctx context.Context, aggID string, seq int64, limit int64) ([]*eventstore.EventMsg, error) {
+func (_m *Storage) GetEvents(ctx context.Context, aggID string, seq int64, limit int64) ([]*eventstore.EventMsg, errors.Error) {
 	ret := _m.Called(ctx, aggID, seq, limit)
 
 	var r0 []*eventstore.EventMsg
@@ -24,18 +25,20 @@ func (_m *Storage) GetEvents(ctx context.Context, aggID string, seq int64, limit
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, int64, int64) error); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(context.Context, string, int64, int64) errors.Error); ok {
 		r1 = rf(ctx, aggID, seq, limit)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // GetSnapshot provides a mock function with given fields: ctx, aggID
-func (_m *Storage) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, error) {
+func (_m *Storage) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, errors.Error) {
 	ret := _m.Called(ctx, aggID)
 
 	var r0 *eventstore.Snapshot
@@ -47,25 +50,29 @@ func (_m *Storage) GetSnapshot(ctx context.Context, aggID string) (*eventstore.S
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(context.Context, string) errors.Error); ok {
 		r1 = rf(ctx, aggID)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // Save provides a mock function with given fields: ctx, msgs, snapshot
-func (_m *Storage) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) error {
+func (_m *Storage) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
 	ret := _m.Called(ctx, msgs, snapshot)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []*eventstore.EventMsg, *eventstore.Snapshot) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, []*eventstore.EventMsg, *eventstore.Snapshot) errors.Error); ok {
 		r0 = rf(ctx, msgs, snapshot)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0

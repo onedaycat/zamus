@@ -4,33 +4,40 @@ import "github.com/onedaycat/errors"
 
 type Input = errors.Input
 
-var (
-	ErrPermissionDenied        = errors.Forbidden("COMMAND_FORBIDDEN", "You don't a permission to access this operation")
-	ErrQueryResultSizeNotMatch = errors.InternalError("QUERY_MISMATCH_RESULT", "Result array size not match")
-	ErrUnableParseQuery        = errors.InternalError("QUERY_PARSE_QUERY", "Unable to parse query")
-	ErrPanic                   = errors.InternalError("PANIC", "Server Error")
-	ErrUnknown                 = errors.InternalError("UNKNOWN_COMMAND", "Unknown error")
+type Error = errors.Error
 
-	ErrNotFound                 = errors.NotFound("es1", "Not Found")
-	ErrVersionInconsistency     = errors.BadRequest("es2", "Version is inconsistency")
-	ErrEncodingNotSupported     = errors.InternalError("es3", "Unable unmarshal payload, unsupport encoding")
-	ErrEventLimitExceed         = errors.InternalError("es4", "Number of events in aggregate limit exceed")
-	ErrInvalidVersionNotAllowed = errors.InternalError("es5", "Event sequence should not be 0")
-	ErrNoAggregateID            = errors.InternalError("es6", "No aggregate id in aggregate root")
-	ErrUnbleGetEventStore       = errors.InternalError("es7", "Unable to get")
-	ErrUnbleSaveEventStore      = errors.InternalError("es8", "Unable to save")
-	ErrUnbleSaveDQLMessages     = errors.InternalError("ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
+var (
+	ErrPermissionDenied        = errors.Forbidden("Zamus_ErrPermissionDenied", "You don't a permission to access this operation")
+	ErrQueryResultSizeNotMatch = errors.InternalError("Zamus_ErrQueryResultSizeNotMatch", "Result array size not match")
+	ErrUnableParseQuery        = errors.InternalError("Zamus_ErrUnableParseQuery", "Unable to parse query")
+	ErrUnableUnmarshal         = errors.InternalError("Zamus_ErrUnableUnmarshal", "Unable to unmarshal")
+	ErrUnableMarshal           = errors.InternalError("Zamus_ErrUnableMarshal", "Unable to marshal")
+	ErrUnableEncode            = errors.InternalError("Zamus_ErrUnableEncode", "Unable to encode")
+	ErrUnableDecode            = errors.InternalError("Zamus_ErrUnableDecode", "Unable to decode")
+	ErrUnablePublishKinesis    = errors.InternalError("Zamus_ErrUnablePublishKinesis", "Unable to publish kinesis stream")
+	ErrPanic                   = errors.InternalError("Zamus_ErrPanic", "Server Error")
+	ErrUnknown                 = errors.InternalError("Zamus_ErrUnknown", "Unknown error")
+
+	ErrNotFound                 = errors.NotFound("Zamus_ErrNotFound", "Not Found")
+	ErrVersionInconsistency     = errors.BadRequest("Zamus_ErrVersionInconsistency", "Version is inconsistency")
+	ErrEncodingNotSupported     = errors.InternalError("Zamus_ErrEncodingNotSupported", "Unable unmarshal payload, unsupport encoding")
+	ErrEventLimitExceed         = errors.InternalError("Zamus_ErrEventLimitExceed", "Number of events in aggregate limit exceed")
+	ErrInvalidVersionNotAllowed = errors.InternalError("Zamus_ErrInvalidVersionNotAllowed", "Event sequence should not be 0")
+	ErrNoAggregateID            = errors.InternalError("Zamus_ErrNoAggregateID", "No aggregate id in aggregate root")
+	ErrUnbleGetEventStore       = errors.InternalError("Zamus_ErrUnbleGetEventStore", "Unable to get")
+	ErrUnbleSaveEventStore      = errors.InternalError("Zamus_ErrUnbleSaveEventStore", "Unable to save")
+	ErrUnbleSaveDQLMessages     = errors.InternalError("Zamus_ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
 )
 
-func ErrCommandNotFound(command string) error {
-	return errors.BadRequestf("COMMAND_NOT_FOUND", "%s command not found", command)
+func ErrCommandNotFound(command string) errors.Error {
+	return errors.BadRequestf("ZAMUS_ErrCommandNotFound", "%s command not found", command)
 }
 
-func ErrQueryNotFound(query string) error {
-	return errors.BadRequestf("QUERY_NOT_FOUND", "%s query not found", query)
+func ErrQueryNotFound(query string) errors.Error {
+	return errors.BadRequestf("ZAMUS_ErrQueryNotFound", "%s query not found", query)
 }
 
-func Warp(err error) *errors.AppError {
+func Wrap(err error) errors.Error {
 	appErr, ok := errors.FromError(err)
 	if ok {
 		return appErr

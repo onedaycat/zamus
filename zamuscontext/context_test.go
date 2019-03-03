@@ -10,11 +10,11 @@ import (
 func TestContext(t *testing.T) {
 
 	zc := &ZamusContext{
+		AppStage:       "dev",
 		Service:        "srv1",
 		LambdaFunction: "lambda1",
 		LambdaVersion:  "$LATEST",
 		Version:        "1.0.0",
-		SentryRelease:  "project@v1.2.4",
 	}
 
 	ctx := context.Background()

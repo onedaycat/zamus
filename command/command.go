@@ -12,7 +12,7 @@ type commandinfo struct {
 }
 
 func WithPermission(pm string) CommandHandler {
-	return func(ctx context.Context, cmd *Command) (interface{}, error) {
+	return func(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 		if cmd.Identity == nil {
 			return nil, errors.ErrPermissionDenied
 		}

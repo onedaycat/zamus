@@ -111,7 +111,7 @@ func (d *dqlDynamoDB) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *dqlDynamoDB) Save(ctx context.Context, dqlMsg *dql.DQLMsg) error {
+func (d *dqlDynamoDB) Save(ctx context.Context, dqlMsg *dql.DQLMsg) errors.Error {
 
 	item, _ := dynamodbattribute.MarshalMap(dqlMsg)
 

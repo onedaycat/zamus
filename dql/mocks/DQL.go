@@ -14,7 +14,7 @@ type DQL struct {
 }
 
 // AddError provides a mock function with given fields: appErr
-func (_m *DQL) AddError(appErr *errors.AppError) {
+func (_m *DQL) AddError(appErr errors.Error) {
 	_m.Called(appErr)
 }
 
@@ -33,14 +33,16 @@ func (_m *DQL) Retry() bool {
 }
 
 // Save provides a mock function with given fields: ctx, msgs
-func (_m *DQL) Save(ctx context.Context, msgs []*eventstore.EventMsg) error {
+func (_m *DQL) Save(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
 	ret := _m.Called(ctx, msgs)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []*eventstore.EventMsg) error); ok {
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, []*eventstore.EventMsg) errors.Error); ok {
 		r0 = rf(ctx, msgs)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
 	}
 
 	return r0

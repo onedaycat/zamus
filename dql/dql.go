@@ -11,9 +11,9 @@ import (
 
 //go:generate mockery -name=DQL
 type DQL interface {
-	Save(ctx context.Context, msgs []*eventstore.EventMsg) error
+	Save(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error
 	Retry() bool
-	AddError(appErr *errors.AppError)
+	AddError(appErr errors.Error)
 }
 
 type dql struct {
@@ -30,7 +30,7 @@ func New(storage Storage, maxRetry int, service, lambdaFunc, version string) *dq
 	return &dql{storage, maxRetry, maxRetry, nil, service, lambdaFunc, version}
 }
 
-func (d *dql) Save(ctx context.Context, msgs []*eventstore.EventMsg) error {
+func (d *dql) Save(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
 	msgList := eventstore.EventMsgList{
 		EventMsgs: msgs,
 	}
@@ -66,7 +66,7 @@ func (d *dql) Retry() bool {
 	return true
 }
 
-func (d *dql) AddError(appErr *errors.AppError) {
+func (d *dql) AddError(appErr errors.Error) {
 	if d.Errors == nil {
 		d.Errors = make(DQLErrors, 0, 10)
 	}
@@ -76,12 +76,12 @@ func (d *dql) AddError(appErr *errors.AppError) {
 		Stacks:  appErr.StackStrings(),
 	}
 
-	if appErr.Cause != nil {
-		dqlErr.Cause = appErr.Cause.Error()
+	if appErr.GetCause() != nil {
+		dqlErr.Cause = appErr.GetCause().Error()
 	}
 
-	if appErr.Input != nil {
-		dqlErr.Input = appErr.Input
+	if appErr.GetInput() != nil {
+		dqlErr.Input = appErr.GetInput()
 	}
 
 	d.Errors = append(d.Errors, dqlErr)

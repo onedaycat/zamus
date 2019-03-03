@@ -10,15 +10,13 @@ import (
 )
 
 func TestSentry(t *testing.T) {
-	errHandler := Sentry("test")
-
-	f := func(ctx context.Context, cmd *Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 		return nil, errors.New("111")
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterCommand("hello", f)
-	h.ErrorHandlers(errHandler)
+	h.ErrorHandlers(Sentry)
 
 	cmd := &Command{
 		Function: "hello",
@@ -31,15 +29,13 @@ func TestSentry(t *testing.T) {
 }
 
 func TestSentryWithAppError(t *testing.T) {
-	errHandler := Sentry("test")
-
-	f := func(ctx context.Context, cmd *Command) (interface{}, error) {
+	f := func(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 		return nil, errors.InternalError("IN1", "IN_ERR").WithCaller().WithInput(errors.Input{"in": "put"}).WithCause(errors.New("cause"))
 	}
 
-	h := NewHandler()
+	h := NewHandler(&Config{})
 	h.RegisterCommand("hello", f)
-	h.ErrorHandlers(errHandler)
+	h.ErrorHandlers(Sentry)
 
 	cmd := &Command{
 		Function: "hello",
