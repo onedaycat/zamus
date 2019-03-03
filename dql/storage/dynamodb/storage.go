@@ -111,22 +111,13 @@ func (d *dqlDynamoDB) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *dqlDynamoDB) MultiSave(ctx context.Context, msgs dql.DQLMsgs) error {
-	var item map[string]*dynamodb.AttributeValue
-	items := make([]*dynamodb.WriteRequest, 0, len(msgs))
-	for _, msg := range msgs {
-		item, _ = dynamodbattribute.MarshalMap(msg)
-		items = append(items, &dynamodb.WriteRequest{
-			PutRequest: &dynamodb.PutRequest{
-				Item: item,
-			},
-		})
-	}
+func (d *dqlDynamoDB) Save(ctx context.Context, dqlMsg *dql.DQLMsg) error {
 
-	_, err := d.db.BatchWriteItemWithContext(ctx, &dynamodb.BatchWriteItemInput{
-		RequestItems: map[string][]*dynamodb.WriteRequest{
-			d.dqlTable: items,
-		},
+	item, _ := dynamodbattribute.MarshalMap(dqlMsg)
+
+	_, err := d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
+		TableName: &d.dqlTable,
+		Item:      item,
 	})
 
 	if err != nil {

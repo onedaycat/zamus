@@ -2,75 +2,87 @@ package dql
 
 import (
 	"context"
-	"strconv"
 
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/eventstore"
-)
-
-const (
-	colon = ":"
 )
 
 //go:generate mockery -name=DQL
 type DQL interface {
-	Save(ctx context.Context) error
+	Save(ctx context.Context, msgs []*eventstore.EventMsg) error
 	Retry() bool
-	AddEventMsgError(msg *eventstore.EventMsg, errStack []string)
+	AddError(appErr *errors.AppError)
 }
 
 type dql struct {
 	Storage        Storage
 	MaxRetry       int
 	Remain         int
-	DQLMsgs        DQLMsgs
+	Errors         DQLErrors
 	Service        string
 	LambdaFunction string
 	Version        string
 }
 
 func New(storage Storage, maxRetry int, service, lambdaFunc, version string) *dql {
-	return &dql{storage, maxRetry, maxRetry, make(DQLMsgs, 0, 100), service, lambdaFunc, version}
+	return &dql{storage, maxRetry, maxRetry, nil, service, lambdaFunc, version}
 }
 
-func (d *dql) Save(ctx context.Context) error {
-	if err := d.Storage.MultiSave(ctx, d.DQLMsgs); err != nil {
+func (d *dql) Save(ctx context.Context, msgs []*eventstore.EventMsg) error {
+	msgList := eventstore.EventMsgList{
+		EventMsgs: msgs,
+	}
+
+	msgListByte, _ := msgList.Marshal()
+
+	dqlMsg := &DQLMsg{
+		ID:             eid.GenerateID(),
+		Service:        d.Service,
+		Time:           clock.Now().Unix(),
+		Version:        d.Version,
+		LambdaFunction: d.LambdaFunction,
+		EventMsgs:      msgListByte,
+		Errors:         d.Errors,
+	}
+
+	if err := d.Storage.Save(ctx, dqlMsg); err != nil {
 		return err
 	}
 
 	d.Remain = d.MaxRetry
-	d.DQLMsgs = make(DQLMsgs, 0, 100)
+	d.Errors = nil
 
 	return nil
 }
 
 func (d *dql) Retry() bool {
 	d.Remain--
-	if d.Remain == 0 {
+	if d.Remain <= 0 {
 		return false
 	}
 
 	return true
 }
 
-func (d *dql) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
-	event, _ := msg.Marshal()
-	now := clock.Now().Unix()
-
-	dqlMsg := &DQLMsg{
-		ID:             d.Service + colon + strconv.FormatInt(now, 10) + colon + msg.AggregateID + colon + strconv.FormatInt(msg.Seq, 10),
-		Service:        d.Service,
-		Version:        d.Version,
-		LambdaFunction: d.LambdaFunction,
-		EventType:      msg.EventType,
-		AggregateID:    msg.AggregateID,
-		EventID:        msg.EventID,
-		Seq:            msg.Seq,
-		Time:           msg.Time,
-		DQLTime:        now,
-		EventMsg:       event,
-		Error:          errStack,
+func (d *dql) AddError(appErr *errors.AppError) {
+	if d.Errors == nil {
+		d.Errors = make(DQLErrors, 0, 10)
 	}
 
-	d.DQLMsgs = append(d.DQLMsgs, dqlMsg)
+	dqlErr := &DQLError{
+		Message: appErr.Error(),
+		Stacks:  appErr.StackStrings(),
+	}
+
+	if appErr.Cause != nil {
+		dqlErr.Cause = appErr.Cause.Error()
+	}
+
+	if appErr.Input != nil {
+		dqlErr.Input = appErr.Input
+	}
+
+	d.Errors = append(d.Errors, dqlErr)
 }

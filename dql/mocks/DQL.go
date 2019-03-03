@@ -4,6 +4,7 @@ package mocks
 
 import context "context"
 
+import errors "github.com/onedaycat/errors"
 import eventstore "github.com/onedaycat/zamus/eventstore"
 import mock "github.com/stretchr/testify/mock"
 
@@ -12,13 +13,13 @@ type DQL struct {
 	mock.Mock
 }
 
-// AddEventMsgError provides a mock function with given fields: msg, errStack
-func (_m *DQL) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
-	_m.Called(msg, errStack)
+// AddError provides a mock function with given fields: appErr
+func (_m *DQL) AddError(appErr *errors.AppError) {
+	_m.Called(appErr)
 }
 
-// IncreateRetry provides a mock function with given fields:
-func (_m *DQL) IncreateRetry() bool {
+// Retry provides a mock function with given fields:
+func (_m *DQL) Retry() bool {
 	ret := _m.Called()
 
 	var r0 bool
@@ -31,13 +32,13 @@ func (_m *DQL) IncreateRetry() bool {
 	return r0
 }
 
-// Save provides a mock function with given fields: ctx
-func (_m *DQL) Save(ctx context.Context) error {
-	ret := _m.Called(ctx)
+// Save provides a mock function with given fields: ctx, msgs
+func (_m *DQL) Save(ctx context.Context, msgs []*eventstore.EventMsg) error {
+	ret := _m.Called(ctx, msgs)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(context.Context, []*eventstore.EventMsg) error); ok {
+		r0 = rf(ctx, msgs)
 	} else {
 		r0 = ret.Error(0)
 	}

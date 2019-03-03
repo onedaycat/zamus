@@ -3,43 +3,86 @@ package dql_test
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/common/random"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/dql/mocks"
 	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDQL(t *testing.T) {
 	storage := &mocks.Storage{}
-	errStack := errors.ErrEncodingNotSupported.WithCaller().StackStrings()
+	appErr := errors.ErrEncodingNotSupported.
+		WithCaller().
+		WithCause(errors.ErrUnknown).
+		WithInput(map[string]interface{}{"input": "1"})
 
 	d := dql.New(storage, 3, "srv1", "fn1", "1.0.0")
+
+	msgs := random.EventMsgs().RandomEventMsgs(10).Build()
+	msgList := eventstore.EventMsgList{EventMsgs: msgs}
 
 	ok := d.Retry()
 	require.True(t, ok)
 	require.Equal(t, 2, d.Remain)
-	e1 := random.EventMsg().Build()
-	d.AddEventMsgError(e1, errStack)
+	d.AddError(appErr)
 
 	ok = d.Retry()
 	require.True(t, ok)
 	require.Equal(t, 1, d.Remain)
-	e2 := random.EventMsg().Build()
-	d.AddEventMsgError(e2, errStack)
+	d.AddError(appErr)
 
 	ok = d.Retry()
 	require.False(t, ok)
 	require.Equal(t, 0, d.Remain)
-	e3 := random.EventMsg().Build()
-	d.AddEventMsgError(e3, errStack)
+	d.AddError(appErr)
+
+	now := time.Now()
+	eid.FreezeID("1")
+	clock.Freeze(now)
+
+	msgListByte, _ := msgList.Marshal()
+
+	dqlMsg := &dql.DQLMsg{
+		ID:             "1",
+		Service:        "srv1",
+		Time:           now.Unix(),
+		Version:        "1.0.0",
+		LambdaFunction: "fn1",
+		EventMsgs:      msgListByte,
+		Errors:         d.Errors,
+	}
 
 	ctx := context.Background()
-	storage.On("MultiSave", ctx, d.DQLMsgs).Return(nil)
-	err := d.Save(ctx)
+	storage.On("Save", ctx, dqlMsg).Return(nil)
+	err := d.Save(ctx, msgs)
 
 	require.NoError(t, err)
 	require.Equal(t, 3, d.Remain)
-	require.Len(t, d.DQLMsgs, 0)
+	require.Nil(t, d.Errors)
+}
+
+func TestDQLOnlyOne(t *testing.T) {
+	storage := &mocks.Storage{}
+
+	d := dql.New(storage, 1, "srv1", "fn1", "1.0.0")
+
+	ok := d.Retry()
+	require.False(t, ok)
+	require.Equal(t, 0, d.Remain)
+}
+
+func TestDQLZero(t *testing.T) {
+	storage := &mocks.Storage{}
+
+	d := dql.New(storage, 0, "srv1", "fn1", "1.0.0")
+
+	ok := d.Retry()
+	require.False(t, ok)
+	require.Equal(t, -1, d.Remain)
 }

@@ -11,13 +11,13 @@ type Storage struct {
 	mock.Mock
 }
 
-// MultiSave provides a mock function with given fields: ctx, msgs
-func (_m *Storage) MultiSave(ctx context.Context, msgs []*dql.DQLMsg) error {
-	ret := _m.Called(ctx, msgs)
+// Save provides a mock function with given fields: ctx, dqlMsg
+func (_m *Storage) Save(ctx context.Context, dqlMsg *dql.DQLMsg) error {
+	ret := _m.Called(ctx, dqlMsg)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []*dql.DQLMsg) error); ok {
-		r0 = rf(ctx, msgs)
+	if rf, ok := ret.Get(0).(func(context.Context, *dql.DQLMsg) error); ok {
+		r0 = rf(ctx, dqlMsg)
 	} else {
 		r0 = ret.Error(0)
 	}

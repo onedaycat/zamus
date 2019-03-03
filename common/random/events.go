@@ -74,6 +74,24 @@ func (b *eventsBuilder) Add(eventType string, event interface{}, options ...Even
 	return b
 }
 
+func (b *eventsBuilder) AddEventMsgs(msgs ...*eventstore.EventMsg) *eventsBuilder {
+	for _, msg := range msgs {
+		b.msgs = append(b.msgs, msg)
+		b.seq++
+	}
+
+	return b
+}
+
+func (b *eventsBuilder) RandomEventMsgs(n int) *eventsBuilder {
+	for i := 0; i < n; i++ {
+		b.msgs = append(b.msgs, EventMsg().Build())
+		b.seq++
+	}
+
+	return b
+}
+
 func (b *eventsBuilder) BuildJSON() []byte {
 	data, err := json.Marshal(b.msgs)
 	if err != nil {

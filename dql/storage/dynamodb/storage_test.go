@@ -6,6 +6,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/onedaycat/zamus/common/eid"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -40,25 +42,21 @@ func getDB() *dqlDynamoDB {
 func TestMultiSave(t *testing.T) {
 	db := getDB()
 
-	eventsRand := random.EventMsgs()
-	for i := 0; i < 10; i++ {
-		eventsRand.Add("et1", map[string]interface{}{"id": "1"})
-	}
-
-	events := eventsRand.Build()
-	errStack := errors.ErrUnbleSaveDQLMessages.WithCaller().StackStrings()
+	msgs := random.EventMsgs().RandomEventMsgs(10).Build()
+	appErr := errors.ErrUnbleSaveDQLMessages.
+		WithCaller().
+		WithCause(errors.ErrUnknown).
+		WithInput(map[string]interface{}{"input": 1})
 
 	d := dql.New(db, 3, "srv1", "lamb1", "1.0.0")
-	for _, event := range events {
-		d.AddEventMsgError(event, errStack)
-	}
+	d.AddError(appErr)
 
-	err := d.Save(context.Background())
+	eid.FreezeID("111")
+
+	err := d.Save(context.Background(), msgs)
 	require.NoError(t, err)
 
-	for _, event := range events {
-		d.AddEventMsgError(event, errStack)
-	}
-	err = d.Save(context.Background())
+	d.AddError(appErr)
+	err = d.Save(context.Background(), msgs)
 	require.NoError(t, err)
 }

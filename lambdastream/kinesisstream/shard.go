@@ -3,6 +3,8 @@ package kinesisstream
 import (
 	"context"
 
+	"github.com/onedaycat/zamus/dql"
+
 	errs "github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/errors"
 	"golang.org/x/sync/errgroup"
@@ -15,6 +17,7 @@ type shardStrategy struct {
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
+	dql           dql.DQL
 }
 
 func NewShardStrategy(shard int) KinesisHandlerStrategy {
@@ -26,6 +29,10 @@ func NewShardStrategy(shard int) KinesisHandlerStrategy {
 
 func (c *shardStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
 	c.errorHandlers = handlers
+}
+
+func (c *shardStrategy) SetDQL(dql dql.DQL) {
+	c.dql = dql
 }
 
 func (c *shardStrategy) FilterEvents(eventTypes ...string) {
@@ -76,6 +83,7 @@ func (c *shardStrategy) Process(ctx context.Context, records Records) error {
 		shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
 	}
 
+DQLRetry:
 	wg := errgroup.Group{}
 
 	for _, shard := range shards {
@@ -85,18 +93,37 @@ func (c *shardStrategy) Process(ctx context.Context, records Records) error {
 		}
 
 		wg.Go(func() (err error) {
-			defer c.recover(ctx, shard, &err)
 			return c.handle(ctx, shard)
 		})
 	}
 
-	return wg.Wait()
+	if err := wg.Wait(); err != nil {
+		if c.dql != nil {
+			if ok := c.dql.Retry(); ok {
+				goto DQLRetry
+			}
+
+			msgs := make(EventMsgs, len(records))
+			for i, record := range records {
+				msgs[i] = record.Kinesis.Data.EventMsg
+			}
+
+			return c.dql.Save(ctx, msgs)
+		}
+
+		return err
+	}
+
+	return nil
 }
 
 func (c *shardStrategy) doPreHandlers(ctx context.Context, msgs EventMsgs) (err error) {
 	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
 		if err = ph(ctx, msgs); err != nil {
+			if c.dql != nil {
+				c.dql.AddError(errors.Warp(err))
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
 			}
@@ -112,6 +139,9 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err 
 	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.postHandlers {
 		if err = ph(ctx, msgs); err != nil {
+			if c.dql != nil {
+				c.dql.AddError(errors.Warp(err))
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
 			}
@@ -129,11 +159,14 @@ func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err err
 		handler := handler
 		wg.Go(func() (aerr error) {
 			defer c.recover(ctx, msgs, &aerr)
-			if err := handler(ctx, msgs); err != nil {
-				for _, errhandler := range c.errorHandlers {
-					errhandler(ctx, msgs, err)
+			if aerr = handler(ctx, msgs); aerr != nil {
+				if c.dql != nil {
+					c.dql.AddError(errors.Warp(aerr))
 				}
-				return err
+				for _, errhandler := range c.errorHandlers {
+					errhandler(ctx, msgs, aerr)
+				}
+				return aerr
 			}
 
 			return
@@ -167,12 +200,18 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *error)
 		switch cause := r.(type) {
 		case error:
 			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
+			if c.dql != nil {
+				c.dql.AddError(appErr)
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		case string:
 			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
+			if c.dql != nil {
+				c.dql.AddError(appErr)
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, appErr)
 			}

@@ -106,13 +106,20 @@ DQLRetry:
 	}
 
 	if err := wg.Wait(); err != nil {
-		if ok := c.dql.Retry(); ok {
-			goto DQLRetry
+		if c.dql != nil {
+			if ok := c.dql.Retry(); ok {
+				goto DQLRetry
+			}
+
+			msgs := make(EventMsgs, len(records))
+			for i, record := range records {
+				msgs[i] = record.Kinesis.Data.EventMsg
+			}
+
+			return c.dql.Save(ctx, msgs)
 		}
 
-		c.dql.Save(ctx)
-
-		return nil
+		return err
 	}
 
 	return nil
@@ -122,6 +129,9 @@ func (c *partitionStrategy) doPreHandlers(ctx context.Context, msgs EventMsgs) (
 	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
 		if err = ph(ctx, msgs); err != nil {
+			if c.dql != nil {
+				c.dql.AddError(errors.Warp(err))
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
 			}
@@ -137,6 +147,9 @@ func (c *partitionStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (
 	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.postHandlers {
 		if err = ph(ctx, msgs); err != nil {
+			if c.dql != nil {
+				c.dql.AddError(errors.Warp(err))
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
 			}
@@ -154,11 +167,14 @@ func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err
 		handler := handler
 		wg.Go(func() (aerr error) {
 			defer c.recover(ctx, msgs, &aerr)
-			if err := handler(ctx, msgs); err != nil {
-				for _, errhandler := range c.errorHandlers {
-					errhandler(ctx, msgs, err)
+			if aerr = handler(ctx, msgs); aerr != nil {
+				if c.dql != nil {
+					c.dql.AddError(errors.Warp(aerr))
 				}
-				return err
+				for _, errhandler := range c.errorHandlers {
+					errhandler(ctx, msgs, aerr)
+				}
+				return aerr
 			}
 
 			return
@@ -192,12 +208,18 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 		switch cause := r.(type) {
 		case error:
 			appErr := errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
+			if c.dql != nil {
+				c.dql.AddError(appErr)
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, appErr)
 			}
 			*err = appErr
 		case string:
 			appErr := errors.ErrPanic.WithCause(errs.New(cause)).WithCallerSkip(6)
+			if c.dql != nil {
+				c.dql.AddError(appErr)
+			}
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, appErr)
 			}
