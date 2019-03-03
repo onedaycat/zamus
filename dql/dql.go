@@ -2,12 +2,14 @@ package dql
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"strconv"
 
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/eventstore"
+)
+
+const (
+	colon = ":"
 )
 
 //go:generate mockery -name=DQL
@@ -53,15 +55,10 @@ func (d *dql) IncreateRetry() bool {
 
 func (d *dql) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
 	event, _ := msg.Marshal()
-	eventByte := make([]byte, base64.StdEncoding.EncodedLen(len(event)))
-	base64.StdEncoding.Encode(eventByte, event)
-
-	errStackJSON, _ := json.Marshal(errStack)
-
 	now := clock.Now().Unix()
 
 	dqlMsg := &DQLMsg{
-		ID:             d.service + ":" + msg.AggregateID + ":" + strconv.FormatInt(msg.Seq, 10) + ":" + strconv.FormatInt(now, 10),
+		ID:             d.service + colon + strconv.FormatInt(now, 10) + colon + msg.AggregateID + colon + strconv.FormatInt(msg.Seq, 10),
 		Service:        d.service,
 		Version:        d.version,
 		LambdaFunction: d.lambdaFunction,
@@ -71,8 +68,8 @@ func (d *dql) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
 		Seq:            msg.Seq,
 		Time:           msg.Time,
 		DQLTime:        now,
-		EventMsg:       eventByte,
-		Error:          errStackJSON,
+		EventMsg:       event,
+		Error:          errStack,
 	}
 
 	d.msgs = append(d.msgs, dqlMsg)
