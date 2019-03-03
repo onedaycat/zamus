@@ -3,8 +3,7 @@ package config
 var C Config
 
 type Config struct {
-	Migration     *Migration `yaml:"migration"`
-	DqlDataSource string     `taml:"dqlDatasource" envconfig:"DQL_DATASOURCE"`
+	Migration *Migration `yaml:"migration"`
 }
 
 type Migration struct {
