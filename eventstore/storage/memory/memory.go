@@ -41,7 +41,7 @@ func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, lim
 	msgs := make([]*eventstore.EventMsg, 0, 1000)
 
 	for _, msg := range store {
-		if seq < msg.TimeSeq {
+		if seq < msg.Seq {
 			msgs = append(msgs, msg)
 		}
 	}

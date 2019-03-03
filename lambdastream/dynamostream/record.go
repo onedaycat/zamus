@@ -29,7 +29,7 @@ type Records []*Record
 func (a Records) Len() int      { return len(a) }
 func (a Records) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a Records) Less(i, j int) bool {
-	return a[i].DynamoDB.NewImage.EventMsg.TimeSeq < a[j].DynamoDB.NewImage.EventMsg.TimeSeq
+	return a[i].DynamoDB.NewImage.EventMsg.Seq < a[j].DynamoDB.NewImage.EventMsg.Seq
 }
 
 type DynamoDBStreamEvent struct {

@@ -8,7 +8,7 @@ import (
 
 func TestGenerateEID(t *testing.T) {
 	id := CreateEventID("bh9vq3krtr34lt1oedc0", 99)
-	require.Len(t, id, 22)
+	require.Len(t, id, 23)
 }
 
 func TestGenerateAggregateID(t *testing.T) {

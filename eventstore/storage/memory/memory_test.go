@@ -49,6 +49,7 @@ func TestSaveAndGet(t *testing.T) {
 	clock.Freeze(now1)
 	err := es.Save(ctx, st)
 	require.NoError(t, err)
+	lastSeq := st.GetSequence()
 
 	// GetAggregate
 	st2 := domain.NewStockItem()
@@ -65,7 +66,7 @@ func TestSaveAndGet(t *testing.T) {
 	err = es.SaveWithMetadata(ctx, st, metadata)
 	require.NoError(t, err)
 
-	events, err := es.GetEvents(ctx, st.GetAggregateID(), eventstore.TimeSeq(now2.Unix(), 0))
+	events, err := es.GetEvents(ctx, st.GetAggregateID(), lastSeq)
 	require.NoError(t, err)
 	require.Len(t, events, 2)
 	require.Equal(t, domain.StockItemUpdatedEvent, events[0].EventType)
@@ -77,7 +78,7 @@ func TestSaveAndGet(t *testing.T) {
 
 	// GetAggregateByTimeSeq
 	st4 := domain.NewStockItem()
-	err = es.GetAggregateByTimeSeq(ctx, st.GetAggregateID(), st4, eventstore.TimeSeq(now2.Unix(), 0))
+	err = es.GetAggregateBySeq(ctx, st.GetAggregateID(), st4, 0)
 	require.NoError(t, err)
 	require.Equal(t, st4, st)
 }
@@ -102,7 +103,7 @@ func TestNotFound(t *testing.T) {
 	require.Nil(t, msgs)
 
 	st4 := domain.NewStockItem()
-	err = es.GetAggregateByTimeSeq(ctx, st.GetAggregateID(), st4, eventstore.TimeSeq(clock.Now().Unix(), 1))
+	err = es.GetAggregateBySeq(ctx, st.GetAggregateID(), st4, 1)
 	require.Equal(t, errors.ErrNotFound, err)
 	require.True(t, st4.IsNew())
 }

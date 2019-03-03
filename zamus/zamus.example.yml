@@ -3,3 +3,6 @@ migration:
   datasource: root@/dbname?parseTime=true
   # ZAMUS_MIGRATION_DIR
   dir: "migration/prod"
+
+# ZAMUS_DQL_DATASOURCE
+dqlDatasource: "root@/dbname?parseTime=true"

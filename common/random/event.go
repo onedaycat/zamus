@@ -7,7 +7,7 @@ import (
 	"github.com/golang/snappy"
 
 	random "github.com/Pallinder/go-randomdata"
-	"github.com/onedaycat/gocqrs/common/eid"
+	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -29,7 +29,6 @@ func EventMsg() *eventBuilder {
 			AggregateID:  aggid,
 			Time:         t,
 			Seq:          seq,
-			TimeSeq:      eventstore.TimeSeq(t, seq),
 		},
 	}
 }
@@ -58,7 +57,6 @@ func (b *eventBuilder) New() *eventBuilder {
 
 func (b *eventBuilder) Seq(seq int64) *eventBuilder {
 	b.msg.Seq = seq
-	b.msg.TimeSeq = eventstore.TimeSeq(b.msg.Time, b.msg.Seq)
 	b.msg.EventID = eid.CreateEventID(b.msg.AggregateID, b.msg.Seq)
 
 	return b
@@ -66,7 +64,6 @@ func (b *eventBuilder) Seq(seq int64) *eventBuilder {
 
 func (b *eventBuilder) Time(t int64) *eventBuilder {
 	b.msg.Time = t
-	b.msg.TimeSeq = eventstore.TimeSeq(b.msg.Time, b.msg.Seq)
 
 	return b
 }

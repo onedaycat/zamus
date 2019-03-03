@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/snappy"
+
 	"github.com/onedaycat/zamus/eventstore"
 
 	"github.com/stretchr/testify/require"
@@ -17,6 +19,8 @@ func TestEventMsgs(t *testing.T) {
 		"id": "1",
 	}
 	eventData, _ := json.Marshal(event)
+	var eventDataSnap []byte
+	eventDataSnap = snappy.Encode(eventDataSnap, eventData)
 
 	metadata := &eventstore.Metadata{
 		UserID: "u1",
@@ -36,10 +40,10 @@ func TestEventMsgs(t *testing.T) {
 	require.Equal(t, "f2", msgs[1].EventType)
 	require.Equal(t, "f3", msgs[2].EventType)
 	require.Equal(t, "f4", msgs[3].EventType)
-	require.Equal(t, eventData, msgs[0].Event)
-	require.Equal(t, eventData, msgs[1].Event)
-	require.Equal(t, eventData, msgs[2].Event)
-	require.Equal(t, eventData, msgs[3].Event)
+	require.Equal(t, eventDataSnap, msgs[0].Event)
+	require.Equal(t, eventDataSnap, msgs[1].Event)
+	require.Equal(t, eventDataSnap, msgs[2].Event)
+	require.Equal(t, eventDataSnap, msgs[3].Event)
 	require.Equal(t, metadataByte, msgs[2].Metadata)
 	require.Equal(t, now, msgs[3].Time)
 

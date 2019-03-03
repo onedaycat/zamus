@@ -57,9 +57,6 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						"s": {
 							"N": "10002"
 						},
-						"x": {
-							"N": "10002"
-						},
 						"e": {
 							"B": "%s"
 						}
@@ -96,9 +93,6 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						"S": "domain.aggregate.event"
 					},
 					"s": {
-						"N": "10001"
-					},
-					"x": {
 						"N": "10001"
 					},
 					"e": {

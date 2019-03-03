@@ -20,9 +20,9 @@ const emptyStr = ""
 
 type EventStore interface {
 	SetSnapshotEveryNEvents(n int64)
-	GetEvents(ctx context.Context, aggID string, timeSeq int64) ([]*EventMsg, error)
+	GetEvents(ctx context.Context, aggID string, seq int64) ([]*EventMsg, error)
 	GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) error
-	GetAggregateByTimeSeq(ctx context.Context, aggID string, agg AggregateRoot, timeSeq int64) error
+	GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) error
 	Save(ctx context.Context, agg AggregateRoot) error
 	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) error
 }
@@ -46,8 +46,8 @@ func (es *eventStore) SetSnapshotEveryNEvents(n int64) {
 	es.snapshotn = n
 }
 
-func (es *eventStore) GetAggregateByTimeSeq(ctx context.Context, aggID string, agg AggregateRoot, timeSeq int64) error {
-	msgs, err := es.storage.GetEvents(ctx, aggID, timeSeq, 0)
+func (es *eventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) error {
+	msgs, err := es.storage.GetEvents(ctx, aggID, seq, 0)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 		return nil
 	}
 
-	msgs, err := es.storage.GetEvents(ctx, aggID, snapshot.TimeSeq, 0)
+	msgs, err := es.storage.GetEvents(ctx, aggID, snapshot.Seq, 0)
 	if err != nil {
 		return err
 	}
@@ -112,8 +112,8 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 	return nil
 }
 
-func (es *eventStore) GetEvents(ctx context.Context, id string, timeSeq int64) ([]*EventMsg, error) {
-	return es.storage.GetEvents(ctx, id, timeSeq, 0)
+func (es *eventStore) GetEvents(ctx context.Context, id string, seq int64) ([]*EventMsg, error) {
+	return es.storage.GetEvents(ctx, id, seq, 0)
 }
 
 func (es *eventStore) GetSnapshot(ctx context.Context, aggID string) (*Snapshot, error) {
@@ -171,7 +171,6 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 			Seq:         seq,
 			Event:       eventDataSnap,
 			Time:        now,
-			TimeSeq:     TimeSeq(now, seq),
 			Metadata:    metadataByte,
 		}
 	}
@@ -198,7 +197,6 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 			EventID:     lastEvent.EventID,
 			Time:        lastEvent.Time,
 			Seq:         lastEvent.Seq,
-			TimeSeq:     lastEvent.TimeSeq,
 		}
 	}
 
@@ -215,16 +213,4 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 
 func (es *eventStore) Save(ctx context.Context, agg AggregateRoot) error {
 	return es.SaveWithMetadata(ctx, agg, nil)
-}
-
-func TimeSeq(time int64, seq int64) int64 {
-	if time < 0 {
-		return 0
-	}
-
-	if seq < 0 {
-		seq = 0
-	}
-
-	return (time * 100000) + seq
 }

@@ -9,6 +9,7 @@ import (
 var (
 	emptyStr  = ""
 	freezeaid = ""
+	colon     = ":"
 )
 
 func FreezeID(id string) {
@@ -20,7 +21,7 @@ func UnFreezeID() {
 }
 
 func CreateEventID(aggID string, seq int64) string {
-	return aggID + strconv.FormatInt(seq, 10)
+	return aggID + colon + strconv.FormatInt(seq, 10)
 }
 
 func GenerateID() string {

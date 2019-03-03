@@ -19,6 +19,7 @@ var (
 	ErrNoAggregateID            = errors.InternalError("es6", "No aggregate id in aggregate root")
 	ErrUnbleGetEventStore       = errors.InternalError("es7", "Unable to get")
 	ErrUnbleSaveEventStore      = errors.InternalError("es8", "Unable to save")
+	ErrUnbleSaveDQLMessages     = errors.InternalError("ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
 )
 
 func ErrCommandNotFound(command string) error {

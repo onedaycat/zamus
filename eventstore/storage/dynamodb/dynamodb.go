@@ -4,8 +4,6 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/aws/aws-xray-sdk-go/xray"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -18,15 +16,15 @@ import (
 const (
 	hashKeyK = "a"
 	emptyStr = ""
-	seqKV    = ":x"
+	seqKV    = ":s"
 	getKV    = ":a"
 )
 
 var (
-	saveCond        = aws.String("attribute_not_exists(x)")
-	saveSnapCond    = aws.String("attribute_not_exists(x) or x < :x")
+	saveCond        = aws.String("attribute_not_exists(s)")
+	saveSnapCond    = aws.String("attribute_not_exists(s) or s < :s")
 	getCond         = aws.String("a=:a")
-	getCondWithTime = aws.String("a=:a and x > :x")
+	getCondWithTime = aws.String("a=:a and s > :s")
 	falseStrongRead = aws.Bool(false)
 )
 
@@ -37,10 +35,8 @@ type DynamoDBEventStore struct {
 }
 
 func New(sess *session.Session, eventstoreTable, snapshotTable string) *DynamoDBEventStore {
-	db := dynamodb.New(sess)
-	xray.AWS(db.Client)
 	return &DynamoDBEventStore{
-		db:              db,
+		db:              dynamodb.New(sess),
 		eventstoreTable: eventstoreTable,
 		snapshotTable:   snapshotTable,
 	}
@@ -63,7 +59,7 @@ func (d *DynamoDBEventStore) Truncate() {
 			DeleteRequest: &dynamodb.DeleteRequest{
 				Key: map[string]*dynamodb.AttributeValue{
 					"a": &dynamodb.AttributeValue{S: output.Items[i]["a"].S},
-					"x": &dynamodb.AttributeValue{N: output.Items[i]["x"].N},
+					"s": &dynamodb.AttributeValue{N: output.Items[i]["s"].N},
 				},
 			},
 		}
@@ -120,7 +116,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 				AttributeType: aws.String("S"),
 			},
 			{
-				AttributeName: aws.String("x"),
+				AttributeName: aws.String("s"),
 				AttributeType: aws.String("N"),
 			},
 		},
@@ -130,7 +126,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 				KeyType:       aws.String("HASH"),
 			},
 			{
-				AttributeName: aws.String("x"),
+				AttributeName: aws.String("s"),
 				KeyType:       aws.String("RANGE"),
 			},
 		},

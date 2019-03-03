@@ -23,7 +23,6 @@ func TestJSONSize(t *testing.T) {
 		AggregateID: "bhh9lvkrtr33vbmh6djg",
 		Seq:         10,
 		Time:        1549966068,
-		TimeSeq:     154996606800001,
 	}
 
 	data.Event, err = json.Marshal(map[string]interface{}{
@@ -46,7 +45,6 @@ func TestSizeProto(t *testing.T) {
 		AggregateID: "bhh9lvkrtr33vbmh6djg",
 		Seq:         10,
 		Time:        1549966068,
-		TimeSeq:     154996606800001,
 	}
 
 	data.Event, err = json.Marshal(map[string]interface{}{
@@ -76,7 +74,6 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		AggregateID: "a1",
 		Seq:         10,
 		EventType:   "domain.aggregate.event",
-		TimeSeq:     10001,
 	}
 
 	data.Event, err = json.Marshal(map[string]interface{}{

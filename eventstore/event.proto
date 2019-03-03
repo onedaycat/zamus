@@ -8,7 +8,7 @@ message Metadata {
   string userID = 2;
   string ip = 3;
   string correlationID = 4;
-  string trnasactionID = 5;
+  string txID = 5;
 }
 
 message EventMsg {
@@ -19,9 +19,8 @@ message EventMsg {
   bytes event = 5;
   int64 time = 6;
   int64 seq = 7;
-  int64 timeSeq = 8;
-  int64 expired = 9;
-  bytes metadata = 10;
+  int64 expired = 8;
+  bytes metadata = 9;
 }
 
 message EventMsgList {

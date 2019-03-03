@@ -163,6 +163,17 @@
   revision = "c2b33e84"
 
 [[projects]]
+  digest = "1:6c41d4f998a03b6604227ccad36edaed6126c397e5d78709ef4814a1145a6757"
+  name = "github.com/jmoiron/sqlx"
+  packages = [
+    ".",
+    "reflectx",
+  ]
+  pruneopts = "UT"
+  revision = "d161d7a76b5661016ad0b085869f77fd410f3e6a"
+  version = "v1.2.0"
+
+[[projects]]
   digest = "1:edbef42561faa44c19129b68d1e109fbc1647f63239250391eadc8d0e7c9f669"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -183,22 +194,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a73b63abf2a894270f0d20130a216b8d51679bcadf6bc397b390c0de5ea05814"
+  digest = "1:a91f89d6da52f142b5cd14c09e6727c94f9b0f8e00205accafbf968aaa556e07"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "dc76da224cde5466241568f1fd6ec93329c7802f"
-
-[[projects]]
-  branch = "master"
-  digest = "1:7af595f48e507f5f04d2af2f1dbd5b6a6b39b82b5beb3a6839df16c7820610ca"
-  name = "github.com/onedaycat/gocqrs"
-  packages = ["common/eid"]
-  pruneopts = "UT"
-  revision = "4cb9069aec0a2ce4d584117a94244a4e0b51da0d"
+  revision = "41e7018d161efa453738dfa777ff697b5dbb7383"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -218,11 +221,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c1ccd4b194417bcfcf7d45ea419fb222f50d1d03f1eae8f6baadd7662c98ebc4"
+  digest = "1:51aa5f134638d70d9eb36562fcd07ba9bbd02708ca53a31e4582622406cb9ee5"
   name = "github.com/plimble/mage"
   packages = ["mg"]
   pruneopts = "UT"
-  revision = "c0f166d01ae1a6b5fa487f5e161ec16da4d730a9"
+  revision = "35fdfba4c7c39046e17ce5697c9ed73dae092498"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -362,9 +365,9 @@
     "github.com/go-sql-driver/mysql",
     "github.com/golang/protobuf/proto",
     "github.com/golang/snappy",
+    "github.com/jmoiron/sqlx",
     "github.com/onedaycat/errors",
     "github.com/onedaycat/errors/sentry",
-    "github.com/onedaycat/gocqrs/common/eid",
     "github.com/plimble/goconf",
     "github.com/plimble/mage/mg",
     "github.com/rs/xid",
