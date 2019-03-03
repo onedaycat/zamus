@@ -37,7 +37,7 @@ func TestMultiSave(t *testing.T) {
 	}
 
 	events := eventsRand.Build()
-	errStack := errors.ErrUnbleSaveDQLMessages.WithCaller().PrintStack()
+	errStack := errors.ErrUnbleSaveDQLMessages.WithCaller().StackStrings()
 
 	d := dql.New(db, 3, "srv1", "lamb1", "1.0.0")
 	for _, event := range events {

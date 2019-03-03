@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	errs "github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"
 	"golang.org/x/sync/errgroup"
 )
@@ -16,6 +17,7 @@ type partitionStrategy struct {
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
+	dql           dql.DQL
 }
 
 func NewPartitionStrategy() KinesisHandlerStrategy {
@@ -34,6 +36,10 @@ func NewPartitionStrategy() KinesisHandlerStrategy {
 
 func (c *partitionStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
 	c.errorHandlers = handlers
+}
+
+func (c *partitionStrategy) SetDQL(dql dql.DQL) {
+	c.dql = dql
 }
 
 func (c *partitionStrategy) FilterEvents(eventTypes ...string) {
@@ -84,6 +90,8 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) error 
 		partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
 	}
 
+DQLRetry:
+
 	wg := errgroup.Group{}
 
 	for _, ghs := range partitions {
@@ -98,7 +106,13 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) error 
 	}
 
 	if err := wg.Wait(); err != nil {
-		return err
+		if ok := c.dql.Retry(); ok {
+			goto DQLRetry
+		}
+
+		c.dql.Save(ctx)
+
+		return nil
 	}
 
 	return nil

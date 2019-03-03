@@ -10,7 +10,6 @@ type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
 type LambdaHandler func(ctx context.Context, event *KinesisStreamEvent)
-type EventMessageHandler func(ctx context.Context, msg *EventMsg) error
 type EventMessagesHandler func(ctx context.Context, msgs EventMsgs) error
 type EventMessageErrorHandler func(ctx context.Context, msg *EventMsg, err error)
 type EventMessagesErrorHandler func(ctx context.Context, msgs EventMsgs, err error)

@@ -15,42 +15,42 @@ const (
 //go:generate mockery -name=DQL
 type DQL interface {
 	Save(ctx context.Context) error
-	IncreateRetry() bool
+	Retry() bool
 	AddEventMsgError(msg *eventstore.EventMsg, errStack []string)
 }
 
 type dql struct {
-	storage        Storage
-	retry          int
-	nRetry         int
-	msgs           DQLMsgs
-	service        string
-	lambdaFunction string
-	version        string
+	Storage        Storage
+	MaxRetry       int
+	Remain         int
+	DQLMsgs        DQLMsgs
+	Service        string
+	LambdaFunction string
+	Version        string
 }
 
-func New(storage Storage, retry int, service, lambdaFunc, version string) DQL {
-	return &dql{storage, retry, 0, make(DQLMsgs, 0, 100), service, lambdaFunc, version}
+func New(storage Storage, maxRetry int, service, lambdaFunc, version string) *dql {
+	return &dql{storage, maxRetry, maxRetry, make(DQLMsgs, 0, 100), service, lambdaFunc, version}
 }
 
 func (d *dql) Save(ctx context.Context) error {
-	if err := d.storage.MultiSave(ctx, d.msgs); err != nil {
+	if err := d.Storage.MultiSave(ctx, d.DQLMsgs); err != nil {
 		return err
 	}
 
-	d.nRetry = 0
-	d.msgs = make(DQLMsgs, 0, 100)
+	d.Remain = d.MaxRetry
+	d.DQLMsgs = make(DQLMsgs, 0, 100)
 
 	return nil
 }
 
-func (d *dql) IncreateRetry() bool {
-	d.retry++
-	if d.retry == d.nRetry {
-		return true
+func (d *dql) Retry() bool {
+	d.Remain--
+	if d.Remain == 0 {
+		return false
 	}
 
-	return false
+	return true
 }
 
 func (d *dql) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
@@ -58,10 +58,10 @@ func (d *dql) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
 	now := clock.Now().Unix()
 
 	dqlMsg := &DQLMsg{
-		ID:             d.service + colon + strconv.FormatInt(now, 10) + colon + msg.AggregateID + colon + strconv.FormatInt(msg.Seq, 10),
-		Service:        d.service,
-		Version:        d.version,
-		LambdaFunction: d.lambdaFunction,
+		ID:             d.Service + colon + strconv.FormatInt(now, 10) + colon + msg.AggregateID + colon + strconv.FormatInt(msg.Seq, 10),
+		Service:        d.Service,
+		Version:        d.Version,
+		LambdaFunction: d.LambdaFunction,
 		EventType:      msg.EventType,
 		AggregateID:    msg.AggregateID,
 		EventID:        msg.EventID,
@@ -72,5 +72,5 @@ func (d *dql) AddEventMsgError(msg *eventstore.EventMsg, errStack []string) {
 		Error:          errStack,
 	}
 
-	d.msgs = append(d.msgs, dqlMsg)
+	d.DQLMsgs = append(d.DQLMsgs, dqlMsg)
 }
