@@ -16,11 +16,6 @@ func (Build) Linux() {
 	fmt.Println("Build Done")
 }
 
-func (Build) Mac() {
-	mg.BuildMac(".", "./bin/app")
-	fmt.Println("Build Done")
-}
-
 func Deploy() {
 	Build{}.Linux()
 	mg.Exec("serverless deploy -v")
