@@ -3,6 +3,7 @@
 package mocks
 
 import context "context"
+import errors "github.com/onedaycat/errors"
 
 import lambda "github.com/aws/aws-sdk-go/service/lambda"
 import mock "github.com/stretchr/testify/mock"
@@ -14,7 +15,7 @@ type Invoker struct {
 }
 
 // Invoke provides a mock function with given fields: input
-func (_m *Invoker) Invoke(input *lambda.InvokeInput) (*lambda.InvokeOutput, error) {
+func (_m *Invoker) Invoke(input *lambda.InvokeInput) (*lambda.InvokeOutput, errors.Error) {
 	ret := _m.Called(input)
 
 	var r0 *lambda.InvokeOutput
@@ -26,18 +27,20 @@ func (_m *Invoker) Invoke(input *lambda.InvokeInput) (*lambda.InvokeOutput, erro
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*lambda.InvokeInput) error); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(*lambda.InvokeInput) errors.Error); ok {
 		r1 = rf(input)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // InvokeAsync provides a mock function with given fields: input
-func (_m *Invoker) InvokeAsync(input *lambda.InvokeAsyncInput) (*lambda.InvokeAsyncOutput, error) {
+func (_m *Invoker) InvokeAsync(input *lambda.InvokeAsyncInput) (*lambda.InvokeAsyncOutput, errors.Error) {
 	ret := _m.Called(input)
 
 	var r0 *lambda.InvokeAsyncOutput
@@ -49,18 +52,20 @@ func (_m *Invoker) InvokeAsync(input *lambda.InvokeAsyncInput) (*lambda.InvokeAs
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(*lambda.InvokeAsyncInput) error); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(*lambda.InvokeAsyncInput) errors.Error); ok {
 		r1 = rf(input)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // InvokeAsyncWithContext provides a mock function with given fields: ctx, input, opts
-func (_m *Invoker) InvokeAsyncWithContext(ctx context.Context, input *lambda.InvokeAsyncInput, opts ...request.Option) (*lambda.InvokeAsyncOutput, error) {
+func (_m *Invoker) InvokeAsyncWithContext(ctx context.Context, input *lambda.InvokeAsyncInput, opts ...request.Option) (*lambda.InvokeAsyncOutput, errors.Error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -79,18 +84,20 @@ func (_m *Invoker) InvokeAsyncWithContext(ctx context.Context, input *lambda.Inv
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *lambda.InvokeAsyncInput, ...request.Option) error); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(context.Context, *lambda.InvokeAsyncInput, ...request.Option) errors.Error); ok {
 		r1 = rf(ctx, input, opts...)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
 }
 
 // InvokeWithContext provides a mock function with given fields: ctx, input, opts
-func (_m *Invoker) InvokeWithContext(ctx context.Context, input *lambda.InvokeInput, opts ...request.Option) (*lambda.InvokeOutput, error) {
+func (_m *Invoker) InvokeWithContext(ctx context.Context, input *lambda.InvokeInput, opts ...request.Option) (*lambda.InvokeOutput, errors.Error) {
 	_va := make([]interface{}, len(opts))
 	for _i := range opts {
 		_va[_i] = opts[_i]
@@ -109,11 +116,13 @@ func (_m *Invoker) InvokeWithContext(ctx context.Context, input *lambda.InvokeIn
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *lambda.InvokeInput, ...request.Option) error); ok {
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(context.Context, *lambda.InvokeInput, ...request.Option) errors.Error); ok {
 		r1 = rf(ctx, input, opts...)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
 	}
 
 	return r0, r1
