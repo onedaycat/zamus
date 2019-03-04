@@ -3,6 +3,8 @@ package dynamostream
 import (
 	"encoding/json"
 
+	"github.com/onedaycat/zamus/errors"
+
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 )
@@ -15,10 +17,14 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
 	var err error
 	data := make(map[string]*dynamodb.AttributeValue)
 	if err = json.Unmarshal(b, &data); err != nil {
-		return err
+		return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
 	}
 
-	return dynamodbattribute.UnmarshalMap(data, &p.EventMsg)
+	if err = dynamodbattribute.UnmarshalMap(data, &p.EventMsg); err != nil {
+		return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
+	}
+
+	return nil
 }
 
 const EventInsert = "INSERT"

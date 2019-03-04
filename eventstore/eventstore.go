@@ -12,10 +12,6 @@ import (
 
 //go:generate mockery -name=EventStore
 
-// RetryHandler if return bool is true is allow retry,
-// if return bool is false no retry
-type RetryHandler func() error
-
 const emptyStr = ""
 
 type EventStore interface {

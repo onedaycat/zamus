@@ -4,18 +4,24 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/onedaycat/zamus/errors"
+
 	"github.com/golang/snappy"
 )
 
-func (e *EventMsg) UnmarshalEvent(v interface{}) error {
+func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
 	var dst []byte
 	var err error
 	dst, err = snappy.Decode(dst, e.Event)
 	if err != nil {
-		return err
+		return errors.ErrUnableDecode.WithCause(err).WithCaller()
 	}
 
-	return json.Unmarshal(dst, v)
+	if err := json.Unmarshal(dst, v); err != nil {
+		return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+	}
+
+	return nil
 }
 
 func (e *EventMsg) AddExpired(d time.Duration) {
