@@ -78,21 +78,35 @@ func (c *shardStrategy) Process(ctx context.Context, records Records) errors.Err
 		shards[i] = make(EventMsgs, 0, 100)
 	}
 
-	for i, record := range records {
-		eventType = record.Kinesis.Data.EventMsg.EventType
-		if _, ok := c.eventTypes[eventType]; !ok {
-			continue
-		}
+	if len(c.eventTypes) > 0 {
+		for i, record := range records {
+			eventType = record.Kinesis.Data.EventMsg.EventType
+			if _, ok := c.eventTypes[eventType]; !ok {
+				continue
+			}
 
-		pk = record.Kinesis.PartitionKey
-		shardPos = i % c.nShard
-		pos, ok = pkPos[pk]
-		if !ok {
-			pkPos[pk] = shardPos
-			pos = shardPos
-		}
+			pk = record.Kinesis.PartitionKey
+			shardPos = i % c.nShard
+			pos, ok = pkPos[pk]
+			if !ok {
+				pkPos[pk] = shardPos
+				pos = shardPos
+			}
 
-		shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
+			shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
+		}
+	} else {
+		for i, record := range records {
+			pk = record.Kinesis.PartitionKey
+			shardPos = i % c.nShard
+			pos, ok = pkPos[pk]
+			if !ok {
+				pkPos[pk] = shardPos
+				pos = shardPos
+			}
+
+			shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
+		}
 	}
 
 DQLRetry:

@@ -66,13 +66,19 @@ func (c *simpleStrategy) Process(ctx context.Context, records Records) errors.Er
 	var eventType string
 	msgs := make(EventMsgs, 0, 100)
 
-	for _, record := range records {
-		eventType = record.Kinesis.Data.EventMsg.EventType
-		if _, ok := c.eventTypes[eventType]; !ok {
-			continue
-		}
+	if len(c.eventTypes) > 0 {
+		for _, record := range records {
+			eventType = record.Kinesis.Data.EventMsg.EventType
+			if _, ok := c.eventTypes[eventType]; !ok {
+				continue
+			}
 
-		msgs = append(msgs, record.Kinesis.Data.EventMsg)
+			msgs = append(msgs, record.Kinesis.Data.EventMsg)
+		}
+	} else {
+		for _, record := range records {
+			msgs = append(msgs, record.Kinesis.Data.EventMsg)
+		}
 	}
 
 DQLRetry:

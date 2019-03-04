@@ -88,19 +88,30 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) errors
 
 	}()
 
-	for _, record := range records {
-		// fmt.Println("###", record.Kinesis.Data.EventMsg.EventID, record.Kinesis.Data.EventMsg.Seq)
-		eventType = record.Kinesis.Data.EventMsg.EventType
-		if _, ok := c.eventTypes[eventType]; !ok {
-			continue
-		}
+	if len(c.eventTypes) > 0 {
+		for _, record := range records {
+			// fmt.Println("###", record.Kinesis.Data.EventMsg.EventID, record.Kinesis.Data.EventMsg.Seq)
+			eventType = record.Kinesis.Data.EventMsg.EventType
+			if _, ok := c.eventTypes[eventType]; !ok {
+				continue
+			}
 
-		pk = record.Kinesis.PartitionKey
-		if _, ok := partitions[pk]; !ok {
-			partitions[pk] = make(EventMsgs, 0, 100)
-		}
+			pk = record.Kinesis.PartitionKey
+			if _, ok := partitions[pk]; !ok {
+				partitions[pk] = make(EventMsgs, 0, 100)
+			}
 
-		partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
+			partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
+		}
+	} else {
+		for _, record := range records {
+			pk = record.Kinesis.PartitionKey
+			if _, ok := partitions[pk]; !ok {
+				partitions[pk] = make(EventMsgs, 0, 100)
+			}
+
+			partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
+		}
 	}
 
 DQLRetry:
