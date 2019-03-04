@@ -54,7 +54,7 @@ func BenchmarkShard(b *testing.B) {
 	}
 
 	h := NewShardStrategy(3)
-	h.RegisterHandlers(handler, handler, handler)
+	h.RegisterHandler(handler)
 	h.FilterEvents("et1")
 
 	b.ReportAllocs()
@@ -82,7 +82,7 @@ func BenchmarkPartition(b *testing.B) {
 	}
 
 	h := NewPartitionStrategy()
-	h.RegisterHandlers(handler, handler, handler)
+	h.RegisterHandler(handler)
 	h.FilterEvents("et1")
 
 	b.ReportAllocs()
@@ -109,7 +109,7 @@ func BenchmarkSimple(b *testing.B) {
 	}
 
 	h := NewSimpleStrategy()
-	h.RegisterHandlers(handler, handler, handler)
+	h.RegisterHandler(handler)
 	h.FilterEvents("et1")
 
 	b.ReportAllocs()
@@ -160,7 +160,8 @@ func TestShardStrategy(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler1, handler2)
+	cm.RegisterHandler(handler1)
+	cm.RegisterHandler(handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -187,6 +188,73 @@ func TestShardStrategy(t *testing.T) {
 	require.Equal(t, 0, h1ET2)
 	require.Equal(t, 3, h1ET3)
 	require.Equal(t, 3, h2ET1)
+	require.Equal(t, 0, h2ET2)
+	require.Equal(t, 3, h2ET3)
+}
+
+func TestShardStrategyWithFilter(t *testing.T) {
+	nError := 0
+	h1ET1 := 0
+	h1ET2 := 0
+	h1ET3 := 0
+	h2ET1 := 0
+	h2ET2 := 0
+	h2ET3 := 0
+	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+		for _, msg := range msgs {
+			if msg.EventType == "et1" {
+				h1ET1++
+			}
+			if msg.EventType == "et3" {
+				h1ET3++
+			}
+			fmt.Println("h1", msg.EventID, msg.EventType)
+		}
+		return nil
+	}
+
+	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+		for _, msg := range msgs {
+			h2ET3++
+			fmt.Println("h2", msg.EventID, msg.EventType)
+		}
+		return nil
+	}
+
+	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+		nError++
+	}
+
+	n := 10
+	cm := NewShardStrategy(10)
+	cm.RegisterHandler(handler1, "et1", "et3")
+	cm.RegisterHandler(handler2, "et3")
+	cm.FilterEvents("et1", "et3")
+	cm.ErrorHandlers(onErr)
+
+	records := make(Records, n)
+	for i := range records {
+		rec := &Record{}
+		istr := strconv.Itoa(i)
+		if i == 0 || i == 4 || i == 7 {
+			rec.add("p1", istr, "et1")
+		}
+		if i == 1 || i == 5 || i == 6 || i == 9 {
+			rec.add("p2", istr, "et2")
+		}
+		if i == 2 || i == 3 || i == 8 {
+			rec.add("p3", istr, "et3")
+		}
+		records[i] = rec
+	}
+
+	err := cm.Process(context.Background(), records)
+	require.NoError(t, err)
+	require.Equal(t, 0, nError)
+	require.Equal(t, 3, h1ET1)
+	require.Equal(t, 0, h1ET2)
+	require.Equal(t, 3, h1ET3)
+	require.Equal(t, 0, h2ET1)
 	require.Equal(t, 0, h2ET2)
 	require.Equal(t, 3, h2ET3)
 }
@@ -235,7 +303,8 @@ func TestShardStrategyError(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler1, handler2)
+	cm.RegisterHandler(handler1)
+	cm.RegisterHandler(handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -312,7 +381,8 @@ func TestShardStrategyPanic(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler1, handler2)
+	cm.RegisterHandler(handler1)
+	cm.RegisterHandler(handler2)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -366,7 +436,7 @@ func TestShardStrategyPanicPre(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler)
+	cm.RegisterHandler(handler)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -416,7 +486,7 @@ func TestShardStrategyPanicPost(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler)
+	cm.RegisterHandler(handler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -477,7 +547,7 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler)
+	cm.RegisterHandler(handler)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
@@ -536,7 +606,7 @@ func TestShardStrategyPanicPostWithPre(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandlers(handler)
+	cm.RegisterHandler(handler)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")

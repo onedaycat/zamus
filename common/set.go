@@ -2,12 +2,31 @@ package common
 
 type Set map[string]struct{}
 
-func NewSet() Set {
-	return make(map[string]struct{}, 100)
+func NewSet(keys ...string) Set {
+	s := make(map[string]struct{}, 100)
+	if len(keys) > 0 {
+		for _, key := range keys {
+			s[key] = struct{}{}
+		}
+	}
+
+	return s
+}
+
+func (s Set) IsEmpty() bool {
+	if len(s) == 0 {
+		return true
+	}
+
+	return false
 }
 
 func (s Set) Set(key string) {
 	s[key] = struct{}{}
+}
+
+func (s Set) Delete(key string) {
+	delete(s, key)
 }
 
 func (s Set) Has(key string) bool {

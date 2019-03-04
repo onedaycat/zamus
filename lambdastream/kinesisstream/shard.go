@@ -3,6 +3,7 @@ package kinesisstream
 import (
 	"context"
 
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/tracer"
 
@@ -13,7 +14,7 @@ import (
 type shardStrategy struct {
 	nShard        int
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []EventMessagesHandler
+	handlers      []*Handler
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -24,6 +25,7 @@ func NewShardStrategy(shard int) KinesisHandlerStrategy {
 	return &shardStrategy{
 		nShard:     shard,
 		eventTypes: make(map[string]struct{}, 20),
+		handlers:   make([]*Handler, 0, 10),
 	}
 }
 
@@ -49,8 +51,11 @@ func (c *shardStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *shardStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
-	c.handlers = handlers
+func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents ...string) {
+	c.handlers = append(c.handlers, &Handler{
+		Handler:      handler,
+		FilterEvents: common.NewSet(filterEvents...),
+	})
 }
 
 func (c *shardStrategy) Process(ctx context.Context, records Records) errors.Error {
@@ -153,21 +158,42 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err 
 	return
 }
 
+func (c *shardStrategy) filterEvents(info *Handler, msgs EventMsgs) EventMsgs {
+	if info.FilterEvents.IsEmpty() {
+		return msgs
+	}
+
+	var ok bool
+	fillter := make(EventMsgs, 0, len(msgs))
+	for _, msg := range msgs {
+		if ok = info.FilterEvents.Has(msg.EventType); ok {
+			fillter = append(fillter, msg)
+		}
+	}
+
+	return fillter
+}
+
 func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	wg := errgroup.Group{}
-	for _, handler := range c.handlers {
-		handler := handler
+	for _, handlerinfo := range c.handlers {
+		handlerinfo := handlerinfo
 		wg.Go(func() (aerr errors.Error) {
 			hctx, seg := tracer.BeginSubsegment(ctx, "handler")
 			defer tracer.Close(seg)
 			defer c.recover(hctx, msgs, &aerr)
-			if aerr = handler(hctx, msgs); aerr != nil {
+			newmsgs := c.filterEvents(handlerinfo, msgs)
+			if len(newmsgs) == 0 {
+				return nil
+			}
+
+			if aerr = handlerinfo.Handler(hctx, c.filterEvents(handlerinfo, newmsgs)); aerr != nil {
 				tracer.AddError(seg, aerr)
 				if c.dql != nil {
 					c.dql.AddError(aerr)
 				}
 				for _, errhandler := range c.errorHandlers {
-					errhandler(hctx, msgs, aerr)
+					errhandler(hctx, newmsgs, aerr)
 				}
 				return aerr
 			}

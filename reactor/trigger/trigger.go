@@ -4,10 +4,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-xray-sdk-go/xray"
-	"github.com/aws/aws-xray-sdk-go/xraylog"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
@@ -21,11 +18,6 @@ type Config struct {
 	SentryRelease string
 	SentryDNS     string
 	EnableTrace   bool
-}
-
-func init() {
-	common.PrettyLog()
-	xray.SetLogger(xraylog.NullLogger)
 }
 
 func InitTrigger(config *Config) {

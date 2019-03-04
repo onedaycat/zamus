@@ -3,6 +3,7 @@ package kinesisstream
 import (
 	"context"
 
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
@@ -20,7 +21,12 @@ type KinesisHandlerStrategy interface {
 	FilterEvents(eventTypes ...string)
 	PreHandlers(handlers ...EventMessagesHandler)
 	PostHandlers(handlers ...EventMessagesHandler)
-	RegisterHandlers(handlers ...EventMessagesHandler)
+	RegisterHandler(handlers EventMessagesHandler, filterEvents ...string)
 	Process(ctx context.Context, records Records) errors.Error
 	SetDQL(dql dql.DQL)
+}
+
+type Handler struct {
+	Handler      EventMessagesHandler
+	FilterEvents common.Set
 }

@@ -5,10 +5,7 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-xray-sdk-go/xray"
-	"github.com/aws/aws-xray-sdk-go/xraylog"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
@@ -31,11 +28,6 @@ type Config struct {
 	EnableTrace   bool
 	DQLMaxRetry   int
 	DQLStorage    dql.Storage
-}
-
-func init() {
-	common.PrettyLog()
-	xray.SetLogger(xraylog.NullLogger)
 }
 
 type Handler struct {
@@ -92,8 +84,8 @@ func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
 	h.streamer.ErrorHandlers(handlers...)
 }
 
-func (h *Handler) RegisterHandlers(handlers ...EventHandler) {
-	h.streamer.RegisterHandlers(handlers...)
+func (h *Handler) RegisterHandler(handler EventHandler, filterEvents ...string) {
+	h.streamer.RegisterHandler(handler, filterEvents...)
 }
 
 func (h *Handler) FilterEvents(eventTypes ...string) {

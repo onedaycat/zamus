@@ -5,12 +5,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/client"
 	"github.com/aws/aws-xray-sdk-go/xray"
+	"github.com/aws/aws-xray-sdk-go/xraylog"
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common"
 )
 
 var (
 	Enable = false
 )
+
+func init() {
+	xray.SetLogger(xraylog.NullLogger)
+	common.PrettyLog()
+}
 
 type Segment = xray.Segment
 

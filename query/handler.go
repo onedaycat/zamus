@@ -8,9 +8,6 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-xray-sdk-go/xray"
-	"github.com/aws/aws-xray-sdk-go/xraylog"
-	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/tracer"
@@ -20,11 +17,6 @@ type ErrorHandler func(ctx context.Context, query *Query, appErr errors.Error)
 type QueryHandler func(ctx context.Context, query *Query) (QueryResult, errors.Error)
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
-
-func init() {
-	common.PrettyLog()
-	xray.SetLogger(xraylog.NullLogger)
-}
 
 type Config struct {
 	AppStage      string

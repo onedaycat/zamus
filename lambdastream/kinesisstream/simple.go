@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/onedaycat/errors/errgroup"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/tracer"
@@ -11,7 +12,7 @@ import (
 
 type simpleStrategy struct {
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []EventMessagesHandler
+	handlers      []*Handler
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -21,6 +22,7 @@ type simpleStrategy struct {
 func NewSimpleStrategy() KinesisHandlerStrategy {
 	return &simpleStrategy{
 		eventTypes: make(map[string]struct{}, 20),
+		handlers:   make([]*Handler, 0, 10),
 	}
 }
 
@@ -46,8 +48,11 @@ func (c *simpleStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *simpleStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
-	c.handlers = handlers
+func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents ...string) {
+	c.handlers = append(c.handlers, &Handler{
+		Handler:      handler,
+		FilterEvents: common.NewSet(filterEvents...),
+	})
 }
 
 func (c *simpleStrategy) Process(ctx context.Context, records Records) errors.Error {
@@ -79,6 +84,53 @@ DQLRetry:
 	return nil
 }
 
+func (c *simpleStrategy) filterEvents(info *Handler, msgs EventMsgs) EventMsgs {
+	if info.FilterEvents.IsEmpty() {
+		return msgs
+	}
+
+	var ok bool
+	fillter := make(EventMsgs, 0, len(msgs))
+	for _, msg := range msgs {
+		if ok = info.FilterEvents.Has(msg.EventType); ok {
+			fillter = append(fillter, msg)
+		}
+	}
+
+	return fillter
+}
+
+func (c *simpleStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
+	wg := errgroup.Group{}
+	for _, handlerinfo := range c.handlers {
+		handlerinfo := handlerinfo
+		wg.Go(func() (aerr errors.Error) {
+			hctx, seg := tracer.BeginSubsegment(ctx, "handler")
+			defer tracer.Close(seg)
+			defer c.recover(hctx, msgs, &aerr)
+			newmsgs := c.filterEvents(handlerinfo, msgs)
+			if len(newmsgs) == 0 {
+				return nil
+			}
+
+			if aerr = handlerinfo.Handler(hctx, c.filterEvents(handlerinfo, newmsgs)); aerr != nil {
+				tracer.AddError(seg, aerr)
+				if c.dql != nil {
+					c.dql.AddError(aerr)
+				}
+				for _, errhandler := range c.errorHandlers {
+					errhandler(hctx, newmsgs, aerr)
+				}
+				return aerr
+			}
+
+			return
+		})
+	}
+
+	return wg.Wait()
+}
+
 func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	defer c.recover(ctx, msgs, &err)
 	for _, ph := range c.preHandlers {
@@ -94,28 +146,7 @@ func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors
 		}
 	}
 
-	wg := errgroup.Group{}
-	for _, handler := range c.handlers {
-		handler := handler
-		wg.Go(func() (aerr errors.Error) {
-			hctx, seg := tracer.BeginSubsegment(ctx, "handler")
-			defer tracer.Close(seg)
-			defer c.recover(hctx, msgs, &aerr)
-			if aerr = handler(hctx, msgs); aerr != nil {
-				tracer.AddError(seg, aerr)
-				if c.dql != nil {
-					c.dql.AddError(aerr)
-				}
-				for _, errhandler := range c.errorHandlers {
-					errhandler(hctx, msgs, aerr)
-				}
-				return aerr
-			}
-
-			return
-		})
-	}
-	if err = wg.Wait(); err != nil {
+	if err = c.doHandlers(ctx, msgs); err != nil {
 		return err
 	}
 

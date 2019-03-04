@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 
+	"github.com/onedaycat/zamus/common"
+
 	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"
@@ -13,7 +15,7 @@ import (
 type partitionStrategy struct {
 	pkPool        sync.Pool
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []EventMessagesHandler
+	handlers      []*Handler
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -23,6 +25,7 @@ type partitionStrategy struct {
 func NewPartitionStrategy() KinesisHandlerStrategy {
 	ps := &partitionStrategy{
 		eventTypes: make(map[string]struct{}, 20),
+		handlers:   make([]*Handler, 0, 10),
 	}
 
 	ps.pkPool = sync.Pool{
@@ -56,8 +59,11 @@ func (c *partitionStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *partitionStrategy) RegisterHandlers(handlers ...EventMessagesHandler) {
-	c.handlers = handlers
+func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents ...string) {
+	c.handlers = append(c.handlers, &Handler{
+		Handler:      handler,
+		FilterEvents: common.NewSet(filterEvents...),
+	})
 }
 
 func (c *partitionStrategy) Process(ctx context.Context, records Records) errors.Error {
@@ -161,21 +167,42 @@ func (c *partitionStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (
 	return
 }
 
+func (c *partitionStrategy) filterEvents(info *Handler, msgs EventMsgs) EventMsgs {
+	if info.FilterEvents.IsEmpty() {
+		return msgs
+	}
+
+	var ok bool
+	fillter := make(EventMsgs, 0, len(msgs))
+	for _, msg := range msgs {
+		if ok = info.FilterEvents.Has(msg.EventType); ok {
+			fillter = append(fillter, msg)
+		}
+	}
+
+	return fillter
+}
+
 func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	wg := errgroup.Group{}
-	for _, handler := range c.handlers {
-		handler := handler
+	for _, handlerinfo := range c.handlers {
+		handlerinfo := handlerinfo
 		wg.Go(func() (aerr errors.Error) {
 			hctx, seg := tracer.BeginSubsegment(ctx, "handler")
 			defer tracer.Close(seg)
 			defer c.recover(hctx, msgs, &aerr)
-			if aerr = handler(hctx, msgs); aerr != nil {
+			newmsgs := c.filterEvents(handlerinfo, msgs)
+			if len(newmsgs) == 0 {
+				return nil
+			}
+
+			if aerr = handlerinfo.Handler(hctx, newmsgs); aerr != nil {
 				tracer.AddError(seg, aerr)
 				if c.dql != nil {
 					c.dql.AddError(aerr)
 				}
 				for _, errhandler := range c.errorHandlers {
-					errhandler(hctx, msgs, aerr)
+					errhandler(hctx, newmsgs, aerr)
 				}
 				return aerr
 			}
@@ -183,11 +210,8 @@ func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err
 			return
 		})
 	}
-	if err = wg.Wait(); err != nil {
-		return err
-	}
 
-	return
+	return wg.Wait()
 }
 
 func (c *partitionStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.Error) {
