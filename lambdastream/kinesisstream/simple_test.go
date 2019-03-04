@@ -50,8 +50,8 @@ func TestSimpleStrategy(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -117,8 +117,8 @@ func TestSimpleStrategyWithFilter(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler1, "et1", "et3")
-	cm.RegisterHandler(handler2, "et3")
+	cm.RegisterHandler(handler1, func() []string { return []string{"et1", "et3"} })
+	cm.RegisterHandler(handler2, func() []string { return []string{"et3"} })
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -193,8 +193,8 @@ func TestSimpleStrategyError(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -271,8 +271,8 @@ func TestSimpleStrategyPanic(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -326,7 +326,7 @@ func TestSimpleStrategyPanicPre(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -376,7 +376,7 @@ func TestSimpleStrategyPanicPost(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -437,7 +437,7 @@ func TestSimpleStrategyPanicPreWithPost(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
@@ -496,7 +496,7 @@ func TestSimpleStrategyPanicPostWithPre(t *testing.T) {
 
 	n := 10
 	cm := NewSimpleStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")

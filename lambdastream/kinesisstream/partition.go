@@ -15,7 +15,7 @@ import (
 type partitionStrategy struct {
 	pkPool        sync.Pool
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []*Handler
+	handlers      []*handlerInfo
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -25,7 +25,7 @@ type partitionStrategy struct {
 func NewPartitionStrategy() KinesisHandlerStrategy {
 	ps := &partitionStrategy{
 		eventTypes: make(map[string]struct{}, 20),
-		handlers:   make([]*Handler, 0, 10),
+		handlers:   make([]*handlerInfo, 0, 10),
 	}
 
 	ps.pkPool = sync.Pool{
@@ -59,11 +59,18 @@ func (c *partitionStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents ...string) {
-	c.handlers = append(c.handlers, &Handler{
-		Handler:      handler,
-		FilterEvents: common.NewSet(filterEvents...),
-	})
+func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
+	if filterEvents == nil {
+		c.handlers = append(c.handlers, &handlerInfo{
+			Handler:      handler,
+			FilterEvents: common.NewSet(),
+		})
+	} else {
+		c.handlers = append(c.handlers, &handlerInfo{
+			Handler:      handler,
+			FilterEvents: common.NewSetFromList(filterEvents()),
+		})
+	}
 }
 
 func (c *partitionStrategy) Process(ctx context.Context, records Records) errors.Error {
@@ -167,7 +174,7 @@ func (c *partitionStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (
 	return
 }
 
-func (c *partitionStrategy) filterEvents(info *Handler, msgs EventMsgs) EventMsgs {
+func (c *partitionStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMsgs {
 	if info.FilterEvents.IsEmpty() {
 		return msgs
 	}

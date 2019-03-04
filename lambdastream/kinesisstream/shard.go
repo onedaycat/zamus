@@ -14,7 +14,7 @@ import (
 type shardStrategy struct {
 	nShard        int
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []*Handler
+	handlers      []*handlerInfo
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -25,7 +25,7 @@ func NewShardStrategy(shard int) KinesisHandlerStrategy {
 	return &shardStrategy{
 		nShard:     shard,
 		eventTypes: make(map[string]struct{}, 20),
-		handlers:   make([]*Handler, 0, 10),
+		handlers:   make([]*handlerInfo, 0, 10),
 	}
 }
 
@@ -51,11 +51,18 @@ func (c *shardStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents ...string) {
-	c.handlers = append(c.handlers, &Handler{
-		Handler:      handler,
-		FilterEvents: common.NewSet(filterEvents...),
-	})
+func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
+	if filterEvents == nil {
+		c.handlers = append(c.handlers, &handlerInfo{
+			Handler:      handler,
+			FilterEvents: common.NewSet(),
+		})
+	} else {
+		c.handlers = append(c.handlers, &handlerInfo{
+			Handler:      handler,
+			FilterEvents: common.NewSetFromList(filterEvents()),
+		})
+	}
 }
 
 func (c *shardStrategy) Process(ctx context.Context, records Records) errors.Error {
@@ -158,7 +165,7 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err 
 	return
 }
 
-func (c *shardStrategy) filterEvents(info *Handler, msgs EventMsgs) EventMsgs {
+func (c *shardStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMsgs {
 	if info.FilterEvents.IsEmpty() {
 		return msgs
 	}

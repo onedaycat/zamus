@@ -6,11 +6,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/mock"
-
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/dql/mocks"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,8 +53,8 @@ func TestPartitionStrategy(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -94,6 +93,7 @@ func TestPartitionStrategyWithFilter(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
+
 	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
@@ -121,8 +121,8 @@ func TestPartitionStrategyWithFilter(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1, "et1", "et3")
-	cm.RegisterHandler(handler2, "et3")
+	cm.RegisterHandler(handler1, func() []string { return []string{"et1", "et3"} })
+	cm.RegisterHandler(handler2, func() []string { return []string{"et3"} })
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -197,8 +197,8 @@ func TestPartitionStrategyError(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -275,8 +275,8 @@ func TestPartitionStrategyPanic(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -330,7 +330,7 @@ func TestPartitionStrategyPanicPre(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -380,7 +380,7 @@ func TestPartitionStrategyPanicPost(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -441,7 +441,7 @@ func TestPartitionStrategyPanicPreWithPost(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
@@ -500,7 +500,7 @@ func TestPartitionStrategyPanicPostWithPre(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
@@ -573,8 +573,8 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 	dqlStorage := &mocks.Storage{}
@@ -655,8 +655,8 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 	dqlStorage := &mocks.Storage{}
@@ -739,8 +739,8 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 
 	n := 10
 	cm := NewPartitionStrategy()
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 	dqlStorage := &mocks.Storage{}

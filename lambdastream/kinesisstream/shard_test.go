@@ -54,7 +54,7 @@ func BenchmarkShard(b *testing.B) {
 	}
 
 	h := NewShardStrategy(3)
-	h.RegisterHandler(handler)
+	h.RegisterHandler(handler, nil)
 	h.FilterEvents("et1")
 
 	b.ReportAllocs()
@@ -82,7 +82,7 @@ func BenchmarkPartition(b *testing.B) {
 	}
 
 	h := NewPartitionStrategy()
-	h.RegisterHandler(handler)
+	h.RegisterHandler(handler, nil)
 	h.FilterEvents("et1")
 
 	b.ReportAllocs()
@@ -109,7 +109,7 @@ func BenchmarkSimple(b *testing.B) {
 	}
 
 	h := NewSimpleStrategy()
-	h.RegisterHandler(handler)
+	h.RegisterHandler(handler, nil)
 	h.FilterEvents("et1")
 
 	b.ReportAllocs()
@@ -160,8 +160,8 @@ func TestShardStrategy(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -227,8 +227,8 @@ func TestShardStrategyWithFilter(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler1, "et1", "et3")
-	cm.RegisterHandler(handler2, "et3")
+	cm.RegisterHandler(handler1, func() []string { return []string{"et1", "et3"} })
+	cm.RegisterHandler(handler2, func() []string { return []string{"et3"} })
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -303,8 +303,8 @@ func TestShardStrategyError(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -381,8 +381,8 @@ func TestShardStrategyPanic(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler1)
-	cm.RegisterHandler(handler2)
+	cm.RegisterHandler(handler1, nil)
+	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
@@ -436,7 +436,7 @@ func TestShardStrategyPanicPre(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -486,7 +486,7 @@ func TestShardStrategyPanicPost(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
@@ -547,7 +547,7 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
@@ -606,7 +606,7 @@ func TestShardStrategyPanicPostWithPre(t *testing.T) {
 
 	n := 10
 	cm := NewShardStrategy(10)
-	cm.RegisterHandler(handler)
+	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")

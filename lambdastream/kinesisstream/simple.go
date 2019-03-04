@@ -12,7 +12,7 @@ import (
 
 type simpleStrategy struct {
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []*Handler
+	handlers      []*handlerInfo
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -22,7 +22,7 @@ type simpleStrategy struct {
 func NewSimpleStrategy() KinesisHandlerStrategy {
 	return &simpleStrategy{
 		eventTypes: make(map[string]struct{}, 20),
-		handlers:   make([]*Handler, 0, 10),
+		handlers:   make([]*handlerInfo, 0, 10),
 	}
 }
 
@@ -48,11 +48,18 @@ func (c *simpleStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents ...string) {
-	c.handlers = append(c.handlers, &Handler{
-		Handler:      handler,
-		FilterEvents: common.NewSet(filterEvents...),
-	})
+func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
+	if filterEvents == nil {
+		c.handlers = append(c.handlers, &handlerInfo{
+			Handler:      handler,
+			FilterEvents: common.NewSet(),
+		})
+	} else {
+		c.handlers = append(c.handlers, &handlerInfo{
+			Handler:      handler,
+			FilterEvents: common.NewSetFromList(filterEvents()),
+		})
+	}
 }
 
 func (c *simpleStrategy) Process(ctx context.Context, records Records) errors.Error {
@@ -84,7 +91,7 @@ DQLRetry:
 	return nil
 }
 
-func (c *simpleStrategy) filterEvents(info *Handler, msgs EventMsgs) EventMsgs {
+func (c *simpleStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMsgs {
 	if info.FilterEvents.IsEmpty() {
 		return msgs
 	}

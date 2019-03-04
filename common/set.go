@@ -13,6 +13,17 @@ func NewSet(keys ...string) Set {
 	return s
 }
 
+func NewSetFromList(keys []string) Set {
+	s := make(map[string]struct{}, 100)
+	if len(keys) > 0 {
+		for _, key := range keys {
+			s[key] = struct{}{}
+		}
+	}
+
+	return s
+}
+
 func (s Set) IsEmpty() bool {
 	if len(s) == 0 {
 		return true
