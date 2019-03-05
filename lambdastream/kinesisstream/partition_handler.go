@@ -19,10 +19,21 @@ type partitionHandler struct {
 	PartitionGetModel    PartitionGetModel
 	PartitionSaveModel   PartitionSaveModel
 	CreatePartitionModel CreatePartitionModel
+	FilterEvents         []string
 }
 
-func NewPartitionHandler() *partitionHandler {
-	return &partitionHandler{}
+func NewPartitionHandler(pm PartitionModel, pg PartitionGetModel, ps PartitionSaveModel, cp CreatePartitionModel, fs []string) *partitionHandler {
+	return &partitionHandler{
+		PartitionModel:       pm,
+		PartitionGetModel:    pg,
+		PartitionSaveModel:   ps,
+		CreatePartitionModel: cp,
+		FilterEvents:         fs,
+	}
+}
+
+func (h *partitionHandler) GetFilterEvents() []string {
+	return h.FilterEvents
 }
 
 func (h *partitionHandler) Apply(ctx context.Context, msgs EventMsgs) errors.Error {

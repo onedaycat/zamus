@@ -21,6 +21,8 @@ type EventMsgs = []*eventstore.EventMsg
 type LambdaEvent = kinesisstream.KinesisStreamEvent
 type FilterEvents = kinesisstream.FilterEvents
 
+var NewPartitionHandler = kinesisstream.NewPartitionHandler
+
 type Config struct {
 	AppStage      string
 	Service       string
