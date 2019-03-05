@@ -13,51 +13,210 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCommandHandler(t *testing.T) {
-	spy := common.Spy()
+type CommandHandlerSuite struct {
+	*common.SpyTest
+	handler *command.Handler
+	ctx     context.Context
+}
 
-	cmd := random.Command().
-		ValidPermission("w1", "deleteWorkspace").
-		Build()
+func setupCommandHandler() *CommandHandlerSuite {
+	s := &CommandHandlerSuite{}
+	s.SpyTest = common.Spy()
 
+	s.handler = command.NewHandler(&command.Config{})
+	s.ctx = context.Background()
+
+	return s
+}
+
+func (s *CommandHandlerSuite) WithHandler(function string) *CommandHandlerSuite {
 	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
-		spy.Called("f")
+		s.Called(function)
 		return nil, nil
 	}
 
-	h := command.NewHandler(&command.Config{})
-	h.RegisterCommand(cmd.Function, f, command.WithPermission("deleteWorkspace"))
-
-	resp, err := h.Handle(context.Background(), cmd)
-
-	require.Nil(t, err)
-	require.Nil(t, resp)
-	require.True(t, spy.Has("f"))
-}
-
-func TestCommandNotFound(t *testing.T) {
-	spy := common.Spy()
-
-	cmd := &command.Command{
-		Function: "xxxxxx",
+	fErr := func(ctx context.Context, cmd *command.Command, xerr errors.Error) {
+		s.Called(function + "Err")
 	}
 
+	s.handler.RegisterCommand(function, f)
+	s.handler.ErrorHandlers(fErr)
+
+	return s
+}
+
+func (s *CommandHandlerSuite) WithErrorHandler(function string, err errors.Error) *CommandHandlerSuite {
 	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
-		spy.Called("f")
+		s.Called(function)
+		return nil, err
+	}
+
+	fErr := func(ctx context.Context, cmd *command.Command, xerr errors.Error) {
+		s.Called(function + "Err")
+	}
+
+	s.handler.RegisterCommand(function, f)
+	s.handler.ErrorHandlers(fErr)
+
+	return s
+}
+
+func (s *CommandHandlerSuite) WithPanicErrorHandler(t *testing.T, cmd *command.Command, function string, err errors.Error) *CommandHandlerSuite {
+	f := func(ctx context.Context, xcmd *command.Command) (interface{}, errors.Error) {
+		require.Equal(t, cmd, xcmd)
+		s.Called(function)
+		panic(err)
+	}
+
+	fErr := func(ctx context.Context, xcmd *command.Command, xerr errors.Error) {
+		require.Equal(t, cmd, xcmd)
+		require.Equal(t, errors.ErrPanic, xerr)
+		s.Called(function + "Err")
+	}
+
+	s.handler.RegisterCommand(function, f)
+	s.handler.ErrorHandlers(fErr)
+
+	return s
+}
+
+func (s *CommandHandlerSuite) WithPanicHandler(t *testing.T, cmd *command.Command, function string) *CommandHandlerSuite {
+	f := func(ctx context.Context, xcmd *command.Command) (interface{}, errors.Error) {
+		require.Equal(t, cmd, xcmd)
+		s.Called(function)
+		panic("panic string")
+	}
+
+	fErr := func(ctx context.Context, xcmd *command.Command, xerr errors.Error) {
+		require.Equal(t, cmd, xcmd)
+		require.Equal(t, errors.ErrPanic, xerr)
+		s.Called(function + "Err")
+	}
+
+	s.handler.RegisterCommand(function, f)
+	s.handler.ErrorHandlers(fErr)
+
+	return s
+}
+
+func Test_Command_Handler(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		s := setupCommandHandler().
+			WithHandler("f")
+
+		cmd := random.Command().
+			Function("f").
+			Build()
+
+		resp, err := s.handler.Handle(s.ctx, cmd)
+
+		require.Nil(t, err)
+		require.Nil(t, resp)
+		require.Equal(t, 1, s.Count("f"))
+		require.Equal(t, 0, s.Count("fErr"))
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		s := setupCommandHandler()
+
+		cmd := random.Command().
+			Function("xxxxxx").
+			Build()
+
+		resp, err := s.handler.Handle(s.ctx, cmd)
+
+		require.Error(t, errors.ErrCommandNotFound("xxxxxx"), err)
+		require.Nil(t, resp)
+		require.Equal(t, 0, s.Count("f"))
+		require.Equal(t, 0, s.Count("fErr"))
+	})
+
+	t.Run("Error", func(t *testing.T) {
+		s := setupCommandHandler().
+			WithErrorHandler("f", errors.ErrUnableMarshal)
+
+		cmd := random.Command().
+			Function("f").
+			Build()
+
+		resp, err := s.handler.Handle(s.ctx, cmd)
+
+		require.Error(t, errors.ErrUnableMarshal, err)
+		require.Nil(t, resp)
+		require.Equal(t, 1, s.Count("f"))
+		require.Equal(t, 1, s.Count("fErr"))
+	})
+
+	t.Run("Panic Error", func(t *testing.T) {
+		s := setupCommandHandler()
+
+		cmd := random.Command().
+			Function("f").
+			Build()
+
+		s.WithPanicErrorHandler(t, cmd, "f", errors.ErrUnableMarshal)
+
+		resp, err := s.handler.Handle(s.ctx, cmd)
+
+		require.Error(t, errors.ErrPanic, err)
+		require.Nil(t, resp)
+		require.Equal(t, 1, s.Count("f"))
+		require.Equal(t, 1, s.Count("fErr"))
+	})
+
+	t.Run("Panic String", func(t *testing.T) {
+		s := setupCommandHandler()
+
+		cmd := random.Command().
+			Function("f").
+			Build()
+
+		s.WithPanicHandler(t, cmd, "f")
+
+		resp, err := s.handler.Handle(s.ctx, cmd)
+
+		require.Error(t, errors.ErrPanic, err)
+		require.Nil(t, resp)
+		require.Equal(t, 1, s.Count("f"))
+		require.Equal(t, 1, s.Count("fErr"))
+	})
+}
+
+type PreCommandHandlerSuite struct {
+	*common.SpyTest
+	handler *command.Handler
+	ctx     context.Context
+}
+
+func setupPreCommandHandler() *PreCommandHandlerSuite {
+	s := &PreCommandHandlerSuite{}
+	s.SpyTest = common.Spy()
+
+	s.handler = command.NewHandler(&command.Config{})
+	s.ctx = context.Background()
+
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		s.Called("f")
 		return nil, nil
 	}
 
-	h := command.NewHandler(&command.Config{})
-	h.RegisterCommand("testHandlerCommand", f)
+	s.handler.RegisterCommand("f", f)
 
-	resp, err := h.Handle(context.Background(), cmd)
-
-	require.Error(t, errors.ErrCommandNotFound("xxxxxx"), err)
-	require.Nil(t, resp)
-	require.False(t, spy.Has("f"))
+	return s
 }
 
-func TestCommandPreHandler(t *testing.T) {
+func (s *PreCommandHandlerSuite) WithPreHandler(function string, n int) *PreCommandHandlerSuite {
+	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+		s.Called(function)
+		return nil, nil
+	}
+
+	s.handler.PreHandlers(f)
+
+	return s
+}
+
+func Test_Pre_Command_Handler(t *testing.T) {
 	spy := common.Spy()
 
 	cmd := &command.Command{
