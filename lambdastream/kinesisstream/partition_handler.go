@@ -22,9 +22,8 @@ type partitionHandler struct {
 	FilterEvents         []string
 }
 
-func NewPartitionHandler(pm PartitionModel, pg PartitionGetModel, ps PartitionSaveModel, cp CreatePartitionModel, fs []string) *partitionHandler {
+func NewPartitionHandler(pg PartitionGetModel, ps PartitionSaveModel, cp CreatePartitionModel, fs []string) *partitionHandler {
 	return &partitionHandler{
-		PartitionModel:       pm,
 		PartitionGetModel:    pg,
 		PartitionSaveModel:   ps,
 		CreatePartitionModel: cp,
