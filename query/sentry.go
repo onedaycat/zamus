@@ -25,12 +25,6 @@ func Sentry(ctx context.Context, query *Query, appErr errors.Error) {
 		})
 	}
 
-	if appErr.GetInput() != nil {
-		packet.AddExtra(sentry.Extra{
-			"input": appErr.GetInput(),
-		})
-	}
-
 	packet.AddError(appErr)
 	packet.AddTag("function", query.Function)
 	sentry.CaptureAndWait(packet)

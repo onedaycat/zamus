@@ -20,12 +20,6 @@ func Sentry(ctx context.Context, msgs EventMsgs, err errors.Error) {
 
 	packet := sentry.NewPacket(err)
 
-	if err.GetInput() != nil {
-		packet.AddExtra(sentry.Extra{
-			"input": err.GetInput(),
-		})
-	}
-
 	packet.AddError(err)
 	sentry.CaptureAndWait(packet)
 }
