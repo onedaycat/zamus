@@ -31,9 +31,7 @@ func Sentry(ctx context.Context, cmd *Command, err errors.Error) {
 		})
 	}
 
-	packet.SetFingerprint(err.GetCode())
+	packet.AddError(err)
 	packet.AddTag("function", cmd.Function)
-	packet.SetCulprit(err.GetMessage())
-	packet.AddStackTrace(err.StackTrace())
 	sentry.CaptureAndWait(packet)
 }

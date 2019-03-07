@@ -10,16 +10,17 @@ import (
 	"github.com/onedaycat/zamus/common"
 )
 
+type Segment = xray.Segment
+
 var (
-	Enable = false
+	Enable      = false
+	dumpSegment *xray.Segment
 )
 
 func init() {
 	xray.SetLogger(xraylog.NullLogger)
 	common.PrettyLog()
 }
-
-type Segment = xray.Segment
 
 func AWS(c *client.Client) {
 	if Enable {
@@ -32,7 +33,11 @@ func BeginSubsegment(ctx context.Context, name string) (context.Context, *Segmen
 		return xray.BeginSubsegment(ctx, name)
 	}
 
-	return xray.BeginFacadeSegment(ctx, name, nil)
+	if dumpSegment == nil {
+		dumpSegment = &xray.Segment{}
+	}
+
+	return ctx, dumpSegment
 }
 
 func GetSegment(ctx context.Context) *Segment {
@@ -40,7 +45,7 @@ func GetSegment(ctx context.Context) *Segment {
 }
 
 func Close(seg *Segment) {
-	if seg == nil {
+	if !Enable || seg == nil {
 		return
 	}
 

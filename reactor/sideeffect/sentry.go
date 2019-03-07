@@ -26,8 +26,6 @@ func Sentry(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		})
 	}
 
-	packet.SetFingerprint(err.GetCode())
-	packet.SetCulprit(err.GetMessage())
-	packet.AddStackTrace(err.StackTrace())
+	packet.AddError(err)
 	sentry.CaptureAndWait(packet)
 }

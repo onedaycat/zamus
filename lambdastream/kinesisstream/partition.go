@@ -2,6 +2,7 @@ package kinesisstream
 
 import (
 	"context"
+	"strconv"
 	"sync"
 
 	"github.com/onedaycat/zamus/common"
@@ -203,10 +204,10 @@ func (c *partitionStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) Even
 
 func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	wg := errgroup.Group{}
-	for _, handlerinfo := range c.handlers {
+	for i, handlerinfo := range c.handlers {
 		handlerinfo := handlerinfo
 		wg.Go(func() (aerr errors.Error) {
-			hctx, seg := tracer.BeginSubsegment(ctx, "handler")
+			hctx, seg := tracer.BeginSubsegment(ctx, "handler_"+strconv.Itoa(i))
 			defer tracer.Close(seg)
 			defer c.recover(hctx, msgs, &aerr)
 			newmsgs := c.filterEvents(handlerinfo, msgs)
@@ -233,6 +234,10 @@ func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err
 }
 
 func (c *partitionStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.Error) {
+	if len(msgs) == 0 {
+		return nil
+	}
+
 	if err = c.doPreHandlers(ctx, msgs); err != nil {
 		return err
 	}

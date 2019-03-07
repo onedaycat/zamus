@@ -31,9 +31,7 @@ func Sentry(ctx context.Context, query *Query, appErr errors.Error) {
 		})
 	}
 
-	packet.SetFingerprint(appErr.GetCode())
-	packet.SetCulprit(appErr.GetMessage())
+	packet.AddError(appErr)
 	packet.AddTag("function", query.Function)
-	packet.AddStackTrace(appErr.StackTrace())
 	sentry.CaptureAndWait(packet)
 }
