@@ -2,7 +2,6 @@ package kinesisstream
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/onedaycat/errors/errgroup"
@@ -191,7 +190,7 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error
 		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6)
+			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6).WithPanic()
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -200,8 +199,7 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error
 			}
 			tracer.AddError(seg, *err)
 		default:
-			fmt.Println(cause)
-			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6)
+			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6).WithPanic()
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
