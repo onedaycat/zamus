@@ -183,7 +183,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b16cf1fe6aac8bd1f27a13f54024af28d61822fca1aac8e17685e63eed7d257b"
+  digest = "1:029d227d6404151b956ab82a32fe4b677d1aaea697932449ec74911a11f55c57"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -191,7 +191,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "e365cc2c28f1c9502918c7df009018a66a1378cf"
+  revision = "5438082d7f0757560bfa85efbadab2d107ffa01b"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
