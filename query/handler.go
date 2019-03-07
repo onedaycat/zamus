@@ -106,8 +106,8 @@ func (h *Handler) recovery(ctx context.Context, query *Query, err *errors.Error)
 
 func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) (result QueryResult, err errors.Error) {
 	hctx, seg := tracer.BeginSubsegment(ctx, "handler")
-	defer seg.Close(nil)
 	defer h.recovery(hctx, query, &err)
+	defer seg.Close(nil)
 	result, err = info.handler(hctx, query)
 	if err != nil {
 		for _, errHandler := range h.errHandlers {

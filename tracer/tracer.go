@@ -13,8 +13,7 @@ import (
 type Segment = xray.Segment
 
 var (
-	Enable      = false
-	dumpSegment *xray.Segment
+	Enable = false
 )
 
 func init() {
@@ -33,11 +32,7 @@ func BeginSubsegment(ctx context.Context, name string) (context.Context, *Segmen
 		return xray.BeginSubsegment(ctx, name)
 	}
 
-	if dumpSegment == nil {
-		dumpSegment = &xray.Segment{}
-	}
-
-	return ctx, dumpSegment
+	return xray.BeginFacadeSegment(ctx, name, nil)
 }
 
 func GetSegment(ctx context.Context) *Segment {
@@ -45,7 +40,7 @@ func GetSegment(ctx context.Context) *Segment {
 }
 
 func Close(seg *Segment) {
-	if !Enable || seg == nil {
+	if seg == nil {
 		return
 	}
 

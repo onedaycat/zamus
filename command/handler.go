@@ -109,8 +109,8 @@ func (h *Handler) recovery(ctx context.Context, cmd *Command, err *errors.Error)
 
 func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
 	hctx, seg := tracer.BeginSubsegment(ctx, "handler")
-	defer tracer.Close(seg)
 	defer h.recovery(hctx, cmd, &err)
+	defer tracer.Close(seg)
 	result, err = info.handler(hctx, cmd)
 	if err != nil {
 		err.WithCaller().WithInput(cmd)
