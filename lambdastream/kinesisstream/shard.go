@@ -2,6 +2,7 @@ package kinesisstream
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	"github.com/onedaycat/zamus/common"
@@ -262,6 +263,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 			}
 			tracer.AddError(seg, *err)
 		default:
+			fmt.Println(cause)
 			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6)
 			if c.dql != nil {
 				c.dql.AddError(*err)

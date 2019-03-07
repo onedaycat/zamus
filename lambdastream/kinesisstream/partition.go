@@ -2,6 +2,7 @@ package kinesisstream
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"sync"
 
@@ -268,6 +269,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			}
 			tracer.AddError(seg, *err)
 		default:
+			fmt.Println(cause)
 			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6)
 			if c.dql != nil {
 				c.dql.AddError(*err)
