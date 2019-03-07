@@ -14,6 +14,15 @@ type InvokeRequest struct {
 	PermissionKey string      `json:"pemKey,omitempty"`
 }
 
+func (r *InvokeRequest) MarshalRequest() ([]byte, errors.Error) {
+	data, err := json.Marshal(r)
+	if err != nil {
+		return nil, errors.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(r)
+	}
+
+	return data, nil
+}
+
 type InvokeEvent struct {
 	Function      string          `json:"function"`
 	Args          json.RawMessage `json:"arguments,omitempty"`
