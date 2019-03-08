@@ -31,10 +31,10 @@ var (
 var (
 	ErrInternalError    = errors.InternalError("InternalError", "Internal error")
 	ErrInvalidRequest   = errors.BadRequest("InvalidRequest", "Invalid request")
-	ErrValidateError    = errors.BadRequest("ValidateError", "Invalid request")
+	ErrValidateError    = errors.BadRequest("ValidateError", "Validation error")
 	ErrPermissionDenied = errors.Forbidden("PermissionDenied", "You don't a permission to access this operation")
 	ErrTimeout          = errors.Timeout("TimeoutError", "The operation is timeout")
-	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "Unauthorized")
+	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "The authorization is required")
 	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
 )
 
