@@ -7,7 +7,6 @@ type Input = errors.Input
 type Error = errors.Error
 
 var (
-	ErrPermissionDenied        = errors.Forbidden("Zamus_ErrPermissionDenied", "You don't a permission to access this operation")
 	ErrQueryResultSizeNotMatch = errors.InternalError("Zamus_ErrQueryResultSizeNotMatch", "Result array size not match")
 	ErrUnableParseQuery        = errors.InternalError("Zamus_ErrUnableParseQuery", "Unable to parse query")
 	ErrUnableUnmarshal         = errors.InternalError("Zamus_ErrUnableUnmarshal", "Unable to unmarshal")
@@ -27,6 +26,16 @@ var (
 	ErrUnbleGetEventStore       = errors.InternalError("Zamus_ErrUnbleGetEventStore", "Unable to get")
 	ErrUnbleSaveEventStore      = errors.InternalError("Zamus_ErrUnbleSaveEventStore", "Unable to save")
 	ErrUnbleSaveDQLMessages     = errors.InternalError("Zamus_ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
+)
+
+var (
+	ErrInternalError    = errors.InternalError("InternalError", "Internal error")
+	ErrInvalidRequest   = errors.BadRequest("InvalidRequest", "Invalid request")
+	ErrValidateError    = errors.BadRequest("ValidateError", "Invalid request")
+	ErrPermissionDenied = errors.Forbidden("PermissionDenied", "You don't a permission to access this operation")
+	ErrTimeout          = errors.Timeout("TimeoutError", "The operation is timeout")
+	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "Unauthorized")
+	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
 )
 
 func ErrCommandNotFound(command string) errors.Error {
