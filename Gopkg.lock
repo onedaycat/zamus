@@ -24,7 +24,7 @@
   revision = "ec2fec7cfe48fbf48ea1a6855a077c372bbb1b1c"
 
 [[projects]]
-  digest = "1:a23124a8cfa8415299010bd7fea20e786e3e1f509faf4bc93f4426429c8d0e74"
+  digest = "1:296214ce9e7b5e0a91273035b4037f07742553b4c5d02b99e5628a37b3bef10c"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -67,8 +67,8 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "774132714af4336cfacbde2528d8702d0649f225"
-  version = "v1.17.13"
+  revision = "8b705a6dec722bcda3a9309c0924d4eca24f7c72"
+  version = "v1.17.14"
 
 [[projects]]
   branch = "master"
@@ -125,11 +125,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e7c020149ea57a272a4fbfa2ef409a32c1f0f3fd3d1e2af4930de9e021345354"
+  digest = "1:e8aed6a962c25dc86fa885a9386129a9f2bb6f641849dd09a698285e946accbc"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "972a708cf97995463843c08c8585b26997daf0e1"
+  revision = "2c9d54fefcfb443251f5b92cd5106cf4dc07b880"
 
 [[projects]]
   branch = "master"
@@ -183,7 +183,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b3f8c9eef493d3bfd3427c4ad263d73a57bb77b89d6e368217f495bffba27046"
+  digest = "1:f6396837fe6ffb2f8d092acc03c973c5d0aabc7b8ff5cc60da675ab6876c7946"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -191,7 +191,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "5c114e2f90cca770b8a66ec46145bd4e790f11ff"
+  revision = "1288e8341d21f991f9206281ba171b2153cf8be0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -299,7 +299,7 @@
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "572b51eaf7221935bdec454796989ba8318fa6f3"
+  revision = "584f3b12f43e1e55248c90e84804777009eed0a4"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
