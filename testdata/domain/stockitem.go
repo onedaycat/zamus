@@ -23,7 +23,7 @@ func (st *StockItem) CurrentVersion() int {
 	return 1
 }
 
-func (st *StockItem) SnaphotVersion() int {
+func (st *StockItem) SnapshotVersion() int {
 	return 0
 }
 

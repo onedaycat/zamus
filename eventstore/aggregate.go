@@ -6,7 +6,7 @@ type AggregateRoot interface {
 	Apply(payload *EventMsg) errors.Error
 	CurrentVersion() int
 	// 0 is the latest
-	SnaphotVersion() int
+	SnapshotVersion() int
 	GetAggregateID() string
 	SetAggregateID(id string)
 	SetSequence(seq int64)

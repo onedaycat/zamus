@@ -61,7 +61,7 @@ func (es *eventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg A
 func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) errors.Error {
 	var seq int64
 
-	snapshot, err := es.storage.GetSnapshot(ctx, aggID, agg.SnaphotVersion())
+	snapshot, err := es.storage.GetSnapshot(ctx, aggID, agg.SnapshotVersion())
 	if err != nil {
 		return err
 	}
