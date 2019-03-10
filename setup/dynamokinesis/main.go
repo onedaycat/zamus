@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
-	errs "github.com/onedaycat/errors"
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
-	"github.com/onedaycat/zamus/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/dynamostream"
 	"github.com/onedaycat/zamus/tracer"
@@ -36,13 +36,13 @@ func publish(ctx context.Context, streamName string, records []*kinesis.PutRecor
 	})
 
 	if err != nil {
-		appErr := errors.ErrUnablePublishKinesis.WithCaller().WithCause(err)
+		appErr := appErr.ErrUnablePublishKinesis.WithCaller().WithCause(err)
 		tracer.AddError(seg, appErr)
 		return appErr
 	}
 
 	if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
-		appErr := errors.ErrUnablePublishKinesis.WithCaller().WithCause(errs.New("One or more events published failed"))
+		appErr := appErr.ErrUnablePublishKinesis.WithCaller().WithCause(errors.New("One or more events published failed"))
 		tracer.AddError(seg, appErr)
 		return appErr
 	}

@@ -5,8 +5,9 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/tracer"
@@ -92,13 +93,13 @@ func (h *Handler) recovery(ctx context.Context, cmd *Command, err *errors.Error)
 		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
 			tracer.AddError(seg, *err)
 		default:
-			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
@@ -184,7 +185,7 @@ func (h *Handler) doPostHandler(ctx context.Context, cmd *Command) (result inter
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 	info, ok := h.commands[cmd.Function]
 	if !ok {
-		return nil, errors.ErrCommandNotFound(cmd.Function)
+		return nil, appErr.ErrCommandNotFound(cmd.Function)
 	}
 
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)

@@ -9,7 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
-	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -17,15 +18,18 @@ const (
 	hashKeyK = "a"
 	emptyStr = ""
 	seqKV    = ":s"
+	verKV    = ":v"
 	getKV    = ":a"
 )
 
 var (
-	saveCond        = aws.String("attribute_not_exists(s)")
-	saveSnapCond    = aws.String("attribute_not_exists(s) or s < :s")
-	getCond         = aws.String("a=:a")
-	getCondWithTime = aws.String("a=:a and s > :s")
-	falseStrongRead = aws.Bool(false)
+	saveCond            = aws.String("attribute_not_exists(s)")
+	saveSnapCond        = aws.String("attribute_not_exists(s) or s < :s")
+	getCond             = aws.String("a=:a")
+	snapshotCond        = aws.String("a=:a")
+	snapshotCondWithVer = aws.String("a=:a and v <= :v")
+	getCondWithTime     = aws.String("a=:a and s > :s")
+	falseStrongRead     = aws.Bool(false)
 )
 
 type DynamoDBEventStore struct {
@@ -88,6 +92,7 @@ func (d *DynamoDBEventStore) Truncate() {
 			DeleteRequest: &dynamodb.DeleteRequest{
 				Key: map[string]*dynamodb.AttributeValue{
 					"a": &dynamodb.AttributeValue{S: output.Items[i]["a"].S},
+					"v": &dynamodb.AttributeValue{N: output.Items[i]["v"].N},
 				},
 			},
 		}
@@ -147,11 +152,19 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 				AttributeName: aws.String("a"),
 				AttributeType: aws.String("S"),
 			},
+			{
+				AttributeName: aws.String("v"),
+				AttributeType: aws.String("N"),
+			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
 				AttributeName: aws.String("a"),
 				KeyType:       aws.String("HASH"),
+			},
+			{
+				AttributeName: aws.String("v"),
+				KeyType:       aws.String("RANGE"),
 			},
 		},
 	})
@@ -166,7 +179,7 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	return nil
 }
 
-func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, errors.Error) {
+func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq int64) ([]*eventstore.EventMsg, errors.Error) {
 	keyCond := getCond
 	exValue := map[string]*dynamodb.AttributeValue{
 		getKV: &dynamodb.AttributeValue{S: &aggID},
@@ -177,58 +190,72 @@ func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq, l
 		keyCond = getCondWithTime
 	}
 
-	output, err := d.db.QueryWithContext(ctx, &dynamodb.QueryInput{
-		TableName:              &d.eventstoreTable,
-		KeyConditionExpression: keyCond,
-		// Limit:                     &limit,
+	msgs := make([]*eventstore.EventMsg, 0, 100)
+	err := d.db.QueryPagesWithContext(ctx, &dynamodb.QueryInput{
+		TableName:                 &d.eventstoreTable,
+		KeyConditionExpression:    keyCond,
 		ExpressionAttributeValues: exValue,
 		ConsistentRead:            falseStrongRead,
+	}, func(output *dynamodb.QueryOutput, lastPage bool) bool {
+		if len(output.Items) == 0 {
+			return false
+		}
+
+		submsgs := make([]*eventstore.EventMsg, 0, len(output.Items))
+		dynamodbattribute.UnmarshalListOfMaps(output.Items, &submsgs)
+		msgs = append(msgs, submsgs...)
+
+		return !lastPage
 	})
 
 	if err != nil {
-		return nil, errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
+		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
 			"aggID": aggID,
 			"seq":   seq,
-			"limit": limit,
 		})
+	}
+
+	if len(msgs) == 0 {
+		return nil, nil
+	}
+
+	return msgs, nil
+}
+
+func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, version int) (*eventstore.Snapshot, errors.Error) {
+	var limit int64
+	limit = 1
+
+	keyCond := snapshotCond
+	exValue := map[string]*dynamodb.AttributeValue{
+		getKV: &dynamodb.AttributeValue{S: &aggID},
+	}
+
+	if version > 0 {
+		exValue[verKV] = &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(version))}
+		keyCond = snapshotCondWithVer
+	}
+
+	output, err := d.db.QueryWithContext(ctx, &dynamodb.QueryInput{
+		TableName:                 &d.snapshotTable,
+		ConsistentRead:            falseStrongRead,
+		KeyConditionExpression:    keyCond,
+		Limit:                     &limit,
+		ExpressionAttributeValues: exValue,
+	})
+	if err != nil {
+		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
 	if len(output.Items) == 0 {
 		return nil, nil
 	}
 
-	msgs := make([]*eventstore.EventMsg, 0, len(output.Items))
-	if err = dynamodbattribute.UnmarshalListOfMaps(output.Items, &msgs); err != nil {
-		return nil, errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
-			"aggID": aggID,
-			"seq":   seq,
-			"limit": limit,
-		})
-	}
-
-	return msgs, nil
-}
-
-func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, errors.Error) {
-	output, err := d.db.GetItemWithContext(ctx, &dynamodb.GetItemInput{
-		TableName:      &d.snapshotTable,
-		ConsistentRead: falseStrongRead,
-		Key: map[string]*dynamodb.AttributeValue{
-			hashKeyK: &dynamodb.AttributeValue{S: &aggID},
-		},
-	})
-	if err != nil {
-		return nil, errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
-	}
-
-	if len(output.Item) == 0 {
-		return nil, errors.ErrNotFound
-	}
-
 	snapshot := &eventstore.Snapshot{}
-	if err = dynamodbattribute.UnmarshalMap(output.Item, snapshot); err != nil {
-		return nil, errors.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
-			"aggID": aggID,
+	if err = dynamodbattribute.UnmarshalMap(output.Items[0], snapshot); err != nil {
+		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
+			"aggID":   aggID,
+			"version": version,
 		})
 	}
 
@@ -301,7 +328,7 @@ func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventM
 	for i := 0; i < len(msgs); i++ {
 		payloadReq, err = dynamodbattribute.MarshalMap(msgs[i])
 		if err != nil {
-			return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+			return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 		}
 
 		_, err = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
@@ -313,10 +340,10 @@ func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventM
 		if err != nil {
 			aerr := err.(awserr.Error)
 			if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-				return errors.ErrVersionInconsistency.WithCaller()
+				return appErr.ErrVersionInconsistency.WithCaller()
 			}
 
-			return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+			return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 		}
 	}
 
@@ -327,7 +354,7 @@ func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventM
 	var snapshotReq map[string]*dynamodb.AttributeValue
 	snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
 	if err != nil {
-		return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+		return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 	}
 
 	_, err = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
@@ -338,10 +365,10 @@ func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventM
 	if err != nil {
 		aerr := err.(awserr.Error)
 		if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
-			return errors.ErrVersionInconsistency.WithCaller()
+			return appErr.ErrVersionInconsistency.WithCaller()
 		}
 
-		return errors.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+		return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
 	}
 
 	return nil

@@ -3,14 +3,14 @@ package query
 import (
 	"context"
 
-	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/zamuscontext"
-
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/errors"
+	"github.com/onedaycat/errors/sentry"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/tracer"
+	"github.com/onedaycat/zamus/zamuscontext"
 )
 
 type ErrorHandler func(ctx context.Context, query *Query, appErr errors.Error)
@@ -89,13 +89,13 @@ func (h *Handler) recovery(ctx context.Context, query *Query, err *errors.Error)
 		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, query, *err)
 			}
 			tracer.AddError(seg, *err)
 		default:
-			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, query, *err)
 			}
@@ -118,7 +118,7 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) 
 	}
 
 	if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-		err = errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+		err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 		tracer.AddError(seg, err)
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (h *Handler) doPreHandler(ctx context.Context, query *Query) (result QueryR
 		}
 
 		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			err = errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 			return nil, err
 		}
 
@@ -162,7 +162,7 @@ func (h *Handler) doInPreHandler(info *queryinfo, ctx context.Context, query *Qu
 		}
 
 		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			err = errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 			return nil, err
 		}
 
@@ -186,7 +186,7 @@ func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result Query
 		}
 
 		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			err = errors.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
 			return nil, err
 		}
 
@@ -200,14 +200,14 @@ func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result Query
 
 func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, error) {
 	if query == nil {
-		return nil, errors.ErrUnableParseQuery
+		return nil, appErr.ErrUnableParseQuery
 	}
 
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 
 	info, ok := h.quries[query.Function]
 	if !ok {
-		return nil, errors.ErrQueryNotFound(query.Function)
+		return nil, appErr.ErrQueryNotFound(query.Function)
 	}
 
 	result, err := h.doPreHandler(zmctx, query)

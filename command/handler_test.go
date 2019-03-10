@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/command"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/random"
-	"github.com/onedaycat/zamus/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/stretchr/testify/require"
 )
@@ -70,7 +71,7 @@ func (s *CommandHandlerSuite) WithPanicErrorHandler(t *testing.T, cmd *command.C
 
 	fErr := func(ctx context.Context, xcmd *command.Command, xerr errors.Error) {
 		require.Equal(t, cmd, xcmd)
-		require.Equal(t, errors.ErrPanic, xerr)
+		require.Equal(t, appErr.ErrInternalError, xerr)
 		s.Called(function + "Err")
 	}
 
@@ -89,7 +90,7 @@ func (s *CommandHandlerSuite) WithPanicHandler(t *testing.T, cmd *command.Comman
 
 	fErr := func(ctx context.Context, xcmd *command.Command, xerr errors.Error) {
 		require.Equal(t, cmd, xcmd)
-		require.Equal(t, errors.ErrPanic, xerr)
+		require.Equal(t, appErr.ErrInternalError, xerr)
 		s.Called(function + "Err")
 	}
 
@@ -125,7 +126,7 @@ func Test_Command_Handler(t *testing.T) {
 
 		resp, err := s.handler.Handle(s.ctx, cmd)
 
-		require.Error(t, errors.ErrCommandNotFound("xxxxxx"), err)
+		require.Error(t, appErr.ErrCommandNotFound("xxxxxx"), err)
 		require.Nil(t, resp)
 		require.Equal(t, 0, s.Count("f"))
 		require.Equal(t, 0, s.Count("fErr"))
@@ -133,7 +134,7 @@ func Test_Command_Handler(t *testing.T) {
 
 	t.Run("Error", func(t *testing.T) {
 		s := setupCommandHandler().
-			WithErrorHandler("f", errors.ErrUnableMarshal)
+			WithErrorHandler("f", appErr.ErrUnableMarshal)
 
 		cmd := random.Command().
 			Function("f").
@@ -141,7 +142,7 @@ func Test_Command_Handler(t *testing.T) {
 
 		resp, err := s.handler.Handle(s.ctx, cmd)
 
-		require.Error(t, errors.ErrUnableMarshal, err)
+		require.Error(t, appErr.ErrUnableMarshal, err)
 		require.Nil(t, resp)
 		require.Equal(t, 1, s.Count("f"))
 		require.Equal(t, 1, s.Count("fErr"))
@@ -154,11 +155,11 @@ func Test_Command_Handler(t *testing.T) {
 			Function("f").
 			Build()
 
-		s.WithPanicErrorHandler(t, cmd, "f", errors.ErrUnableMarshal)
+		s.WithPanicErrorHandler(t, cmd, "f", appErr.ErrUnableMarshal)
 
 		resp, err := s.handler.Handle(s.ctx, cmd)
 
-		require.Error(t, errors.ErrPanic, err)
+		require.Error(t, appErr.ErrPanic, err)
 		require.Nil(t, resp)
 		require.Equal(t, 1, s.Count("f"))
 		require.Equal(t, 1, s.Count("fErr"))
@@ -175,7 +176,7 @@ func Test_Command_Handler(t *testing.T) {
 
 		resp, err := s.handler.Handle(s.ctx, cmd)
 
-		require.Error(t, errors.ErrPanic, err)
+		require.Error(t, appErr.ErrPanic, err)
 		require.Nil(t, resp)
 		require.Equal(t, 1, s.Count("f"))
 		require.Equal(t, 1, s.Count("fErr"))
@@ -271,7 +272,7 @@ func TestCommandPreHandlerError(t *testing.T) {
 
 	fPreErr := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		spy.Called("fPreErr")
-		return nil, errors.ErrUnknown
+		return nil, appErr.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
@@ -286,7 +287,7 @@ func TestCommandPreHandlerError(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), cmd)
 
-	require.Equal(t, errors.ErrUnknown, err)
+	require.Equal(t, appErr.ErrUnknown, err)
 	require.Equal(t, nil, resp)
 	require.Equal(t, 0, spy.Count("f"))
 	require.Equal(t, 0, spy.Count("fPre"))
@@ -354,7 +355,7 @@ func TestErrorHandler(t *testing.T) {
 	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		require.False(t, checkFunc)
 		checkFunc = true
-		return nil, errors.ErrUnknown
+		return nil, appErr.ErrUnknown
 	}
 
 	fErr := func(ctx context.Context, cmd *command.Command, err errors.Error) {
@@ -367,7 +368,7 @@ func TestErrorHandler(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), cmd)
 
-	require.Equal(t, errors.ErrUnknown, err)
+	require.Equal(t, appErr.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)
@@ -409,7 +410,7 @@ func TestPanicHandler(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), cmd)
 
-	require.Equal(t, errors.ErrPanic, err)
+	require.Equal(t, appErr.ErrInternalError, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)
@@ -448,7 +449,7 @@ func TestPanicStringHandler(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), cmd)
 
-	require.Equal(t, errors.ErrPanic, err)
+	require.Equal(t, appErr.ErrInternalError, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)
@@ -508,7 +509,7 @@ func TestCommandPostHandlerError(t *testing.T) {
 
 	fPost1 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
 		nFPost1++
-		return nil, errors.ErrUnknown
+		return nil, appErr.ErrUnknown
 	}
 
 	fPost2 := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
@@ -527,7 +528,7 @@ func TestCommandPostHandlerError(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), cmd)
 
-	require.Equal(t, errors.ErrUnknown, err)
+	require.Equal(t, appErr.ErrUnknown, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nH)
 	require.Equal(t, 1, nH)

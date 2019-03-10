@@ -1,9 +1,12 @@
 package eventstore
 
-import "github.com/onedaycat/zamus/errors"
+import "github.com/onedaycat/errors"
 
 type AggregateRoot interface {
 	Apply(payload *EventMsg) errors.Error
+	CurrentVersion() int
+	// 0 is the latest
+	SnaphotVersion() int
 	GetAggregateID() string
 	SetAggregateID(id string)
 	SetSequence(seq int64)

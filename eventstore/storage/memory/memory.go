@@ -2,9 +2,11 @@ package memory
 
 import (
 	"context"
+	"strconv"
 	"sync"
 
-	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -29,7 +31,7 @@ func (d *MemoryEventStore) Truncate() {
 	d.snapshot = make(map[string]*eventstore.Snapshot)
 }
 
-func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, limit int64) ([]*eventstore.EventMsg, errors.Error) {
+func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq int64) ([]*eventstore.EventMsg, errors.Error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
@@ -49,13 +51,13 @@ func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq, lim
 	return msgs, nil
 }
 
-func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string) (*eventstore.Snapshot, errors.Error) {
+func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string, version int) (*eventstore.Snapshot, errors.Error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
-	snap, ok := d.snapshot[aggID]
+	snap, ok := d.snapshot[aggID+":"+strconv.Itoa(version)]
 	if !ok {
-		return nil, errors.ErrNotFound
+		return nil, nil
 	}
 
 	return snap, nil
@@ -79,12 +81,12 @@ func (d *MemoryEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg
 
 	for _, msg := range msgs {
 		if lastSeq == msg.Seq {
-			return errors.ErrVersionInconsistency
+			return appErr.ErrVersionInconsistency
 		}
 	}
 
 	d.eventstore[aggid] = append(d.eventstore[aggid], msgs...)
-	d.snapshot[snapshot.AggregateID] = snapshot
+	d.snapshot[snapshot.AggregateID+":"+strconv.Itoa(snapshot.Version)] = snapshot
 
 	return nil
 }

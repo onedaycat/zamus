@@ -6,4 +6,5 @@ type Snapshot struct {
 	EventID     string `json:"i" bson:"i"`
 	Time        int64  `json:"t" bson:"t"`
 	Seq         int64  `json:"s" bson:"s"`
+	Version     int    `json:"v" bson:"v"`
 }

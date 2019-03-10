@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/stretchr/testify/require"
 )
@@ -154,7 +155,7 @@ func TestQueryPermission(t *testing.T) {
 
 		resp, err := h.Handle(context.Background(), query)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})
@@ -171,7 +172,7 @@ func TestQueryPermission(t *testing.T) {
 
 		resp, err := h.Handle(context.Background(), query)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})
@@ -184,7 +185,7 @@ func TestQueryPermission(t *testing.T) {
 
 		resp, err := h.Handle(context.Background(), query)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})
@@ -204,7 +205,7 @@ func TestQueryPermission(t *testing.T) {
 
 		resp, err := h.Handle(context.Background(), query)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, checkFunc)
 	})

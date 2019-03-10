@@ -1,8 +1,8 @@
 package domain
 
 import (
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common/clock"
-	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -17,6 +17,14 @@ func NewStockItem() *StockItem {
 	return &StockItem{
 		AggregateBase: eventstore.InitAggregate(),
 	}
+}
+
+func (st *StockItem) CurrentVersion() int {
+	return 1
+}
+
+func (st *StockItem) SnaphotVersion() int {
+	return 0
 }
 
 func (st *StockItem) Create(id, productID string, qty Qty) {
@@ -34,7 +42,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) errors.Error {
 	case StockItemCreatedEvent:
 		event := &StockItemCreated{}
 		if err := msg.UnmarshalEvent(event); err != nil {
-			return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+			return err
 		}
 
 		st.ProductID = event.ProductID
@@ -42,7 +50,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) errors.Error {
 	case StockItemUpdatedEvent:
 		event := &StockItemUpdated{}
 		if err := msg.UnmarshalEvent(event); err != nil {
-			return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+			return err
 		}
 
 		st.ProductID = event.ProductID
@@ -50,7 +58,7 @@ func (st *StockItem) Apply(msg *eventstore.EventMsg) errors.Error {
 	case StockItemRemovedEvent:
 		event := &StockItemRemoved{}
 		if err := msg.UnmarshalEvent(event); err != nil {
-			return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+			return err
 		}
 
 		st.ProductID = event.ProductID

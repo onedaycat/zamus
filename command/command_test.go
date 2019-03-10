@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/command"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/random"
-	"github.com/onedaycat/zamus/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/stretchr/testify/require"
 )
@@ -58,7 +59,7 @@ func Test_Command_Permission(t *testing.T) {
 
 		resp, err := s.handler.Handle(context.Background(), cmd)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, s.Has("f"))
 	})
@@ -76,7 +77,7 @@ func Test_Command_Permission(t *testing.T) {
 
 		resp, err := s.handler.Handle(context.Background(), cmd)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, s.Has("f"))
 	})
@@ -89,7 +90,7 @@ func Test_Command_Permission(t *testing.T) {
 
 		resp, err := s.handler.Handle(context.Background(), cmd)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, s.Has("f"))
 	})
@@ -110,7 +111,7 @@ func Test_Command_Permission(t *testing.T) {
 
 		resp, err := s.handler.Handle(context.Background(), cmd)
 
-		require.Equal(t, errors.ErrPermissionDenied, err)
+		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
 		require.False(t, s.Has("f"))
 	})

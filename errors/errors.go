@@ -4,8 +4,6 @@ import "github.com/onedaycat/errors"
 
 type Input = errors.Input
 
-type Error = errors.Error
-
 var (
 	ErrQueryResultSizeNotMatch = errors.InternalError("Zamus_ErrQueryResultSizeNotMatch", "Result array size not match")
 	ErrUnableParseQuery        = errors.InternalError("Zamus_ErrUnableParseQuery", "Unable to parse query")

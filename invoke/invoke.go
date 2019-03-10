@@ -3,7 +3,8 @@ package invoke
 import (
 	"encoding/json"
 
-	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 )
 
 type InvokeRequest struct {
@@ -17,7 +18,7 @@ type InvokeRequest struct {
 func (r *InvokeRequest) MarshalRequest() ([]byte, errors.Error) {
 	data, err := json.Marshal(r)
 	if err != nil {
-		return nil, errors.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(r)
+		return nil, appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(r)
 	}
 
 	return data, nil
@@ -33,7 +34,7 @@ type InvokeEvent struct {
 
 func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {
 	if err := json.Unmarshal(e.Args, v); err != nil {
-		return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
 	return nil
@@ -41,7 +42,7 @@ func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {
 
 func (e *InvokeEvent) ParseSource(v interface{}) errors.Error {
 	if err := json.Unmarshal(e.Source, v); err != nil {
-		return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
 	return nil

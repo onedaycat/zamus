@@ -94,7 +94,7 @@ func TestNotFound(t *testing.T) {
 	st := domain.NewStockItem()
 	st.SetAggregateID("1x")
 	err := es.GetAggregate(ctx, st.GetAggregateID(), st)
-	require.Equal(t, errors.ErrNotFound, err)
+	require.NoError(t, err)
 	require.True(t, st.IsNew())
 
 	// GetEvents
@@ -105,7 +105,7 @@ func TestNotFound(t *testing.T) {
 
 	st4 := domain.NewStockItem()
 	err = es.GetAggregateBySeq(ctx, st.GetAggregateID(), st4, 1)
-	require.Equal(t, errors.ErrNotFound, err)
+	require.NoError(t, err)
 	require.True(t, st4.IsNew())
 }
 

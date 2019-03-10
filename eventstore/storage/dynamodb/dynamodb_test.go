@@ -27,6 +27,7 @@ func getDB() *DynamoDBEventStore {
 		sess, err := session.NewSession(&aws.Config{
 			Credentials: credentials.NewEnvCredentials(),
 			Region:      aws.String("ap-southeast-1"),
+			Endpoint:    aws.String("http://localhost:9000"),
 		})
 		if err != nil {
 			panic(err)
@@ -133,7 +134,7 @@ func TestNotFound(t *testing.T) {
 	st := domain.NewStockItem()
 	st.SetAggregateID("1x")
 	err := es.GetAggregate(ctx, st.GetAggregateID(), st)
-	require.Equal(t, errors.ErrNotFound, err)
+	require.NoError(t, err)
 	require.True(t, st.IsNew())
 
 	// GetEvents
@@ -144,7 +145,7 @@ func TestNotFound(t *testing.T) {
 
 	st4 := domain.NewStockItem()
 	err = es.GetAggregateBySeq(ctx, st.GetAggregateID(), st4, 1)
-	require.Equal(t, errors.ErrNotFound, err)
+	require.NoError(t, err)
 	require.True(t, st4.IsNew())
 }
 

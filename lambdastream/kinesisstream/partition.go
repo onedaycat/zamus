@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/onedaycat/zamus/common"
-
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
-	"github.com/onedaycat/zamus/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/tracer"
 )
 
@@ -259,7 +259,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			*err = errors.ErrPanic.WithPanic().WithCause(cause).WithCallerSkip(6)
+			*err = appErr.ErrInternalError.WithPanic().WithCause(cause).WithCallerSkip(6)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -268,7 +268,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			}
 			tracer.AddError(seg, *err)
 		default:
-			*err = errors.ErrPanic.WithPanic().WithInput(cause).WithCallerSkip(6)
+			*err = appErr.ErrInternalError.WithPanic().WithInput(cause).WithCallerSkip(6)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}

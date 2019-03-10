@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/onedaycat/zamus/errors"
-
 	"github.com/golang/snappy"
+	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 )
 
 func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
@@ -14,11 +14,11 @@ func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
 	var err error
 	dst, err = snappy.Decode(dst, e.Event)
 	if err != nil {
-		return errors.ErrUnableDecode.WithCause(err).WithCaller()
+		return appErr.ErrUnableDecode.WithCause(err).WithCaller()
 	}
 
 	if err := json.Unmarshal(dst, v); err != nil {
-		return errors.ErrUnableUnmarshal.WithCause(err).WithCaller()
+		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
 	return nil

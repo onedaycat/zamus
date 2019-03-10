@@ -4,12 +4,12 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/onedaycat/errors"
+	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/tracer"
-
-	"github.com/onedaycat/errors/errgroup"
-	"github.com/onedaycat/zamus/errors"
 )
 
 type shardStrategy struct {
@@ -253,7 +253,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
-			*err = errors.ErrPanic.WithCause(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -262,7 +262,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 			}
 			tracer.AddError(seg, *err)
 		default:
-			*err = errors.ErrPanic.WithInput(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}

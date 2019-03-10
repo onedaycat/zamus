@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/dql"
-	"github.com/onedaycat/zamus/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 )
 
 const (
@@ -121,7 +122,7 @@ func (d *dqlDynamoDB) Save(ctx context.Context, dqlMsg *dql.DQLMsg) errors.Error
 	})
 
 	if err != nil {
-		return errors.ErrUnbleSaveDQLMessages.WithCaller().WithCause(err)
+		return appErr.ErrUnbleSaveDQLMessages.WithCaller().WithCause(err)
 	}
 
 	return nil
