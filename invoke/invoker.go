@@ -31,6 +31,14 @@ type InvokeErrorPayload struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
+// ErrInternalError    = errors.InternalError("InternalError", "Internal error")
+// 	ErrInvalidRequest   = errors.BadRequest("InvalidRequest", "Invalid request")
+// 	ErrValidateError    = errors.BadRequest("ValidateError", "Validation error")
+// 	ErrPermissionDenied = errors.Forbidden("PermissionDenied", "You don't a permission to access this operation")
+// 	ErrTimeout          = errors.Timeout("TimeoutError", "The operation is timeout")
+// 	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "The authorization is required")
+// 	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
+
 func UnmarshalInvokeErrorPayload(payload []byte) errors.Error {
 	in := &InvokeErrorPayload{}
 	err := json.Unmarshal(payload, in)
@@ -38,5 +46,23 @@ func UnmarshalInvokeErrorPayload(payload []byte) errors.Error {
 		return errors.Wrap(err)
 	}
 
-	return errors.ParseError(in.ErrorMessage)
+	inappErr := errors.ParseError(in.ErrorMessage)
+	switch inappErr.Code {
+	case "InternalError":
+		return inappErr.WithInternalError()
+	case "InvalidRequest":
+		return inappErr.WithBadRequest()
+	case "ValidateError":
+		return inappErr.WithBadRequest()
+	case "PermissionDenied":
+		return inappErr.WithForbidden()
+	case "TimeoutError":
+		return inappErr.WithTimeoutError()
+	case "Unauthorized":
+		return inappErr.WithUnauthorized()
+	case "Unavailable":
+		return inappErr.WithBadRequest()
+	}
+
+	return inappErr.WithType(inappErr.Code)
 }
