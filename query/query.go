@@ -17,6 +17,9 @@ type Query struct {
 	Identity      *invoke.Identity `json:"identity,omitempty"`
 	NBatchSources int              `json:"-"`
 	PermissionKey string           `json:"pemKey,omitempty"`
+	Warmer        bool             `json:"warmer"`
+	Concurency    int              `json:"concurency"`
+	CorrelationId string           `json:"correlationID"`
 }
 
 type queryinfo struct {
@@ -107,6 +110,9 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 		q.Identity = invoke.Identity
 		q.PermissionKey = invoke.PermissionKey
 		q.NBatchSources = 0
+		q.Warmer = invoke.Warmer
+		q.Concurency = invoke.Concurency
+		q.CorrelationId = invoke.CorrelationId
 
 		return nil
 	}

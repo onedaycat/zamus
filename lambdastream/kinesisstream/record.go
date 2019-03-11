@@ -9,7 +9,10 @@ import (
 type Records = []*Record
 
 type KinesisStreamEvent struct {
-	Records Records `json:"Records"`
+	Records       Records `json:"Records"`
+	Warmer        bool    `json:"warmer"`
+	Concurency    int     `json:"concurency"`
+	CorrelationId string  `json:"correlationID"`
 }
 
 type Record struct {

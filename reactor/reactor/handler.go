@@ -5,11 +5,14 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 	"github.com/onedaycat/zamus/tracer"
+	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
 
@@ -21,19 +24,22 @@ type LambdaEvent = kinesisstream.KinesisStreamEvent
 type FilterEvents = kinesisstream.FilterEvents
 
 type Config struct {
-	AppStage      string
-	Service       string
-	Version       string
-	SentryRelease string
-	SentryDNS     string
-	EnableTrace   bool
-	DQLMaxRetry   int
-	DQLStorage    dql.Storage
+	AppStage         string
+	Service          string
+	Version          string
+	SentryRelease    string
+	SentryDNS        string
+	EnableTrace      bool
+	DQLMaxRetry      int
+	DQLStorage       dql.Storage
+	WarmerConcurency int
 }
 
 type Handler struct {
-	streamer kinesisstream.KinesisHandlerStrategy
-	zcctx    *zamuscontext.ZamusContext
+	streamer         kinesisstream.KinesisHandlerStrategy
+	zcctx            *zamuscontext.ZamusContext
+	warmer           *warmer.Warmer
+	warmerConcurency int
 }
 
 func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *Handler {
@@ -65,7 +71,8 @@ func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		streamer: streamer,
+		streamer:         streamer,
+		warmerConcurency: config.WarmerConcurency,
 	}
 }
 
@@ -94,10 +101,26 @@ func (h *Handler) FilterEvents(eventTypes ...string) {
 }
 
 func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) error {
+	if event.Warmer {
+		return nil
+	}
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 	return h.streamer.Process(zmctx, event.Records)
 }
 
 func (h *Handler) StartLambda() {
 	lambda.Start(h.Handle)
+}
+
+func (h *Handler) runWarmer(ctx context.Context) errors.Error {
+	if h.warmer == nil {
+		sess, serr := session.NewSession()
+		if serr != nil {
+			panic(serr)
+		}
+		h.warmer = warmer.New(sess, h.warmerConcurency)
+	}
+	h.warmer.Run(ctx)
+
+	return nil
 }

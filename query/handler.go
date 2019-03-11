@@ -3,6 +3,8 @@ package query
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws/session"
+
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/onedaycat/errors"
@@ -10,6 +12,7 @@ import (
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/tracer"
+	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
 
@@ -19,20 +22,23 @@ type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
 type Config struct {
-	AppStage      string
-	Service       string
-	Version       string
-	SentryRelease string
-	SentryDNS     string
-	EnableTrace   bool
+	AppStage         string
+	Service          string
+	Version          string
+	SentryRelease    string
+	SentryDNS        string
+	EnableTrace      bool
+	WarmerConcurency int
 }
 
 type Handler struct {
-	quries       map[string]*queryinfo
-	preHandlers  []QueryHandler
-	postHandlers []QueryHandler
-	errHandlers  []ErrorHandler
-	zcctx        *zamuscontext.ZamusContext
+	quries           map[string]*queryinfo
+	preHandlers      []QueryHandler
+	postHandlers     []QueryHandler
+	errHandlers      []ErrorHandler
+	zcctx            *zamuscontext.ZamusContext
+	warmer           *warmer.Warmer
+	warmerConcurency int
 }
 
 func NewHandler(config *Config) *Handler {
@@ -60,7 +66,8 @@ func NewHandler(config *Config) *Handler {
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		quries: make(map[string]*queryinfo, 30),
+		quries:           make(map[string]*queryinfo, 30),
+		warmerConcurency: config.WarmerConcurency,
 	}
 }
 
@@ -198,9 +205,25 @@ func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result Query
 	return result, nil
 }
 
+func (h *Handler) runWarmer(ctx context.Context) (QueryResult, error) {
+	if h.warmer == nil {
+		sess, serr := session.NewSession()
+		if serr != nil {
+			panic(serr)
+		}
+		h.warmer = warmer.New(sess, h.warmerConcurency)
+	}
+	h.warmer.Run(ctx)
+
+	return nil, nil
+}
+
 func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, error) {
 	if query == nil {
 		return nil, appErr.ErrUnableParseQuery
+	}
+	if query.Warmer {
+		return h.runWarmer(ctx)
 	}
 
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)

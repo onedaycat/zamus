@@ -5,12 +5,14 @@ import (
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/tracer"
+	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
 
@@ -23,20 +25,23 @@ type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
 type Config struct {
-	AppStage      string
-	Service       string
-	Version       string
-	SentryRelease string
-	SentryDNS     string
-	EnableTrace   bool
+	AppStage         string
+	Service          string
+	Version          string
+	SentryRelease    string
+	SentryDNS        string
+	EnableTrace      bool
+	WarmerConcurency int
 }
 
 type Handler struct {
-	commands     map[string]*commandinfo
-	preHandlers  []CommandHandler
-	postHandlers []CommandHandler
-	errHandlers  []ErrorHandler
-	zcctx        *zamuscontext.ZamusContext
+	commands         map[string]*commandinfo
+	preHandlers      []CommandHandler
+	postHandlers     []CommandHandler
+	errHandlers      []ErrorHandler
+	zcctx            *zamuscontext.ZamusContext
+	warmer           *warmer.Warmer
+	warmerConcurency int
 }
 
 func NewHandler(config *Config) *Handler {
@@ -64,7 +69,8 @@ func NewHandler(config *Config) *Handler {
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		commands: make(map[string]*commandinfo, 30),
+		commands:         make(map[string]*commandinfo, 30),
+		warmerConcurency: config.WarmerConcurency,
 	}
 }
 
@@ -182,7 +188,24 @@ func (h *Handler) doPostHandler(ctx context.Context, cmd *Command) (result inter
 	return result, nil
 }
 
+func (h *Handler) runWarmer(ctx context.Context) (interface{}, errors.Error) {
+	if h.warmer == nil {
+		sess, serr := session.NewSession()
+		if serr != nil {
+			panic(serr)
+		}
+		h.warmer = warmer.New(sess, h.warmerConcurency)
+	}
+	h.warmer.Run(ctx)
+
+	return nil, nil
+}
+
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
+	if cmd.Warmer {
+		return h.runWarmer(ctx)
+	}
+
 	info, ok := h.commands[cmd.Function]
 	if !ok {
 		return nil, appErr.ErrCommandNotFound(cmd.Function)

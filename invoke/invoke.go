@@ -30,6 +30,9 @@ type InvokeEvent struct {
 	Source        json.RawMessage `json:"source,omitempty"`
 	Identity      *Identity       `json:"identity,omitempty"`
 	PermissionKey string          `json:"pemKey,omitempty"`
+	Warmer        bool            `json:"warmer"`
+	Concurency    int             `json:"concurency"`
+	CorrelationId string          `json:"correlationID"`
 }
 
 func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {
