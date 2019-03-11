@@ -2,16 +2,17 @@ package eventstore_test
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/onedaycat/zamus/eventstore/mocks"
-
+	"github.com/golang/snappy"
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
+	"github.com/onedaycat/zamus/eventstore/mocks"
 	"github.com/onedaycat/zamus/eventstore/storage/memory"
 	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/require"
@@ -134,6 +135,37 @@ func TestGetAggregate(t *testing.T) {
 		err := s.es.GetAggregate(s.ctx, "a1", st)
 		require.NoError(t, err)
 		require.True(t, st.IsNew())
+	})
+
+	t.Run("Has Snapshot No Event", func(t *testing.T) {
+		s := setupEventStoreSuite().
+			WithMockStorage()
+
+		st := domain.NewStockItem()
+		stByte, err := json.Marshal(st)
+		require.NoError(t, err)
+
+		var dst []byte
+		dst = snappy.Encode(dst, stByte)
+
+		now := time.Now()
+		clock.Freeze(now)
+
+		snapshot := &eventstore.Snapshot{
+			AggregateID: "a1",
+			Aggregate:   dst,
+			EventID:     "a1:1",
+			Time:        now.Unix(),
+			Seq:         1,
+			Version:     1,
+		}
+
+		s.mockStore.On("GetSnapshot", s.ctx, "a1", 1).Return(snapshot, nil)
+		s.mockStore.On("GetEvents", s.ctx, "a1", int64(1)).Return(nil, nil)
+
+		err = s.es.GetAggregate(s.ctx, "a1", st)
+		require.NoError(t, err)
+		require.False(t, st.IsNew())
 	})
 }
 

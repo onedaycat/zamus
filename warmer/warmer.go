@@ -2,13 +2,13 @@ package warmer
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/zamus/invoke"
 )
 
@@ -38,7 +38,6 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 		return
 	}
 
-	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	payload, _ := json.Marshal(WarmerRequest{
 		Warmer:     true,
 		Concurency: 0,
