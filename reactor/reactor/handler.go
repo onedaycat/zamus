@@ -97,7 +97,7 @@ func (h *Handler) FilterEvents(eventTypes ...string) {
 	h.streamer.FilterEvents(eventTypes...)
 }
 
-func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) error {
+func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
 	if event.Warmer {
 		return h.runWarmer(ctx, event)
 	}

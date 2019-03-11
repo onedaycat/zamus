@@ -202,7 +202,7 @@ func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result Query
 	return result, nil
 }
 
-func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, error) {
+func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 	if h.warmer == nil {
 		sess, serr := session.NewSession()
 		if serr != nil {
@@ -215,7 +215,7 @@ func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, err
 	return nil, nil
 }
 
-func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, error) {
+func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, errors.Error) {
 	if query == nil {
 		return nil, appErr.ErrUnableParseQuery
 	}
