@@ -10,8 +10,8 @@ type Records = []*Record
 
 type KinesisStreamEvent struct {
 	Records    Records `json:"Records"`
-	Warmer     bool    `json:"warmer"`
-	Concurency int     `json:"concurency"`
+	Warmer     bool    `json:"warmer,omitempty"`
+	Concurency int     `json:"concurency,omitempty"`
 }
 
 type Record struct {

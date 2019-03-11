@@ -17,8 +17,8 @@ type Query struct {
 	Identity      *invoke.Identity `json:"identity,omitempty"`
 	NBatchSources int              `json:"-"`
 	PermissionKey string           `json:"pemKey,omitempty"`
-	Warmer        bool             `json:"warmer"`
-	Concurency    int              `json:"concurency"`
+	Warmer        bool             `json:"warmer,omitempty"`
+	Concurency    int              `json:"concurency,omitempty"`
 }
 
 type queryinfo struct {
