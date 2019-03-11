@@ -24,21 +24,25 @@ type AggregateRoot interface {
 }
 
 type AggregateBase struct {
-	events     []interface{}
-	eventTypes []string
-	seq        int64
-	time       int64
-	eventid    string
-	id         string
-	metadata   *Metadata
+	events         []interface{}
+	eventTypes     []string
+	seq            int64
+	time           int64
+	eventid        string
+	id             string
+	metadata       *Metadata
+	currentVersion int
+	snpshotVersion int
 }
 
 // InitAggregate if id is empty, id will be generated
-func InitAggregate() *AggregateBase {
+func InitAggregate(currentVersion, snpshotVersion int) *AggregateBase {
 	return &AggregateBase{
-		events:     make([]interface{}, 0, 1),
-		eventTypes: make([]string, 0, 1),
-		seq:        0,
+		events:         make([]interface{}, 0, 1),
+		eventTypes:     make([]string, 0, 1),
+		seq:            0,
+		currentVersion: currentVersion,
+		snpshotVersion: snpshotVersion,
 	}
 }
 
@@ -98,4 +102,12 @@ func (a *AggregateBase) SetLastEventID(id string) {
 
 func (a *AggregateBase) GetLastEventID() string {
 	return a.eventid
+}
+
+func (a *AggregateBase) CurrentVersion() int {
+	return a.currentVersion
+}
+
+func (a *AggregateBase) SnapshotVersion() int {
+	return a.snpshotVersion
 }

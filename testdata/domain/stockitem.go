@@ -15,16 +15,8 @@ type StockItem struct {
 
 func NewStockItem() *StockItem {
 	return &StockItem{
-		AggregateBase: eventstore.InitAggregate(),
+		AggregateBase: eventstore.InitAggregate(1, 0),
 	}
-}
-
-func (st *StockItem) CurrentVersion() int {
-	return 1
-}
-
-func (st *StockItem) SnapshotVersion() int {
-	return 0
 }
 
 func (st *StockItem) Create(id, productID string, qty Qty) {
