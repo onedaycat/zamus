@@ -22,23 +22,21 @@ type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
 type Config struct {
-	AppStage         string
-	Service          string
-	Version          string
-	SentryRelease    string
-	SentryDNS        string
-	EnableTrace      bool
-	WarmerConcurency int
+	AppStage      string
+	Service       string
+	Version       string
+	SentryRelease string
+	SentryDNS     string
+	EnableTrace   bool
 }
 
 type Handler struct {
-	quries           map[string]*queryinfo
-	preHandlers      []QueryHandler
-	postHandlers     []QueryHandler
-	errHandlers      []ErrorHandler
-	zcctx            *zamuscontext.ZamusContext
-	warmer           *warmer.Warmer
-	warmerConcurency int
+	quries       map[string]*queryinfo
+	preHandlers  []QueryHandler
+	postHandlers []QueryHandler
+	errHandlers  []ErrorHandler
+	zcctx        *zamuscontext.ZamusContext
+	warmer       *warmer.Warmer
 }
 
 func NewHandler(config *Config) *Handler {
@@ -66,8 +64,7 @@ func NewHandler(config *Config) *Handler {
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		quries:           make(map[string]*queryinfo, 30),
-		warmerConcurency: config.WarmerConcurency,
+		quries: make(map[string]*queryinfo, 30),
 	}
 }
 
@@ -205,15 +202,15 @@ func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result Query
 	return result, nil
 }
 
-func (h *Handler) runWarmer(ctx context.Context) (QueryResult, error) {
+func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, error) {
 	if h.warmer == nil {
 		sess, serr := session.NewSession()
 		if serr != nil {
 			panic(serr)
 		}
-		h.warmer = warmer.New(sess, h.warmerConcurency)
+		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx)
+	h.warmer.Run(ctx, query.Concurency, query.CorrelationID)
 
 	return nil, nil
 }
@@ -223,7 +220,7 @@ func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, error)
 		return nil, appErr.ErrUnableParseQuery
 	}
 	if query.Warmer {
-		return h.runWarmer(ctx)
+		return h.runWarmer(ctx, query)
 	}
 
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)

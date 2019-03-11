@@ -32,7 +32,7 @@ type InvokeEvent struct {
 	PermissionKey string          `json:"pemKey,omitempty"`
 	Warmer        bool            `json:"warmer"`
 	Concurency    int             `json:"concurency"`
-	CorrelationId string          `json:"correlationID"`
+	CorrelationID string          `json:"correlationID"`
 }
 
 func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {

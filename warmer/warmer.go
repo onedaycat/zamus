@@ -15,16 +15,14 @@ import (
 type Warmer struct {
 	delay      time.Duration
 	ld         invoke.Invoker
-	concurrent int
 	wg         sync.WaitGroup
 	invokeType string
 }
 
-func New(sess *session.Session, concurrent int) *Warmer {
+func New(sess *session.Session) *Warmer {
 	return &Warmer{
 		delay:      75 * time.Millisecond,
 		ld:         lambda.New(sess),
-		concurrent: concurrent,
 		invokeType: "Event",
 	}
 }
@@ -32,11 +30,15 @@ func New(sess *session.Session, concurrent int) *Warmer {
 type WarmerRequest struct {
 	Warmer        bool   `json:"warmer"`
 	Concurency    int    `json:"concurency"`
-	CorrelationId string `json:"correlationID"`
+	CorrelationID string `json:"correlationID"`
 }
 
-func (w *Warmer) Run(ctx context.Context) {
-	if w.concurrent == 0 {
+func (w *Warmer) Run(ctx context.Context, concurency int, correlationID string) {
+	if correlationID == "" {
+		return
+	}
+
+	if concurency == 0 {
 		return
 	}
 
@@ -45,18 +47,18 @@ func (w *Warmer) Run(ctx context.Context) {
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	payload, _ := json.Marshal(WarmerRequest{
 		Warmer:        true,
-		Concurency:    w.concurrent,
-		CorrelationId: lc.AwsRequestID,
+		Concurency:    concurency,
+		CorrelationID: lc.AwsRequestID,
 	})
 
-	if w.concurrent == 1 {
+	if concurency == 1 {
 		w.invoke(ctx, payload)
 		return
 	}
 
-	w.wg.Add(w.concurrent)
+	w.wg.Add(concurency)
 
-	for i := 0; i < w.concurrent; i++ {
+	for i := 0; i < concurency; i++ {
 		go w.conInvoke(ctx, payload)
 	}
 

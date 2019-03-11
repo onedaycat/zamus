@@ -42,7 +42,7 @@ type DynamoDBStreamEvent struct {
 	Records       Records `json:"Records"`
 	Warmer        bool    `json:"warmer"`
 	Concurency    int     `json:"concurency"`
-	CorrelationId string  `json:"correlationID"`
+	CorrelationID string  `json:"correlationID"`
 }
 
 type Record struct {

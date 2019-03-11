@@ -24,22 +24,20 @@ type LambdaEvent = kinesisstream.KinesisStreamEvent
 type FilterEvents = kinesisstream.FilterEvents
 
 type Config struct {
-	AppStage         string
-	Service          string
-	Version          string
-	SentryRelease    string
-	SentryDNS        string
-	EnableTrace      bool
-	DQLMaxRetry      int
-	DQLStorage       dql.Storage
-	WarmerConcurency int
+	AppStage      string
+	Service       string
+	Version       string
+	SentryRelease string
+	SentryDNS     string
+	EnableTrace   bool
+	DQLMaxRetry   int
+	DQLStorage    dql.Storage
 }
 
 type Handler struct {
-	streamer         kinesisstream.KinesisHandlerStrategy
-	zcctx            *zamuscontext.ZamusContext
-	warmer           *warmer.Warmer
-	warmerConcurency int
+	streamer kinesisstream.KinesisHandlerStrategy
+	zcctx    *zamuscontext.ZamusContext
+	warmer   *warmer.Warmer
 }
 
 func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *Handler {
@@ -71,8 +69,7 @@ func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		streamer:         streamer,
-		warmerConcurency: config.WarmerConcurency,
+		streamer: streamer,
 	}
 }
 
@@ -102,7 +99,7 @@ func (h *Handler) FilterEvents(eventTypes ...string) {
 
 func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) {
 	if event.Warmer {
-		return
+		h.runWarmer(ctx, event)
 	}
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 	h.streamer.Process(zmctx, event.Records)
@@ -112,15 +109,15 @@ func (h *Handler) StartLambda() {
 	lambda.Start(h.Handle)
 }
 
-func (h *Handler) runWarmer(ctx context.Context) errors.Error {
+func (h *Handler) runWarmer(ctx context.Context, event *LambdaEvent) errors.Error {
 	if h.warmer == nil {
 		sess, serr := session.NewSession()
 		if serr != nil {
 			panic(serr)
 		}
-		h.warmer = warmer.New(sess, h.warmerConcurency)
+		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx)
+	h.warmer.Run(ctx, event.Concurency, event.CorrelationID)
 
 	return nil
 }

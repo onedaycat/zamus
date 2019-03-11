@@ -25,23 +25,21 @@ type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
 type Config struct {
-	AppStage         string
-	Service          string
-	Version          string
-	SentryRelease    string
-	SentryDNS        string
-	EnableTrace      bool
-	WarmerConcurency int
+	AppStage      string
+	Service       string
+	Version       string
+	SentryRelease string
+	SentryDNS     string
+	EnableTrace   bool
 }
 
 type Handler struct {
-	commands         map[string]*commandinfo
-	preHandlers      []CommandHandler
-	postHandlers     []CommandHandler
-	errHandlers      []ErrorHandler
-	zcctx            *zamuscontext.ZamusContext
-	warmer           *warmer.Warmer
-	warmerConcurency int
+	commands     map[string]*commandinfo
+	preHandlers  []CommandHandler
+	postHandlers []CommandHandler
+	errHandlers  []ErrorHandler
+	zcctx        *zamuscontext.ZamusContext
+	warmer       *warmer.Warmer
 }
 
 func NewHandler(config *Config) *Handler {
@@ -69,8 +67,7 @@ func NewHandler(config *Config) *Handler {
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		commands:         make(map[string]*commandinfo, 30),
-		warmerConcurency: config.WarmerConcurency,
+		commands: make(map[string]*commandinfo, 30),
 	}
 }
 
@@ -188,22 +185,22 @@ func (h *Handler) doPostHandler(ctx context.Context, cmd *Command) (result inter
 	return result, nil
 }
 
-func (h *Handler) runWarmer(ctx context.Context) (interface{}, errors.Error) {
+func (h *Handler) runWarmer(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 	if h.warmer == nil {
 		sess, serr := session.NewSession()
 		if serr != nil {
 			panic(serr)
 		}
-		h.warmer = warmer.New(sess, h.warmerConcurency)
+		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx)
+	h.warmer.Run(ctx, cmd.Concurency, cmd.CorrelationID)
 
 	return nil, nil
 }
 
 func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
 	if cmd.Warmer {
-		return h.runWarmer(ctx)
+		return h.runWarmer(ctx, cmd)
 	}
 
 	info, ok := h.commands[cmd.Function]
