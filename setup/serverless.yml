@@ -29,6 +29,13 @@ functions:
           batchSize: ${file(./setting.yml):dynamokinesis.batchSize}
           startingPosition: ${file(./setting.yml):dynamokinesis.startingPosition}
           enabled: true
+      - schedule:
+          name: warmer-${self:service}-${self:provider.stage}-dynamodb-kinesis
+          rate: rate(30 minutes)
+          enabled: true
+          input:
+            warmer: true
+            concurrency: 1
     package:
       exclude:
         - ./**

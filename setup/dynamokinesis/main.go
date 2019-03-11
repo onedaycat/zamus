@@ -14,6 +14,7 @@ import (
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/dynamostream"
 	"github.com/onedaycat/zamus/tracer"
+	"github.com/onedaycat/zamus/warmer"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,6 +26,7 @@ var (
 	streamList  []string
 	ks          *kinesis.Kinesis
 	streamNames = os.Getenv("KINESIS_STREAM_NAMES")
+	wrm         *warmer.Warmer
 )
 
 func publish(ctx context.Context, streamName string, records []*kinesis.PutRecordsRequestEntry) errors.Error {
@@ -51,6 +53,11 @@ func publish(ctx context.Context, streamName string, records []*kinesis.PutRecor
 }
 
 func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
+	if stream.Warmer {
+		wrm.Run(ctx, stream.Concurency)
+		return nil
+	}
+
 	records := stream.Records
 	n := len(records)
 	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
@@ -95,6 +102,7 @@ func init() {
 		log.Panic().Msg("AWS Session error: " + err.Error())
 	}
 
+	wrm = warmer.New(sess)
 	streamList = strings.Split(streamNames, delim)
 
 	tracer.Enable = true

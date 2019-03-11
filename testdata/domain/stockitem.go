@@ -15,7 +15,7 @@ type StockItem struct {
 
 func NewStockItem() *StockItem {
 	return &StockItem{
-		AggregateBase: eventstore.InitAggregate(1, 0),
+		AggregateBase: eventstore.InitAggregate(1),
 	}
 }
 
@@ -24,6 +24,7 @@ func (st *StockItem) Create(id, productID string, qty Qty) {
 	st.ProductID = productID
 	st.Qty = qty
 	st.Publish(StockItemCreatedEvent, &StockItemCreated{
+		ID:        id,
 		ProductID: productID,
 		Qty:       st.Qty.ToInt(),
 	})

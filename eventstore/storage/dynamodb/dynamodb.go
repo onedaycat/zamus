@@ -15,11 +15,12 @@ import (
 )
 
 const (
-	hashKeyK = "a"
-	emptyStr = ""
-	seqKV    = ":s"
-	verKV    = ":v"
-	getKV    = ":a"
+	hashKeyK      = "a"
+	snapRangeKeyK = "v"
+	emptyStr      = ""
+	seqKV         = ":s"
+	verKV         = ":v"
+	getKV         = ":a"
 )
 
 var (
@@ -27,7 +28,7 @@ var (
 	saveSnapCond        = aws.String("attribute_not_exists(s) or s < :s")
 	getCond             = aws.String("a=:a")
 	snapshotCond        = aws.String("a=:a")
-	snapshotCondWithVer = aws.String("a=:a and v <= :v")
+	snapshotCondWithVer = aws.String("a=:a and v = :v")
 	getCondWithTime     = aws.String("a=:a and s > :s")
 	falseStrongRead     = aws.Bool(false)
 )
@@ -223,36 +224,28 @@ func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq in
 }
 
 func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, version int) (*eventstore.Snapshot, errors.Error) {
-	var limit int64
-	limit = 1
-
-	keyCond := snapshotCond
-	exValue := map[string]*dynamodb.AttributeValue{
-		getKV: &dynamodb.AttributeValue{S: &aggID},
+	if version == 0 {
+		return nil, nil
 	}
 
-	if version > 0 {
-		exValue[verKV] = &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(version))}
-		keyCond = snapshotCondWithVer
-	}
-
-	output, err := d.db.QueryWithContext(ctx, &dynamodb.QueryInput{
-		TableName:                 &d.snapshotTable,
-		ConsistentRead:            falseStrongRead,
-		KeyConditionExpression:    keyCond,
-		Limit:                     &limit,
-		ExpressionAttributeValues: exValue,
+	output, err := d.db.GetItemWithContext(ctx, &dynamodb.GetItemInput{
+		TableName:      &d.snapshotTable,
+		ConsistentRead: falseStrongRead,
+		Key: map[string]*dynamodb.AttributeValue{
+			hashKeyK:      &dynamodb.AttributeValue{S: &aggID},
+			snapRangeKeyK: &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(version))},
+		},
 	})
 	if err != nil {
 		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
-	if len(output.Items) == 0 {
+	if len(output.Item) == 0 {
 		return nil, nil
 	}
 
 	snapshot := &eventstore.Snapshot{}
-	if err = dynamodbattribute.UnmarshalMap(output.Items[0], snapshot); err != nil {
+	if err = dynamodbattribute.UnmarshalMap(output.Item, snapshot); err != nil {
 		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
 			"aggID":   aggID,
 			"version": version,
@@ -322,6 +315,14 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, vers
 // }
 
 func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
+	if err := d.saveEvents(ctx, msgs); err != nil {
+		return err
+	}
+
+	return d.saveSnapshot(ctx, snapshot)
+}
+
+func (d *DynamoDBEventStore) saveEvents(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
 	var err error
 
 	var payloadReq map[string]*dynamodb.AttributeValue
@@ -347,28 +348,33 @@ func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventM
 		}
 	}
 
+	return nil
+}
+
+func (d *DynamoDBEventStore) saveSnapshot(ctx context.Context, snapshot *eventstore.Snapshot) errors.Error {
 	if snapshot == nil {
 		return nil
 	}
 
 	var snapshotReq map[string]*dynamodb.AttributeValue
-	snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
-	if err != nil {
-		return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+	var xerr error
+	snapshotReq, xerr = dynamodbattribute.MarshalMap(snapshot)
+	if xerr != nil {
+		return appErr.ErrUnbleSaveEventStore.WithCause(xerr).WithCaller()
 	}
 
-	_, err = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
+	_, xerr = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
 		TableName: &d.snapshotTable,
 		Item:      snapshotReq,
 	})
 
-	if err != nil {
-		aerr := err.(awserr.Error)
+	if xerr != nil {
+		aerr := xerr.(awserr.Error)
 		if aerr.Code() == dynamodb.ErrCodeConditionalCheckFailedException {
 			return appErr.ErrVersionInconsistency.WithCaller()
 		}
 
-		return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+		return appErr.ErrUnbleSaveEventStore.WithCause(xerr).WithCaller()
 	}
 
 	return nil

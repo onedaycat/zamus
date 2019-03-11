@@ -5,8 +5,6 @@ import "github.com/onedaycat/errors"
 type AggregateRoot interface {
 	Apply(payload *EventMsg) errors.Error
 	CurrentVersion() int
-	// 0 is the latest
-	SnapshotVersion() int
 	GetAggregateID() string
 	SetAggregateID(id string)
 	SetSequence(seq int64)
@@ -36,13 +34,12 @@ type AggregateBase struct {
 }
 
 // InitAggregate if id is empty, id will be generated
-func InitAggregate(currentVersion, snpshotVersion int) *AggregateBase {
+func InitAggregate(currentVersion int) *AggregateBase {
 	return &AggregateBase{
 		events:         make([]interface{}, 0, 1),
 		eventTypes:     make([]string, 0, 1),
 		seq:            0,
 		currentVersion: currentVersion,
-		snpshotVersion: snpshotVersion,
 	}
 }
 

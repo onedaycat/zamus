@@ -100,8 +100,3 @@ func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg eventstore.Aggre
 
 	return r0
 }
-
-// SetSnapshotEveryNEvents provides a mock function with given fields: n
-func (_m *EventStore) SetSnapshotEveryNEvents(n int64) {
-	_m.Called(n)
-}

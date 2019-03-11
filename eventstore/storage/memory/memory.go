@@ -48,12 +48,20 @@ func (d *MemoryEventStore) GetEvents(ctx context.Context, aggID string, seq int6
 		}
 	}
 
+	if len(msgs) == 0 {
+		return nil, nil
+	}
+
 	return msgs, nil
 }
 
 func (d *MemoryEventStore) GetSnapshot(ctx context.Context, aggID string, version int) (*eventstore.Snapshot, errors.Error) {
 	d.locker.Lock()
 	defer d.locker.Unlock()
+
+	if version == 0 {
+		return nil, nil
+	}
 
 	snap, ok := d.snapshot[aggID+":"+strconv.Itoa(version)]
 	if !ok {
@@ -67,6 +75,14 @@ func (d *MemoryEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg
 	d.locker.Lock()
 	defer d.locker.Unlock()
 
+	if err := d.saveEvents(ctx, msgs); err != nil {
+		return err
+	}
+
+	return d.saveSnapshot(ctx, snapshot)
+}
+
+func (d *MemoryEventStore) saveEvents(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
 	aggid := msgs[0].AggregateID
 	dmsgs, ok := d.eventstore[aggid]
 	if !ok {
@@ -86,6 +102,15 @@ func (d *MemoryEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg
 	}
 
 	d.eventstore[aggid] = append(d.eventstore[aggid], msgs...)
+
+	return nil
+}
+
+func (d *MemoryEventStore) saveSnapshot(ctx context.Context, snapshot *eventstore.Snapshot) errors.Error {
+	if snapshot == nil {
+		return nil
+	}
+
 	d.snapshot[snapshot.AggregateID+":"+strconv.Itoa(snapshot.Version)] = snapshot
 
 	return nil

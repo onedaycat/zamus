@@ -30,10 +30,10 @@ func TestInvokeConcurency(t *testing.T) {
 
 	invoker.On("Invoke", mock.Anything).Run(func(args mock.Arguments) {
 		spy.Called("invoke")
-	}).Return(nil, nil)
+	}).Return(nil, nil).Times(2)
 
-	w.Run(ctx, 3)
-	require.Equal(t, 3, spy.Count("invoke"))
+	w.Run(ctx, 2)
+	require.Equal(t, 2, spy.Count("invoke"))
 	invoker.AssertExpectations(t)
 }
 
@@ -53,12 +53,8 @@ func TestInvokeOne(t *testing.T) {
 		AwsRequestID: "req1",
 	})
 
-	invoker.On("Invoke", mock.Anything).Run(func(args mock.Arguments) {
-		spy.Called("invoke")
-	}).Return(nil, nil)
-
 	w.Run(ctx, 1)
-	require.Equal(t, 1, spy.Count("invoke"))
+	require.Equal(t, 0, spy.Count("invoke"))
 	invoker.AssertExpectations(t)
 }
 

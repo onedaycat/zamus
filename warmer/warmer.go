@@ -33,7 +33,8 @@ type WarmerRequest struct {
 }
 
 func (w *Warmer) Run(ctx context.Context, concurency int) {
-	if concurency == 0 {
+	if concurency < 2 {
+		time.Sleep(w.delay)
 		return
 	}
 
@@ -42,11 +43,6 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 		Warmer:     true,
 		Concurency: 0,
 	})
-
-	if concurency == 1 {
-		w.invoke(ctx, payload)
-		return
-	}
 
 	w.wg.Add(concurency)
 
@@ -59,15 +55,6 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 
 func (w *Warmer) conInvoke(ctx context.Context, payload []byte) {
 	defer w.wg.Done()
-	w.ld.Invoke(&lambda.InvokeInput{
-		FunctionName:   &lambdacontext.FunctionName,
-		Qualifier:      &lambdacontext.FunctionVersion,
-		InvocationType: &w.invokeType,
-		Payload:        payload,
-	})
-}
-
-func (w *Warmer) invoke(ctx context.Context, payload []byte) {
 	w.ld.Invoke(&lambda.InvokeInput{
 		FunctionName:   &lambdacontext.FunctionName,
 		Qualifier:      &lambdacontext.FunctionVersion,

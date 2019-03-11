@@ -4,17 +4,16 @@ package dynamodb
 
 import (
 	"context"
-	"fmt"
-	"sync"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/onedaycat/errors"
+	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/zamus/common/clock"
-	"github.com/onedaycat/zamus/common/eid"
-	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/zamus/common/random"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/require"
@@ -43,157 +42,265 @@ func getDB() *DynamoDBEventStore {
 	return _db
 }
 
-func TestXXX(t *testing.T) {
-	db := getDB()
-	db.Truncate()
-	ctx := context.Background()
+func TestGetEvents(t *testing.T) {
+	t.Run("From seq 0", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
 
-	es := eventstore.NewEventStore(db)
+		msgs := random.EventMsgs().
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Build()
 
-	metadata := &eventstore.Metadata{
-		UserID: "u1",
-	}
+		err := db.saveEvents(context.Background(), msgs)
+		require.NoError(t, err)
+		msgsResult, err := db.GetEvents(context.Background(), "a1", 0)
+		require.NoError(t, err)
+		require.Len(t, msgsResult, 5)
+		require.Equal(t, msgs, msgsResult)
+	})
 
-	id := eid.GenerateID()
-	st := domain.NewStockItem()
-	st.Create(id, "1", 0)
-	st.Add(10)
-	st.Sub(5)
-	st.Add(2)
-	st.Add(3)
+	t.Run("From seq 3", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
 
-	err := es.SaveWithMetadata(ctx, st, metadata)
-	require.NoError(t, err)
+		msgs := random.EventMsgs().
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Build()
+
+		err := db.saveEvents(context.Background(), msgs)
+		require.NoError(t, err)
+		msgsResult, err := db.GetEvents(context.Background(), "a1", 3)
+		require.NoError(t, err)
+		require.Len(t, msgsResult, 2)
+		require.Equal(t, msgs[3:], msgsResult)
+	})
+
+	t.Run("From 10", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
+
+		msgs := random.EventMsgs().
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Build()
+
+		err := db.saveEvents(context.Background(), msgs)
+		require.NoError(t, err)
+		msgsResult, err := db.GetEvents(context.Background(), "a1", 10)
+		require.NoError(t, err)
+		require.Len(t, msgsResult, 0)
+		require.Nil(t, msgsResult)
+	})
+
+	t.Run("Not Found", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
+
+		msgs := random.EventMsgs().
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Build()
+
+		err := db.saveEvents(context.Background(), msgs)
+		require.NoError(t, err)
+		msgsResult, err := db.GetEvents(context.Background(), "a2", 0)
+		require.NoError(t, err)
+		require.Len(t, msgsResult, 0)
+		require.Nil(t, msgsResult)
+	})
 }
 
-func TestSaveAndGet(t *testing.T) {
-	db := getDB()
-	db.Truncate()
-	ctx := context.Background()
+func TestGetSnapshot(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
 
-	es := eventstore.NewEventStore(db)
+		v1 := &eventstore.Snapshot{
+			AggregateID: "a1",
+			Aggregate:   nil,
+			EventID:     "e1",
+			Time:        clock.Now().Unix(),
+			Seq:         10,
+			Version:     1,
+		}
 
-	metadata := &eventstore.Metadata{
-		UserID: "u1",
-	}
+		err := db.saveSnapshot(context.Background(), v1)
+		require.NoError(t, err)
 
-	now1 := time.Now().UTC().Add(time.Second * -10)
-	now2 := time.Now().UTC().Add(time.Second * -5)
+		snapshot, err := db.GetSnapshot(context.Background(), "a1", 1)
+		require.NoError(t, err)
+		require.Equal(t, v1, snapshot)
+	})
 
-	id := eid.GenerateID()
-	st := domain.NewStockItem()
-	st.Create(id, "1", 0)
-	st.Add(10)
-	st.Sub(5)
-	st.Add(2)
-	st.Add(3)
+	t.Run("Aggregate ID Not Found", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
 
-	clock.Freeze(now1)
-	err := es.Save(ctx, st)
-	require.NoError(t, err)
-	lastSeq := st.GetSequence()
+		v1 := &eventstore.Snapshot{
+			AggregateID: "a1",
+			Aggregate:   nil,
+			EventID:     "e1",
+			Time:        clock.Now().Unix(),
+			Seq:         10,
+			Version:     1,
+		}
 
-	// GetAggregate
-	st2 := domain.NewStockItem()
-	err = es.GetAggregate(ctx, st.GetAggregateID(), st2)
-	require.NoError(t, err)
-	require.Equal(t, st, st2)
+		err := db.saveSnapshot(context.Background(), v1)
+		require.NoError(t, err)
 
-	// GetGetEvents
-	st.Add(2)
-	st.Remove()
+		snapshot, err := db.GetSnapshot(context.Background(), "a2", 1)
+		require.NoError(t, err)
+		require.Nil(t, snapshot)
+	})
 
-	clock.Freeze(now2)
-	err = es.SaveWithMetadata(ctx, st, metadata)
-	require.NoError(t, err)
+	t.Run("Version Not Found", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
 
-	events, err := es.GetEvents(ctx, st.GetAggregateID(), lastSeq)
-	require.NoError(t, err)
-	require.Len(t, events, 2)
-	require.True(t, st.IsRemoved())
-	require.Equal(t, domain.StockItemUpdatedEvent, events[0].EventType)
-	require.Equal(t, int64(6), events[0].Seq)
-	require.Equal(t, domain.StockItemRemovedEvent, events[1].EventType)
-	require.Equal(t, int64(7), events[1].Seq)
-	require.Equal(t, metadata, events[0].UnmarshalMetadata())
+		v1 := &eventstore.Snapshot{
+			AggregateID: "a1",
+			Aggregate:   nil,
+			EventID:     "e1",
+			Time:        clock.Now().Unix(),
+			Seq:         10,
+			Version:     1,
+		}
 
-	// GetAggregateByTimeSeq
-	st4 := domain.NewStockItem()
-	err = es.GetAggregateBySeq(ctx, st.GetAggregateID(), st4, 0)
-	require.NoError(t, err)
-	require.Equal(t, st4, st)
+		err := db.saveSnapshot(context.Background(), v1)
+		require.NoError(t, err)
+
+		snapshot, err := db.GetSnapshot(context.Background(), "a1", 2)
+		require.NoError(t, err)
+		require.Nil(t, snapshot)
+	})
+
+	t.Run("Version 0", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
+
+		v1 := &eventstore.Snapshot{
+			AggregateID: "a1",
+			Aggregate:   nil,
+			EventID:     "e1",
+			Time:        clock.Now().Unix(),
+			Seq:         10,
+			Version:     1,
+		}
+
+		err := db.saveSnapshot(context.Background(), v1)
+		require.NoError(t, err)
+
+		snapshot, err := db.GetSnapshot(context.Background(), "a1", 2)
+		require.NoError(t, err)
+		require.Nil(t, snapshot)
+	})
+
+	t.Run("Nil Snapshot", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
+
+		err := db.saveSnapshot(context.Background(), nil)
+		require.NoError(t, err)
+
+		snapshot, err := db.GetSnapshot(context.Background(), "a1", 2)
+		require.NoError(t, err)
+		require.Nil(t, snapshot)
+	})
 }
 
-func TestNotFound(t *testing.T) {
-	db := getDB()
-	ctx := context.Background()
+func TestSave(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
 
-	es := eventstore.NewEventStore(db)
+		msgs := random.EventMsgs().
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Build()
 
-	// GetAggregate
-	st := domain.NewStockItem()
-	st.SetAggregateID("1x")
-	err := es.GetAggregate(ctx, st.GetAggregateID(), st)
-	require.NoError(t, err)
-	require.True(t, st.IsNew())
+		v1 := &eventstore.Snapshot{
+			AggregateID: "a1",
+			Aggregate:   nil,
+			EventID:     "e1",
+			Time:        clock.Now().Unix(),
+			Seq:         10,
+			Version:     1,
+		}
 
-	// GetEvents
-	msgs, err := es.GetEvents(ctx, st.GetAggregateID(), 0)
-	require.Nil(t, err)
-	require.Len(t, msgs, 0)
-	require.Nil(t, msgs)
+		err := db.Save(context.Background(), msgs, v1)
+		require.NoError(t, err)
 
-	st4 := domain.NewStockItem()
-	err = es.GetAggregateBySeq(ctx, st.GetAggregateID(), st4, 1)
-	require.NoError(t, err)
-	require.True(t, st4.IsNew())
-}
+		msgsResult, err := db.GetEvents(context.Background(), "a1", 0)
+		require.NoError(t, err)
+		require.Equal(t, msgs, msgsResult)
 
-func TestConcurency(t *testing.T) {
-	db := getDB()
-	db.Truncate()
-	ctx := context.Background()
+		snapshot, err := db.GetSnapshot(context.Background(), "a1", 1)
+		require.NoError(t, err)
+		require.Equal(t, v1, snapshot)
+	})
 
-	es := eventstore.NewEventStore(db)
+	t.Run("Concurency", func(t *testing.T) {
+		db := getDB()
+		db.Truncate()
+		wg := errgroup.Group{}
 
-	wg := sync.WaitGroup{}
-	wg.Add(2)
+		wg.Go(func() errors.Error {
+			msgs := random.EventMsgs().
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Build()
 
-	var err1 error
-	var err2 error
-	go func() {
-		st := domain.NewStockItem()
-		st.Create("a1", "1", 0)
-		st.Add(10)
-		st.Sub(5)
-		st.Add(2)
-		st.Add(3)
+			v1 := &eventstore.Snapshot{
+				AggregateID: "a1",
+				Aggregate:   nil,
+				EventID:     "e1",
+				Time:        clock.Now().Unix(),
+				Seq:         10,
+				Version:     1,
+			}
 
-		err1 = es.Save(ctx, st)
+			return db.Save(context.Background(), msgs, v1)
+		})
 
-		wg.Done()
-	}()
+		wg.Go(func() errors.Error {
+			msgs := random.EventMsgs().
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Build()
 
-	go func() {
-		st := domain.NewStockItem()
-		st.Create("a1", "1", 0)
-		st.Add(1)
-		st.Remove()
+			v1 := &eventstore.Snapshot{
+				AggregateID: "a1",
+				Aggregate:   nil,
+				EventID:     "e1",
+				Time:        clock.Now().Unix(),
+				Seq:         10,
+				Version:     1,
+			}
 
-		err2 = es.Save(ctx, st)
+			return db.Save(context.Background(), msgs, v1)
+		})
 
-		wg.Done()
-	}()
-
-	wg.Wait()
-
-	fmt.Println("err1", err1)
-	fmt.Println("err2", err2)
-	if err1 != nil {
-		require.Equal(t, errors.ErrVersionInconsistency, err1)
-		require.Nil(t, err2)
-	} else {
-		require.Equal(t, errors.ErrVersionInconsistency, err2)
-		require.Nil(t, err1)
-	}
+		err := wg.Wait()
+		require.Equal(t, appErr.ErrVersionInconsistency, err)
+	})
 }

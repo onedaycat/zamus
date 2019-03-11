@@ -39,10 +39,9 @@ func (a Records) Less(i, j int) bool {
 }
 
 type DynamoDBStreamEvent struct {
-	Records       Records `json:"Records"`
-	Warmer        bool    `json:"warmer"`
-	Concurency    int     `json:"concurency"`
-	CorrelationID string  `json:"correlationID"`
+	Records    Records `json:"Records"`
+	Warmer     bool    `json:"warmer,omitempty"`
+	Concurency int     `json:"concurency,omitempty"`
 }
 
 type Record struct {

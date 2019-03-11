@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/onedaycat/zamus/eventstore/mocks"
+
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/errors"
@@ -25,12 +27,120 @@ func getDB() *memory.MemoryEventStore {
 	return _db
 }
 
+type EventStoreSuite struct {
+	mockStore *mocks.Storage
+	es        eventstore.EventStore
+	ctx       context.Context
+}
+
+func setupEventStoreSuite() *EventStoreSuite {
+	s := &EventStoreSuite{}
+	db := getDB()
+	db.Truncate()
+	s.ctx = context.Background()
+	s.es = eventstore.NewEventStore(db)
+
+	return s
+}
+
+func (s *EventStoreSuite) WithMockStorage() *EventStoreSuite {
+	s.mockStore = &mocks.Storage{}
+	s.es = eventstore.NewEventStore(s.mockStore)
+
+	return s
+}
+
+func TestWorkFlow(t *testing.T) {
+	t.Run("New Aggregate", func(t *testing.T) {
+		s := setupEventStoreSuite()
+
+		st := domain.NewStockItem()
+		s.es.GetAggregate(s.ctx, "a1", st)
+		require.True(t, st.IsNew())
+
+		st.Create("a1", "p1", 1)
+		require.Equal(t, 1, len(st.GetEvents()))
+		require.Equal(t, &domain.StockItemCreated{
+			ID:        "a1",
+			ProductID: "p1",
+			Qty:       1,
+		}, st.GetEvents()[0])
+
+		now := time.Now()
+		clock.Freeze(now)
+		err := s.es.Save(s.ctx, st)
+		require.NoError(t, err)
+		require.Equal(t, int64(1), st.GetSequence())
+		require.Len(t, st.GetEvents(), 0)
+		require.Equal(t, now.Unix(), st.GetLastEventTime())
+		require.Equal(t, "a1:1", st.GetLastEventID())
+
+		st2 := domain.NewStockItem()
+		err = s.es.GetAggregate(s.ctx, "a1", st2)
+		require.NoError(t, err)
+		require.Equal(t, st2, st)
+	})
+
+	t.Run("Exist Aggregate", func(t *testing.T) {
+		s := setupEventStoreSuite()
+
+		st := domain.NewStockItem()
+		s.es.GetAggregate(s.ctx, "a1", st)
+		require.True(t, st.IsNew())
+
+		st.Create("a1", "p1", 1)
+		require.Equal(t, 1, len(st.GetEvents()))
+		require.Equal(t, &domain.StockItemCreated{
+			ID:        "a1",
+			ProductID: "p1",
+			Qty:       1,
+		}, st.GetEvents()[0])
+
+		now := time.Now()
+		clock.Freeze(now)
+		err := s.es.Save(s.ctx, st)
+
+		st2 := domain.NewStockItem()
+		err = s.es.GetAggregate(s.ctx, "a1", st2)
+		require.NoError(t, err)
+		require.Equal(t, st2, st)
+
+		st2.Add(3)
+		st2.Add(5)
+		err = s.es.Save(s.ctx, st2)
+		require.NoError(t, err)
+		require.Equal(t, int64(3), st2.GetSequence())
+		require.Len(t, st.GetEvents(), 0)
+		require.Equal(t, now.Unix(), st2.GetLastEventTime())
+		require.Equal(t, "a1:3", st2.GetLastEventID())
+
+		st3 := domain.NewStockItem()
+		err = s.es.GetAggregate(s.ctx, "a1", st3)
+		require.NoError(t, err)
+		require.Equal(t, st3, st2)
+	})
+}
+
+func TestGetAggregate(t *testing.T) {
+	t.Run("No Snapshot No Event", func(t *testing.T) {
+		s := setupEventStoreSuite().
+			WithMockStorage()
+
+		st := domain.NewStockItem()
+
+		s.mockStore.On("GetSnapshot", s.ctx, "a1", 1).Return(nil, nil)
+		s.mockStore.On("GetEvents", s.ctx, "a1", int64(0)).Return(nil, nil)
+
+		err := s.es.GetAggregate(s.ctx, "a1", st)
+		require.NoError(t, err)
+		require.True(t, st.IsNew())
+	})
+}
+
 func TestSaveAndGet(t *testing.T) {
 	db := getDB()
 	db.Truncate()
-
 	ctx := context.Background()
-
 	es := eventstore.NewEventStore(db)
 
 	now1 := time.Now().UTC().Add(time.Second * -10)
