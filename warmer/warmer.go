@@ -17,6 +17,7 @@ type Warmer struct {
 	ld         invoke.Invoker
 	concurrent int
 	wg         sync.WaitGroup
+	invokeType string
 }
 
 func New(sess *session.Session, concurrent int) *Warmer {
@@ -24,6 +25,7 @@ func New(sess *session.Session, concurrent int) *Warmer {
 		delay:      75 * time.Millisecond,
 		ld:         lambda.New(sess),
 		concurrent: concurrent,
+		invokeType: "Event",
 	}
 }
 
@@ -47,20 +49,35 @@ func (w *Warmer) Run(ctx context.Context) {
 		CorrelationId: lc.AwsRequestID,
 	})
 
+	if w.concurrent == 1 {
+		w.invoke(ctx, payload)
+		return
+	}
+
 	w.wg.Add(w.concurrent)
 
 	for i := 0; i < w.concurrent; i++ {
-		go w.invoke(ctx, payload)
+		go w.conInvoke(ctx, payload)
 	}
 
 	w.wg.Wait()
 }
 
-func (w *Warmer) invoke(ctx context.Context, payload []byte) {
+func (w *Warmer) conInvoke(ctx context.Context, payload []byte) {
 	defer w.wg.Done()
 	w.ld.Invoke(&lambda.InvokeInput{
-		FunctionName: &lambdacontext.FunctionName,
-		Qualifier:    &lambdacontext.FunctionVersion,
-		Payload:      payload,
+		FunctionName:   &lambdacontext.FunctionName,
+		Qualifier:      &lambdacontext.FunctionVersion,
+		InvocationType: &w.invokeType,
+		Payload:        payload,
+	})
+}
+
+func (w *Warmer) invoke(ctx context.Context, payload []byte) {
+	w.ld.Invoke(&lambda.InvokeInput{
+		FunctionName:   &lambdacontext.FunctionName,
+		Qualifier:      &lambdacontext.FunctionVersion,
+		InvocationType: &w.invokeType,
+		Payload:        payload,
 	})
 }
