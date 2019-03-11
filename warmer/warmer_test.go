@@ -32,7 +32,7 @@ func TestInvokeConcurency(t *testing.T) {
 		spy.Called("invoke")
 	}).Return(nil, nil)
 
-	w.Run(ctx, 3, "cid")
+	w.Run(ctx, 3)
 	require.Equal(t, 3, spy.Count("invoke"))
 	invoker.AssertExpectations(t)
 }
@@ -57,7 +57,7 @@ func TestInvokeOne(t *testing.T) {
 		spy.Called("invoke")
 	}).Return(nil, nil)
 
-	w.Run(ctx, 1, "cid")
+	w.Run(ctx, 1)
 	require.Equal(t, 1, spy.Count("invoke"))
 	invoker.AssertExpectations(t)
 }
@@ -78,26 +78,6 @@ func TestNoConcurency(t *testing.T) {
 		AwsRequestID: "req1",
 	})
 
-	w.Run(ctx, 0, "cid")
-	require.Equal(t, 0, spy.Count("invoke"))
-}
-
-func TestNoCorrelationID(t *testing.T) {
-	invoker := &mocks.Invoker{}
-	sess, err := session.NewSession()
-	if err != nil {
-		panic(err)
-	}
-
-	spy := common.Spy()
-	w := New(sess)
-	w.ld = invoker
-
-	ctx := context.Background()
-	ctx = lambdacontext.NewContext(ctx, &lambdacontext.LambdaContext{
-		AwsRequestID: "req1",
-	})
-
-	w.Run(ctx, 3, "")
+	w.Run(ctx, 0)
 	require.Equal(t, 0, spy.Count("invoke"))
 }

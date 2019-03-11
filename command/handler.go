@@ -193,7 +193,7 @@ func (h *Handler) runWarmer(ctx context.Context, cmd *Command) (interface{}, err
 		}
 		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx, cmd.Concurency, cmd.CorrelationID)
+	h.warmer.Run(ctx, cmd.Concurency)
 
 	return nil, nil
 }

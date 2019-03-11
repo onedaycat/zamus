@@ -28,27 +28,19 @@ func New(sess *session.Session) *Warmer {
 }
 
 type WarmerRequest struct {
-	Warmer        bool   `json:"warmer"`
-	Concurency    int    `json:"concurency"`
-	CorrelationID string `json:"correlationID"`
+	Warmer     bool `json:"warmer"`
+	Concurency int  `json:"concurency"`
 }
 
-func (w *Warmer) Run(ctx context.Context, concurency int, correlationID string) {
-	if correlationID == "" {
-		return
-	}
-
+func (w *Warmer) Run(ctx context.Context, concurency int) {
 	if concurency == 0 {
 		return
 	}
 
-	lc, _ := lambdacontext.FromContext(ctx)
-
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	payload, _ := json.Marshal(WarmerRequest{
-		Warmer:        true,
-		Concurency:    concurency,
-		CorrelationID: lc.AwsRequestID,
+		Warmer:     true,
+		Concurency: 0,
 	})
 
 	if concurency == 1 {

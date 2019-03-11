@@ -210,7 +210,7 @@ func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, err
 		}
 		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx, query.Concurency, query.CorrelationID)
+	h.warmer.Run(ctx, query.Concurency)
 
 	return nil, nil
 }

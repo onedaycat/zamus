@@ -116,7 +116,7 @@ func (h *Handler) runWarmer(ctx context.Context, event *LambdaEvent) errors.Erro
 		}
 		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx, event.Concurency, event.CorrelationID)
+	h.warmer.Run(ctx, event.Concurency)
 
 	return nil
 }
