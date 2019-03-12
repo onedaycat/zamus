@@ -21,6 +21,22 @@ type Query struct {
 	Concurency    int              `json:"concurency,omitempty"`
 }
 
+func (e *Query) ParseArgs(v interface{}) errors.Error {
+	if err := json.Unmarshal(e.Args, v); err != nil {
+		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
+	}
+
+	return nil
+}
+
+func (e *Query) ParseSource(v interface{}) errors.Error {
+	if err := json.Unmarshal(e.Sources, v); err != nil {
+		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
+	}
+
+	return nil
+}
+
 type queryinfo struct {
 	handler     QueryHandler
 	prehandlers []QueryHandler
