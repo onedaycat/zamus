@@ -1,9 +1,9 @@
 package invoke
 
 import (
-	"encoding/json"
 	"testing"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +42,7 @@ func TestIdentity(t *testing.T) {
 
 	id := &Identity{}
 
-	err := json.Unmarshal(payload, id)
+	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(payload, id)
 	if err != nil {
 		require.NoError(t, err)
 	}

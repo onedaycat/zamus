@@ -1,10 +1,10 @@
 package random
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/golang/snappy"
+	jsoniter "github.com/json-iterator/go"
 
 	random "github.com/Pallinder/go-randomdata"
 	"github.com/onedaycat/zamus/common/eid"
@@ -81,7 +81,7 @@ func (b *eventBuilder) Versionn(version string) *eventBuilder {
 }
 
 func (b *eventBuilder) Event(eventType string, event interface{}) *eventBuilder {
-	data, err := json.Marshal(event)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(event)
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func (b *eventBuilder) Event(eventType string, event interface{}) *eventBuilder 
 }
 
 func (b *eventBuilder) BuildJSON() []byte {
-	data, err := json.Marshal(b.msg)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.msg)
 	if err != nil {
 		panic(err)
 	}

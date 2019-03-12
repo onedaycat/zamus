@@ -1,8 +1,9 @@
 package random
 
 import (
-	"encoding/json"
 	"strings"
+
+	jsoniter "github.com/json-iterator/go"
 
 	random "github.com/Pallinder/go-randomdata"
 	"github.com/onedaycat/zamus/command"
@@ -41,7 +42,7 @@ func (b *commandBuilder) Function(fn string) *commandBuilder {
 }
 
 func (b *commandBuilder) Arg(v interface{}) *commandBuilder {
-	data, err := json.Marshal(v)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +53,7 @@ func (b *commandBuilder) Arg(v interface{}) *commandBuilder {
 }
 
 func (b *commandBuilder) Source(v interface{}) *commandBuilder {
-	data, err := json.Marshal(v)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -89,7 +90,7 @@ func (b *commandBuilder) Build() *command.Command {
 }
 
 func (b *commandBuilder) BuildJSON() []byte {
-	data, err := json.Marshal(b.cmd)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.cmd)
 	if err != nil {
 		panic(err)
 	}

@@ -1,8 +1,7 @@
 package dynamostream
 
 import (
-	"encoding/json"
-
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/zamus/errors"
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -16,7 +15,7 @@ type Payload struct {
 func (p *Payload) UnmarshalJSON(b []byte) error {
 	var err error
 	data := make(map[string]*dynamodb.AttributeValue)
-	if err = json.Unmarshal(b, &data); err != nil {
+	if err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &data); err != nil {
 		return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
 	}
 

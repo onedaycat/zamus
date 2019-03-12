@@ -24,7 +24,7 @@
   revision = "ec2fec7cfe48fbf48ea1a6855a077c372bbb1b1c"
 
 [[projects]]
-  digest = "1:296214ce9e7b5e0a91273035b4037f07742553b4c5d02b99e5628a37b3bef10c"
+  digest = "1:b2467381ee33eee6686d7a76710af3f53ec32b82890c9aa6eed0b17ef7bc02da"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -52,6 +52,8 @@
     "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
+    "private/protocol/eventstream",
+    "private/protocol/eventstream/eventstreamapi",
     "private/protocol/json/jsonutil",
     "private/protocol/jsonrpc",
     "private/protocol/query",
@@ -67,8 +69,8 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "8b705a6dec722bcda3a9309c0924d4eca24f7c72"
-  version = "v1.17.14"
+  revision = "eeb8697ef6ae27d51c78e4aaf8dcf58c6a5a57e0"
+  version = "v1.18.0"
 
 [[projects]]
   branch = "master"
@@ -163,6 +165,14 @@
   revision = "c2b33e84"
 
 [[projects]]
+  branch = "master"
+  digest = "1:f5a2051c55d05548d2d4fd23d244027b59fbd943217df8aa3b5e170ac2fd6e1b"
+  name = "github.com/json-iterator/go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0ff49de124c6f76f8494e194af75bde0f1a49a29"
+
+[[projects]]
   digest = "1:edbef42561faa44c19129b68d1e109fbc1647f63239250391eadc8d0e7c9f669"
   name = "github.com/kelseyhightower/envconfig"
   packages = ["."]
@@ -180,6 +190,22 @@
   pruneopts = "UT"
   revision = "aedfce64c122eef47009b7f80c9771044753215d"
   version = "v1.8.0"
+
+[[projects]]
+  digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
+  name = "github.com/modern-go/concurrent"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94"
+  version = "1.0.3"
+
+[[projects]]
+  digest = "1:e32bdbdb7c377a07a9a46378290059822efdce5c8d96fe71940d87cb4f918855"
+  name = "github.com/modern-go/reflect2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd"
+  version = "1.0.1"
 
 [[projects]]
   branch = "master"
@@ -259,11 +285,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:efc0b1c2f3bff9854d96b12af5eb5fe35c97fa2e79c8efe091a8e38fd521bf23"
+  digest = "1:9fb64875be1386e75492979fbec6a89ebf1639fefd08ca85f37868944acf4ab6"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "UT"
-  revision = "7547e83b2d85fd1893c7d76916f67689d761fecb"
+  revision = "ba1052d4cbce7aac421a96de820558f75199ccbc"
 
 [[projects]]
   digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
@@ -283,7 +309,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f5235347aeacc55538e3e527a07c5b581dd337c5406638a15245ebbdef634656"
+  digest = "1:818a3a79d3a653f2c486e120f70b4de78297bb22750a397ca2777c102e06cf22"
   name = "github.com/stretchr/testify"
   packages = [
     "assert",
@@ -291,15 +317,15 @@
     "require",
   ]
   pruneopts = "UT"
-  revision = "21cb1c2932a2d04c6792d5ad106243c6e36a3a7d"
+  revision = "34c6fa2dc70986bccbbffcc6130f6920a924b075"
 
 [[projects]]
   branch = "master"
-  digest = "1:1ac73f06b9fb3a62fac8bd63b7312ba35b03301d0ea89ebdac41a5757c54cea4"
+  digest = "1:f36c7b9a36158e62ffe5d8b02d1b5955500c13106cdaeebf5323d88863cae96f"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "10058d7d4faa7dd5ef860cbd31af00903076e7b8"
+  revision = "c8c8c57fd1e1a977c10821a559dda983a9a9a3b5"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
@@ -348,6 +374,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/golang/protobuf/proto",
     "github.com/golang/snappy",
+    "github.com/json-iterator/go",
     "github.com/onedaycat/errors",
     "github.com/onedaycat/errors/errgroup",
     "github.com/onedaycat/errors/sentry",

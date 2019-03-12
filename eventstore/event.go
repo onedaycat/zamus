@@ -1,8 +1,9 @@
 package eventstore
 
 import (
-	"encoding/json"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/golang/snappy"
 	"github.com/onedaycat/errors"
@@ -17,7 +18,7 @@ func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
 		return appErr.ErrUnableDecode.WithCause(err).WithCaller()
 	}
 
-	if err := json.Unmarshal(dst, v); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(dst, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 

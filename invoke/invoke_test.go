@@ -1,9 +1,9 @@
 package invoke
 
 import (
-	"encoding/json"
 	"testing"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +16,7 @@ func TestParseArguments(t *testing.T) {
 	data := `{"function": "testField1","arguments": {"id": "1", "name":"hello"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
 
 	invoke := &InvokeEvent{}
-	err := json.Unmarshal([]byte(data), invoke)
+	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(data), invoke)
 	require.NoError(t, err)
 
 	a := &arg{}
@@ -36,7 +36,7 @@ func TestParseSource(t *testing.T) {
 	data := `{"function": "testField1","arguments": {"id": "1", "name":"hello"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
 
 	invoke := &InvokeEvent{}
-	err := json.Unmarshal([]byte(data), invoke)
+	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(data), invoke)
 	require.NoError(t, err)
 
 	s := &source{}

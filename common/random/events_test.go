@@ -1,11 +1,11 @@
 package random
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
 
 	"github.com/golang/snappy"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/onedaycat/zamus/eventstore"
 
@@ -18,7 +18,7 @@ func TestEventMsgs(t *testing.T) {
 	event := map[string]interface{}{
 		"id": "1",
 	}
-	eventData, _ := json.Marshal(event)
+	eventData, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(event)
 	var eventDataSnap []byte
 	eventDataSnap = snappy.Encode(eventDataSnap, eventData)
 

@@ -2,8 +2,8 @@ package invoke
 
 import (
 	"context"
-	"encoding/json"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -41,7 +41,7 @@ type InvokeErrorPayload struct {
 
 func UnmarshalInvokeErrorPayload(payload []byte) errors.Error {
 	in := &InvokeErrorPayload{}
-	err := json.Unmarshal(payload, in)
+	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(payload, in)
 	if err != nil {
 		return errors.Wrap(err)
 	}

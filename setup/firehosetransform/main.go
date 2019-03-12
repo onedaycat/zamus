@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -26,7 +26,7 @@ func handler(ctx context.Context, evs *events.KinesisFirehoseEvent) (*events.Kin
 			continue
 		}
 
-		raw, err = json.Marshal(eventmsg)
+		raw, err = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(eventmsg)
 		if err != nil {
 			result[i] = events.KinesisFirehoseResponseRecord{
 				RecordID: record.RecordID,

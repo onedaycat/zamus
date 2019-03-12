@@ -1,8 +1,9 @@
 package random
 
 import (
-	"encoding/json"
 	"testing"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/onedaycat/zamus/command"
 	"github.com/onedaycat/zamus/invoke"
@@ -27,7 +28,7 @@ func TestCommand(t *testing.T) {
 		Build()
 
 	expArg := map[string]interface{}{}
-	json.Unmarshal(cmd.Args, &expArg)
+	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(cmd.Args, &expArg)
 	require.Equal(t, expArg, arg)
 
 	source := map[string]interface{}{
@@ -38,7 +39,7 @@ func TestCommand(t *testing.T) {
 		Source(source).
 		Build()
 	expSource := map[string]interface{}{}
-	json.Unmarshal(cmd.Source, &expSource)
+	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(cmd.Source, &expSource)
 	require.Equal(t, expSource, source)
 
 	cmd = Command().ValidPermission("w1", "open", "delete").Build()

@@ -2,10 +2,10 @@ package kinesisstream
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"testing"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/zamus/eventstore"
 
 	"github.com/stretchr/testify/require"
@@ -25,11 +25,11 @@ func TestJSONSize(t *testing.T) {
 		Time:        1549966068,
 	}
 
-	data.Event, err = json.Marshal(map[string]interface{}{
+	data.Event, err = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
-	bdata, err := json.Marshal(data)
+	bdata, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(data)
 	require.NoError(t, err)
 	data1 := base64.StdEncoding.EncodeToString(bdata)
 
@@ -47,7 +47,7 @@ func TestSizeProto(t *testing.T) {
 		Time:        1549966068,
 	}
 
-	data.Event, err = json.Marshal(map[string]interface{}{
+	data.Event, err = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -76,7 +76,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		EventType:   "domain.aggregate.event",
 	}
 
-	data.Event, err = json.Marshal(map[string]interface{}{
+	data.Event, err = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -136,7 +136,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 	}
 
 	event := &KinesisStreamEvent{}
-	err = json.Unmarshal(bpayload, event)
+	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(bpayload, event)
 	require.NoError(t, err)
 	require.Len(t, event.Records, 2)
 	require.Equal(t, "domain.aggregate.event", event.Records[0].Kinesis.Data.EventMsg.EventType)
@@ -144,7 +144,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 	require.Equal(t, int64(11), event.Records[1].Kinesis.Data.EventMsg.Seq)
 
 	pp := &pdata{}
-	err = json.Unmarshal(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
+	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
 	require.NoError(t, err)
 	fmt.Println(pp)
 	require.Equal(t, &pdata{"1"}, pp)

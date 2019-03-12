@@ -81,10 +81,13 @@
   branch = "master"
   name = "github.com/plimble/goconf"
 
-
 [[constraint]]
   branch = "master"
   name = "github.com/Pallinder/go-randomdata"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/json-iterator/go"
 
 [prune]
   go-tests = true

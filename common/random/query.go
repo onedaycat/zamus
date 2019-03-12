@@ -1,10 +1,10 @@
 package random
 
 import (
-	"encoding/json"
 	"strings"
 
 	random "github.com/Pallinder/go-randomdata"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/query"
 )
@@ -41,7 +41,7 @@ func (b *queryBuilder) Function(fn string) *queryBuilder {
 }
 
 func (b *queryBuilder) Arg(v interface{}) *queryBuilder {
-	data, err := json.Marshal(v)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func (b *queryBuilder) Arg(v interface{}) *queryBuilder {
 }
 
 func (b *queryBuilder) Source(v interface{}) *queryBuilder {
-	data, err := json.Marshal(v)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func (b *queryBuilder) Build() *query.Query {
 }
 
 func (b *queryBuilder) BuildJSON() []byte {
-	data, err := json.Marshal(b.query)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.query)
 	if err != nil {
 		panic(err)
 	}

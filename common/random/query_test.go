@@ -1,9 +1,9 @@
 package random
 
 import (
-	"encoding/json"
 	"testing"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/query"
 	"github.com/stretchr/testify/require"
@@ -27,7 +27,7 @@ func TestQuery(t *testing.T) {
 		Build()
 
 	expArg := map[string]interface{}{}
-	json.Unmarshal(query.Args, &expArg)
+	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(query.Args, &expArg)
 	require.Equal(t, expArg, arg)
 
 	source := map[string]interface{}{
@@ -38,7 +38,7 @@ func TestQuery(t *testing.T) {
 		Source(source).
 		Build()
 	expSource := map[string]interface{}{}
-	json.Unmarshal(query.Sources, &expSource)
+	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(query.Sources, &expSource)
 	require.Equal(t, expSource, source)
 
 	query = Query().ValidPermission("w1", "open", "delete").Build()

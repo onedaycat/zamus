@@ -2,7 +2,8 @@ package command
 
 import (
 	"context"
-	"encoding/json"
+
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/onedaycat/errors"
 	"github.com/rs/zerolog"
@@ -20,7 +21,7 @@ func ErrorLog(ctx context.Context, cmd *Command, err errors.Error) {
 	}
 
 	if in := err.GetInput(); in != nil {
-		input, _ = json.Marshal(in)
+		input, _ = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(in)
 	}
 
 	if err.GetPanic() {

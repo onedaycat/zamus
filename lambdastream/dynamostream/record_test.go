@@ -2,18 +2,18 @@ package dynamostream
 
 import (
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
 	"sort"
 	"testing"
 
 	"github.com/golang/snappy"
+	jsoniter "github.com/json-iterator/go"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestParseDynamoDBStreamEvent(t *testing.T) {
-	p, err := json.Marshal(map[string]interface{}{
+	p, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	}
 
 	event := &DynamoDBStreamEvent{}
-	err = json.Unmarshal([]byte(payload), event)
+	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(payload), event)
 	sort.Sort(event.Records)
 	require.NoError(t, err)
 	require.Len(t, event.Records, 2)
@@ -122,7 +122,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	require.Equal(t, EventInsert, event.Records[1].EventName)
 	require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
 
-	xx, _ := json.Marshal(event.Records[0].DynamoDB.NewImage.EventMsg)
+	xx, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(event.Records[0].DynamoDB.NewImage.EventMsg)
 	fmt.Println(string(xx))
 
 	pp := &pdata{}

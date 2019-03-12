@@ -3,6 +3,7 @@ package invoke
 import (
 	"encoding/json"
 
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	appErr "github.com/onedaycat/zamus/errors"
 )
@@ -16,7 +17,7 @@ type InvokeRequest struct {
 }
 
 func (r *InvokeRequest) MarshalRequest() ([]byte, errors.Error) {
-	data, err := json.Marshal(r)
+	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(r)
 	if err != nil {
 		return nil, appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(r)
 	}
@@ -36,7 +37,7 @@ type InvokeEvent struct {
 }
 
 func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {
-	if err := json.Unmarshal(e.Args, v); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(e.Args, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -44,7 +45,7 @@ func (e *InvokeEvent) ParseArgs(v interface{}) errors.Error {
 }
 
 func (e *InvokeEvent) ParseSource(v interface{}) errors.Error {
-	if err := json.Unmarshal(e.Source, v); err != nil {
+	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(e.Source, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
