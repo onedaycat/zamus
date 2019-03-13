@@ -31,7 +31,7 @@ functions:
           enabled: true
       - schedule:
           name: warmer-${self:service}-${self:provider.stage}-dynamodb-kinesis
-          rate: rate(14 minutes)
+          rate: rate(10 minutes)
           enabled: true
           input:
             warmer: true
