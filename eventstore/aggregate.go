@@ -82,7 +82,11 @@ func (a *AggregateBase) GetSequence() int64 {
 }
 
 func (a *AggregateBase) IsNew() bool {
-	return a.seq == 0 || len(a.events) == 0
+	if a.id == emptyStr || a.seq == 0 && len(a.events) == 0 {
+		return true
+	}
+
+	return false
 }
 
 func (a *AggregateBase) SetLastEventTime(t int64) {
