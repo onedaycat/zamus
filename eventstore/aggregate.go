@@ -127,3 +127,13 @@ func (a *AggregateBase) AggregateFn() NewAggregateFn {
 		return a
 	}
 }
+
+func (a *AggregateBase) HasEvent(eventType string) bool {
+	for _, et := range a.eventTypes {
+		if et == eventType {
+			return true
+		}
+	}
+
+	return false
+}
