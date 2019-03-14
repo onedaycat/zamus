@@ -91,8 +91,6 @@ func (h *Handler) RegisterQuery(query string, handler QueryHandler, prehandlers 
 
 func (h *Handler) recovery(ctx context.Context, req *QueryReq, err *errors.Error) {
 	if r := recover(); r != nil {
-		seg := tracer.GetSegment(ctx)
-		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
 			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()

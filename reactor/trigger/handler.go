@@ -21,12 +21,21 @@ type ErrorHandler = func(ctx context.Context, payload Payload, err errors.Error)
 
 type Payload jsoniter.RawMessage
 
-func (p Payload) Unmarshal(v interface{}) error {
-	return json.Unmarshal(p, v)
+func (p Payload) Unmarshal(v interface{}) errors.Error {
+	if err := json.Unmarshal(p, v); err != nil {
+		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(p)
+	}
+
+	return nil
 }
 
-func (p Payload) Marshal(v interface{}) (jsoniter.RawMessage, error) {
-	return json.Marshal(v)
+func (p Payload) Marshal(v interface{}) (jsoniter.RawMessage, errors.Error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, appErr.ErrUnableMarshal.WithCause(err).WithCaller().WithInput(v)
+	}
+
+	return data, nil
 }
 
 type Config struct {
@@ -130,8 +139,6 @@ func (h *Handler) StartLambda() {
 
 func (h *Handler) recovery(ctx context.Context, payload Payload, err *errors.Error) {
 	if r := recover(); r != nil {
-		seg := tracer.GetSegment(ctx)
-		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
 			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()

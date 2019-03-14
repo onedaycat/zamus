@@ -258,8 +258,6 @@ func (c *partitionStrategy) handle(ctx context.Context, msgs EventMsgs) (err err
 
 func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors.Error) {
 	if r := recover(); r != nil {
-		seg := tracer.GetSegment(ctx)
-		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
 			*err = appErr.ErrInternalError.WithPanic().WithCause(cause).WithCallerSkip(6)

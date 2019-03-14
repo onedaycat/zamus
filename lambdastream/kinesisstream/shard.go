@@ -252,8 +252,6 @@ func (c *shardStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.
 
 func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors.Error) {
 	if r := recover(); r != nil {
-		seg := tracer.GetSegment(ctx)
-		defer tracer.Close(seg)
 		switch cause := r.(type) {
 		case error:
 			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
