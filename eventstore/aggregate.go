@@ -1,6 +1,11 @@
 package eventstore
 
-import "github.com/onedaycat/errors"
+import (
+	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
+)
+
+type NewAggregateFn func() AggregateRoot
 
 type AggregateRoot interface {
 	Apply(payload *EventMsg) errors.Error
@@ -111,4 +116,14 @@ func (a *AggregateBase) CurrentVersion() int {
 
 func (a *AggregateBase) SnapshotVersion() int {
 	return a.snpshotVersion
+}
+
+func (a *AggregateBase) Apply(msg *EventMsg) errors.Error {
+	return appErr.ErrNotImplement
+}
+
+func (a *AggregateBase) AggregateFn() NewAggregateFn {
+	return func() AggregateRoot {
+		return a
+	}
 }

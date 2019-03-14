@@ -31,17 +31,9 @@ type InvokeErrorPayload struct {
 	ErrorMessage string `json:"errorMessage"`
 }
 
-// ErrInternalError    = errors.InternalError("InternalError", "Internal error")
-// 	ErrInvalidRequest   = errors.BadRequest("InvalidRequest", "Invalid request")
-// 	ErrValidateError    = errors.BadRequest("ValidateError", "Validation error")
-// 	ErrPermissionDenied = errors.Forbidden("PermissionDenied", "You don't a permission to access this operation")
-// 	ErrTimeout          = errors.Timeout("TimeoutError", "The operation is timeout")
-// 	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "The authorization is required")
-// 	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
-
 func UnmarshalInvokeErrorPayload(payload []byte) errors.Error {
 	in := &InvokeErrorPayload{}
-	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(payload, in)
+	err := jsoniter.ConfigFastest.Unmarshal(payload, in)
 	if err != nil {
 		return errors.Wrap(err)
 	}

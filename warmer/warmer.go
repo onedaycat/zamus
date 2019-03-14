@@ -38,7 +38,7 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 		return
 	}
 
-	payload, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(WarmerRequest{
+	payload, _ := jsoniter.ConfigFastest.Marshal(WarmerRequest{
 		Warmer:     true,
 		Concurency: 0,
 	})

@@ -2,7 +2,6 @@ package kinesisstream
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
@@ -198,24 +197,22 @@ func (c *shardStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMsg
 
 func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	wg := errgroup.Group{}
-	for i, handlerinfo := range c.handlers {
+	for _, handlerinfo := range c.handlers {
 		handlerinfo := handlerinfo
 		wg.Go(func() (aerr errors.Error) {
-			hctx, seg := tracer.BeginSubsegment(ctx, "handler_"+strconv.Itoa(i))
-			defer tracer.Close(seg)
-			defer c.recover(hctx, msgs, &aerr)
+			defer c.recover(ctx, msgs, &aerr)
 			newmsgs := c.filterEvents(handlerinfo, msgs)
 			if len(newmsgs) == 0 {
 				return nil
 			}
 
-			if aerr = handlerinfo.Handler(hctx, c.filterEvents(handlerinfo, newmsgs)); aerr != nil {
-				tracer.AddError(seg, aerr)
+			if aerr = handlerinfo.Handler(ctx, c.filterEvents(handlerinfo, newmsgs)); aerr != nil {
+				tracer.AddError(ctx, aerr)
 				if c.dql != nil {
 					c.dql.AddError(aerr)
 				}
 				for _, errhandler := range c.errorHandlers {
-					errhandler(hctx, newmsgs, aerr)
+					errhandler(ctx, newmsgs, aerr)
 				}
 				return aerr
 			}
@@ -260,7 +257,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			if c.dql != nil {
@@ -269,7 +266,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		}
 	}
 }

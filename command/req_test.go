@@ -1,4 +1,4 @@
-package invoke
+package command
 
 import (
 	"testing"
@@ -9,18 +9,18 @@ import (
 
 func TestParseArguments(t *testing.T) {
 	type arg struct {
-		ID   string `json:"id"`
-		Name string `json:"name"`
+		ID   string
+		Name string
 	}
 
-	data := `{"function": "testField1","arguments": {"id": "1", "name":"hello"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
+	data := `{"function": "testField1","arguments": {"iD": "1", "NaMe":"hello"},"soUrCE": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
 
-	invoke := &InvokeEvent{}
-	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(data), invoke)
+	req := &CommandReq{}
+	err := jsoniter.ConfigFastest.Unmarshal([]byte(data), req)
 	require.NoError(t, err)
 
 	a := &arg{}
-	err = invoke.ParseArgs(a)
+	err = req.ParseArgs(a)
 	require.NoError(t, err)
 	require.Equal(t, &arg{
 		ID:   "1",
@@ -35,12 +35,12 @@ func TestParseSource(t *testing.T) {
 
 	data := `{"function": "testField1","arguments": {"id": "1", "name":"hello"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
 
-	invoke := &InvokeEvent{}
-	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(data), invoke)
+	req := &CommandReq{}
+	err := jsoniter.ConfigFastest.Unmarshal([]byte(data), req)
 	require.NoError(t, err)
 
 	s := &source{}
-	err = invoke.ParseSource(s)
+	err = req.ParseSource(s)
 	require.NoError(t, err)
 	require.Equal(t, &source{
 		Namespace: "1",

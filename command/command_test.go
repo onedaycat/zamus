@@ -22,7 +22,7 @@ func setupCommandPermission() *CommandPermissionSuite {
 	s := &CommandPermissionSuite{}
 
 	s.SpyTest = common.Spy()
-	f := func(ctx context.Context, cmd *command.Command) (interface{}, errors.Error) {
+	f := func(ctx context.Context, req *command.CommandReq) (interface{}, errors.Error) {
 		s.Called("f")
 		return nil, nil
 	}
@@ -37,12 +37,12 @@ func Test_Command_Permission(t *testing.T) {
 	t.Run("Valid", func(t *testing.T) {
 		s := setupCommandPermission()
 
-		cmd := random.Command().
+		req := random.CommandReq().
 			Function("testHandlerCommandDenied").
 			ValidPermission("w1", "deleteWorkspace").
 			Build()
 
-		resp, err := s.handler.Handle(context.Background(), cmd)
+		resp, err := s.handler.Handle(context.Background(), req)
 
 		require.Nil(t, err)
 		require.Nil(t, resp)
@@ -52,12 +52,12 @@ func Test_Command_Permission(t *testing.T) {
 	t.Run("Invalid", func(t *testing.T) {
 		s := setupCommandPermission()
 
-		cmd := random.Command().
+		req := random.CommandReq().
 			Function("testHandlerCommandDenied").
 			ValidPermission("w1", "readWorkspace").
 			Build()
 
-		resp, err := s.handler.Handle(context.Background(), cmd)
+		resp, err := s.handler.Handle(context.Background(), req)
 
 		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -67,7 +67,7 @@ func Test_Command_Permission(t *testing.T) {
 	t.Run("No Permission", func(t *testing.T) {
 		s := setupCommandPermission()
 
-		cmd := &command.Command{
+		req := &command.CommandReq{
 			Function:      "testHandlerCommandDenied",
 			PermissionKey: "workspace_1",
 			Identity: &invoke.Identity{
@@ -75,7 +75,7 @@ func Test_Command_Permission(t *testing.T) {
 			},
 		}
 
-		resp, err := s.handler.Handle(context.Background(), cmd)
+		resp, err := s.handler.Handle(context.Background(), req)
 
 		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -84,11 +84,11 @@ func Test_Command_Permission(t *testing.T) {
 
 	t.Run("No Identity", func(t *testing.T) {
 		s := setupCommandPermission()
-		cmd := &command.Command{
+		req := &command.CommandReq{
 			Function: "testHandlerCommandDenied",
 		}
 
-		resp, err := s.handler.Handle(context.Background(), cmd)
+		resp, err := s.handler.Handle(context.Background(), req)
 
 		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)
@@ -98,7 +98,7 @@ func Test_Command_Permission(t *testing.T) {
 	t.Run("No PermissionKey", func(t *testing.T) {
 		s := setupCommandPermission()
 
-		cmd := &command.Command{
+		req := &command.CommandReq{
 			Function: "testHandlerCommandDenied",
 			Identity: &invoke.Identity{
 				Claims: invoke.Claims{
@@ -109,7 +109,7 @@ func Test_Command_Permission(t *testing.T) {
 			},
 		}
 
-		resp, err := s.handler.Handle(context.Background(), cmd)
+		resp, err := s.handler.Handle(context.Background(), req)
 
 		require.Equal(t, appErr.ErrPermissionDenied, err)
 		require.Nil(t, resp)

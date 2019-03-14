@@ -42,14 +42,13 @@ func TestIdentity(t *testing.T) {
 
 	id := &Identity{}
 
-	err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(payload, id)
+	err := jsoniter.ConfigFastest.Unmarshal(payload, id)
 	if err != nil {
 		require.NoError(t, err)
 	}
 
 	require.Equal(t, &Identity{
 		Sub:      "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-		Issuer:   "https://issuer.com",
 		Username: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
 		Claims: Claims{
 			Email:     "test@test.com",
@@ -59,9 +58,8 @@ func TestIdentity(t *testing.T) {
 				"shop1": "read,open",
 			},
 		},
-		SourceIP:            []string{"x.x.x.x"},
-		DefaultAuthStrategy: "ALLOW",
-		Groups:              []string{"admin"},
+		SourceIP: []string{"x.x.x.x"},
+		Groups:   []string{"admin"},
 	}, id)
 
 	require.Equal(t, "test@test.com", id.GetEmail())

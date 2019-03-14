@@ -15,7 +15,7 @@ type Payload struct {
 func (p *Payload) UnmarshalJSON(b []byte) error {
 	var err error
 	data := make(map[string]*dynamodb.AttributeValue)
-	if err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &data); err != nil {
+	if err = jsoniter.ConfigFastest.Unmarshal(b, &data); err != nil {
 		return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
 	}
 

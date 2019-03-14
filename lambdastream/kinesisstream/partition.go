@@ -2,7 +2,6 @@ package kinesisstream
 
 import (
 	"context"
-	"strconv"
 	"sync"
 
 	"github.com/onedaycat/errors"
@@ -204,24 +203,22 @@ func (c *partitionStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) Even
 
 func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
 	wg := errgroup.Group{}
-	for i, handlerinfo := range c.handlers {
+	for _, handlerinfo := range c.handlers {
 		handlerinfo := handlerinfo
 		wg.Go(func() (aerr errors.Error) {
-			hctx, seg := tracer.BeginSubsegment(ctx, "handler_"+strconv.Itoa(i))
-			defer tracer.Close(seg)
-			defer c.recover(hctx, msgs, &aerr)
+			defer c.recover(ctx, msgs, &aerr)
 			newmsgs := c.filterEvents(handlerinfo, msgs)
 			if len(newmsgs) == 0 {
 				return nil
 			}
 
-			if aerr = handlerinfo.Handler(hctx, newmsgs); aerr != nil {
-				tracer.AddError(seg, aerr)
+			if aerr = handlerinfo.Handler(ctx, newmsgs); aerr != nil {
+				tracer.AddError(ctx, aerr)
 				if c.dql != nil {
 					c.dql.AddError(aerr)
 				}
 				for _, errhandler := range c.errorHandlers {
-					errhandler(hctx, newmsgs, aerr)
+					errhandler(ctx, newmsgs, aerr)
 				}
 				return aerr
 			}
@@ -266,7 +263,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrInternalError.WithPanic().WithInput(cause).WithCallerSkip(6)
 			if c.dql != nil {
@@ -275,7 +272,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		}
 	}
 }

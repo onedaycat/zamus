@@ -41,7 +41,7 @@ func (b *queryBuilder) Function(fn string) *queryBuilder {
 }
 
 func (b *queryBuilder) Arg(v interface{}) *queryBuilder {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
+	data, err := jsoniter.ConfigFastest.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +52,7 @@ func (b *queryBuilder) Arg(v interface{}) *queryBuilder {
 }
 
 func (b *queryBuilder) Source(v interface{}) *queryBuilder {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
+	data, err := jsoniter.ConfigFastest.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -96,7 +96,7 @@ func (b *queryBuilder) Build() *query.Query {
 }
 
 func (b *queryBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.query)
+	data, err := jsoniter.ConfigFastest.Marshal(b.query)
 	if err != nil {
 		panic(err)
 	}

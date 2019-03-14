@@ -21,17 +21,12 @@ func (p Permissions) Has(workspace, permission string) bool {
 }
 
 type Identity struct {
-	Sub                   string   `json:"sub,omitempty"`
-	AccountId             string   `json:"accountId,omitempty"`
-	CognitoIdentityPoolId string   `json:"cognitoIdentityPoolId,omitempty"`
-	CognitoIdentityId     string   `json:"cognitoIdentityId,omitempty"`
-	SourceIP              []string `json:"sourceIp,omitempty"`
-	Groups                []string `json:"groups,omitempty"`
-	Username              string   `json:"username,omitempty"`
-	UserArn               string   `json:"userArn,omitempty"`
-	Issuer                string   `json:"issuer,omitempty"`
-	Claims                Claims   `json:"claims,omitempty"`
-	DefaultAuthStrategy   string   `json:"defaultAuthStrategy,omitempty"`
+	Sub       string   `json:"sub,omitempty"`
+	AccountId string   `json:"accountId,omitempty"`
+	SourceIP  []string `json:"sourceIp,omitempty"`
+	Groups    []string `json:"groups,omitempty"`
+	Username  string   `json:"username,omitempty"`
+	Claims    Claims   `json:"claims,omitempty"`
 }
 
 func (id *Identity) GetID() string {

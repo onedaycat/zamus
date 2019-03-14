@@ -142,7 +142,7 @@ func TestGetAggregate(t *testing.T) {
 			WithMockStorage()
 
 		st := domain.NewStockItem()
-		stByte, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(st)
+		stByte, err := jsoniter.ConfigFastest.Marshal(st)
 		require.NoError(t, err)
 
 		var dst []byte

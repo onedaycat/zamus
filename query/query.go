@@ -11,10 +11,20 @@ import (
 	"github.com/onedaycat/zamus/invoke"
 )
 
+type invokereq struct {
+	Function      string           `json:"function"`
+	Args          json.RawMessage  `json:"arguments"`
+	Source        json.RawMessage  `json:"source,omitempty"`
+	Identity      *invoke.Identity `json:"identity,omitempty"`
+	PermissionKey string           `json:"pemKey,omitempty"`
+	Warmer        bool             `json:"warmer,omitempty"`
+	Concurency    int              `json:"concurency,omitempty"`
+}
+
 type Query struct {
 	Function      string           `json:"function"`
 	Args          json.RawMessage  `json:"arguments"`
-	Sources       json.RawMessage  `json:"sources,omitempty"`
+	Sources       json.RawMessage  `json:"source,omitempty"`
 	Identity      *invoke.Identity `json:"identity,omitempty"`
 	NBatchSources int              `json:"-"`
 	PermissionKey string           `json:"pemKey,omitempty"`
@@ -23,7 +33,7 @@ type Query struct {
 }
 
 func (e *Query) ParseArgs(v interface{}) errors.Error {
-	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(e.Args, v); err != nil {
+	if err := jsoniter.ConfigFastest.Unmarshal(e.Args, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -31,7 +41,7 @@ func (e *Query) ParseArgs(v interface{}) errors.Error {
 }
 
 func (e *Query) ParseSource(v interface{}) errors.Error {
-	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(e.Sources, v); err != nil {
+	if err := jsoniter.ConfigFastest.Unmarshal(e.Sources, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -75,12 +85,12 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 	firstChar := b[0]
 
 	if firstChar == firstCharArray {
-		invokes := make([]*invoke.InvokeEvent, 0, 5)
-		if err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, &invokes); err != nil {
+		reqs := make([]*invokereq, 0, 5)
+		if err = jsoniter.ConfigFastest.Unmarshal(b, &reqs); err != nil {
 			return appErr.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 
-		if len(invokes) == 0 {
+		if len(reqs) == 0 {
 			return nil
 		}
 
@@ -88,25 +98,25 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 		b.WriteByte(91)
 		first := true
 		n := 0
-		for i := 0; i < len(invokes); i++ {
-			if len(invokes[i].Source) == 0 {
+		for i := 0; i < len(reqs); i++ {
+			if len(reqs[i].Source) == 0 {
 				continue
 			}
 
 			if !first {
 				b.WriteByte(44)
 			}
-			b.Write(invokes[i].Source)
+			b.Write(reqs[i].Source)
 			first = false
 			n = n + 1
 		}
 		b.WriteByte(93)
 
-		q.Function = invokes[0].Function
-		q.Args = invokes[0].Args
+		q.Function = reqs[0].Function
+		q.Args = reqs[0].Args
 		q.Sources = b.Bytes()
-		q.Identity = invokes[0].Identity
-		q.PermissionKey = invokes[0].PermissionKey
+		q.Identity = reqs[0].Identity
+		q.PermissionKey = reqs[0].PermissionKey
 		q.NBatchSources = n
 
 		if len(q.Sources) == 2 {
@@ -115,19 +125,19 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 
 		return nil
 	} else if firstChar == firstCharObject {
-		invoke := &invoke.InvokeEvent{}
-		if err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(b, invoke); err != nil {
+		req := &invokereq{}
+		if err = jsoniter.ConfigFastest.Unmarshal(b, req); err != nil {
 			return appErr.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 
-		q.Function = invoke.Function
-		q.Args = invoke.Args
-		q.Sources = invoke.Source
-		q.Identity = invoke.Identity
-		q.PermissionKey = invoke.PermissionKey
+		q.Function = req.Function
+		q.Args = req.Args
+		q.Sources = req.Source
+		q.Identity = req.Identity
+		q.PermissionKey = req.PermissionKey
 		q.NBatchSources = 0
-		q.Warmer = invoke.Warmer
-		q.Concurency = invoke.Concurency
+		q.Warmer = req.Warmer
+		q.Concurency = req.Concurency
 
 		return nil
 	}

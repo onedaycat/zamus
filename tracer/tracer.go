@@ -47,7 +47,26 @@ func Close(seg *Segment) {
 	seg.Close(nil)
 }
 
-func AddError(seg *Segment, appErr errors.Error) {
+func AddError(ctx context.Context, appErr errors.Error) {
+	seg := xray.GetSegment(ctx)
+	if !Enable || seg == nil {
+		return
+	}
+
+	seg.AddAnnotation("error", appErr.GetStatus())
+	seg.AddAnnotation("error_code", appErr.GetCode())
+	seg.AddAnnotation("error_msg", appErr.Error())
+	seg.AddAnnotation("panic", appErr.GetPanic())
+
+	switch appErr.GetStatus() {
+	case errors.InternalErrorStatus:
+		seg.Fault = true
+	default:
+		seg.Error = true
+	}
+}
+
+func AddSegError(seg *Segment, appErr errors.Error) {
 	if !Enable || seg == nil {
 		return
 	}

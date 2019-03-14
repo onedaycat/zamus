@@ -97,33 +97,31 @@ func (h *Handler) recovery(ctx context.Context, query *Query, err *errors.Error)
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, query, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, query, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		}
 	}
 }
 
 func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) (result QueryResult, err errors.Error) {
-	hctx, seg := tracer.BeginSubsegment(ctx, "handler")
-	defer h.recovery(hctx, query, &err)
-	defer seg.Close(nil)
-	result, err = info.handler(hctx, query)
+	defer h.recovery(ctx, query, &err)
+	result, err = info.handler(ctx, query)
 	if err != nil {
 		for _, errHandler := range h.errHandlers {
-			errHandler(hctx, query, err)
+			errHandler(ctx, query, err)
 		}
-		tracer.AddError(seg, err)
+		tracer.AddError(ctx, err)
 		return nil, err
 	}
 
 	if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
 		err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
-		tracer.AddError(seg, err)
+		tracer.AddError(ctx, err)
 		return nil, err
 	}
 

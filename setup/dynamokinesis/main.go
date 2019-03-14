@@ -30,22 +30,20 @@ var (
 )
 
 func publish(ctx context.Context, streamName string, records []*kinesis.PutRecordsRequestEntry) errors.Error {
-	hctx, seg := tracer.BeginSubsegment(ctx, "publish-"+streamName)
-	defer tracer.Close(seg)
-	out, err := ks.PutRecordsWithContext(hctx, &kinesis.PutRecordsInput{
+	out, err := ks.PutRecordsWithContext(ctx, &kinesis.PutRecordsInput{
 		Records:    records,
 		StreamName: &streamName,
 	})
 
 	if err != nil {
 		appErr := appErr.ErrUnablePublishKinesis.WithCaller().WithCause(err)
-		tracer.AddError(seg, appErr)
+		tracer.AddError(ctx, appErr)
 		return appErr
 	}
 
 	if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
 		appErr := appErr.ErrUnablePublishKinesis.WithCaller().WithCause(errors.New("One or more events published failed"))
-		tracer.AddError(seg, appErr)
+		tracer.AddError(ctx, appErr)
 		return appErr
 	}
 

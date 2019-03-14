@@ -18,7 +18,7 @@ func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
 		return appErr.ErrUnableDecode.WithCause(err).WithCaller()
 	}
 
-	if err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(dst, v); err != nil {
+	if err := jsoniter.ConfigFastest.Unmarshal(dst, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 

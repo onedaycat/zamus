@@ -62,7 +62,7 @@ func TestParseBatchInvoke(t *testing.T) {
 
 	for i, testcase := range testcases {
 		req := &Query{}
-		err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(testcase.payload), req)
+		err := jsoniter.ConfigFastest.Unmarshal([]byte(testcase.payload), req)
 		require.NoError(t, err)
 		require.Equal(t, testcase.expEvent, req, i)
 	}
@@ -101,7 +101,7 @@ func TestParseInvoke(t *testing.T) {
 
 	for i, testcase := range testcases {
 		req := &Query{}
-		err := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(testcase.payload), req)
+		err := jsoniter.ConfigFastest.Unmarshal([]byte(testcase.payload), req)
 		require.NoError(t, err)
 		require.Equal(t, testcase.expEvent, req, i)
 	}

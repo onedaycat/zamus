@@ -13,16 +13,16 @@ type commandinfo struct {
 }
 
 func WithPermission(pm string) CommandHandler {
-	return func(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
-		if cmd.Identity == nil {
+	return func(ctx context.Context, req *CommandReq) (interface{}, errors.Error) {
+		if req.Identity == nil {
 			return nil, appErr.ErrPermissionDenied
 		}
 
-		if cmd.Identity.Claims.Permissions == nil {
+		if req.Identity.Claims.Permissions == nil {
 			return nil, appErr.ErrPermissionDenied
 		}
 
-		if ok := cmd.Identity.Claims.Permissions.Has(cmd.PermissionKey, pm); !ok {
+		if ok := req.Identity.Claims.Permissions.Has(req.PermissionKey, pm); !ok {
 			return nil, appErr.ErrPermissionDenied
 		}
 

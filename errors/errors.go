@@ -34,6 +34,7 @@ var (
 	ErrTimeout          = errors.Timeout("TimeoutError", "The operation is timeout")
 	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "The authorization is required")
 	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
+	ErrNotImplement     = errors.NotImplement("NotImplement", "This operation is not implemented")
 )
 
 func ErrCommandNotFound(command string) errors.Error {

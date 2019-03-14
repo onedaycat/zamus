@@ -6,6 +6,11 @@ import (
 	"github.com/onedaycat/zamus/eventstore"
 )
 
+type CreateStockCmd struct {
+	ProductID string
+	Qty       int
+}
+
 type StockItem struct {
 	*eventstore.AggregateBase
 	ProductID string

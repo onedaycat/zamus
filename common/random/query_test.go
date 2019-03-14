@@ -27,7 +27,7 @@ func TestQuery(t *testing.T) {
 		Build()
 
 	expArg := map[string]interface{}{}
-	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(query.Args, &expArg)
+	jsoniter.ConfigFastest.Unmarshal(query.Args, &expArg)
 	require.Equal(t, expArg, arg)
 
 	source := map[string]interface{}{
@@ -38,7 +38,7 @@ func TestQuery(t *testing.T) {
 		Source(source).
 		Build()
 	expSource := map[string]interface{}{}
-	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(query.Sources, &expSource)
+	jsoniter.ConfigFastest.Unmarshal(query.Sources, &expSource)
 	require.Equal(t, expSource, source)
 
 	query = Query().ValidPermission("w1", "open", "delete").Build()

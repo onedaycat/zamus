@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func ErrorLog(ctx context.Context, cmd *Command, err errors.Error) {
+func ErrorLog(ctx context.Context, req *CommandReq, err errors.Error) {
 	var cause string
 	var input []byte
 
@@ -21,7 +21,7 @@ func ErrorLog(ctx context.Context, cmd *Command, err errors.Error) {
 	}
 
 	if in := err.GetInput(); in != nil {
-		input, _ = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(in)
+		input, _ = jsoniter.ConfigFastest.Marshal(in)
 	}
 
 	if err.GetPanic() {

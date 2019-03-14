@@ -53,7 +53,7 @@ func TestEventMsg(t *testing.T) {
 		"id": "1",
 	}
 
-	eventByte, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(event)
+	eventByte, _ := jsoniter.ConfigFastest.Marshal(event)
 	var eventDataSnap []byte
 	eventDataSnap = snappy.Encode(eventDataSnap, eventByte)
 	msg = EventMsg().

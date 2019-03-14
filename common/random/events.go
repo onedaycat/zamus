@@ -92,7 +92,7 @@ func (b *eventsBuilder) RandomEventMsgs(n int) *eventsBuilder {
 }
 
 func (b *eventsBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.msgs)
+	data, err := jsoniter.ConfigFastest.Marshal(b.msgs)
 	if err != nil {
 		panic(err)
 	}

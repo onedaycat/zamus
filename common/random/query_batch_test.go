@@ -28,7 +28,7 @@ func TestBatchQuery(t *testing.T) {
 		Build()
 
 	expArg := map[string]interface{}{}
-	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(query.Args, &expArg)
+	jsoniter.ConfigFastest.Unmarshal(query.Args, &expArg)
 	require.Equal(t, expArg, arg)
 
 	source := map[string]interface{}{
@@ -41,7 +41,7 @@ func TestBatchQuery(t *testing.T) {
 		Sources(source, source).
 		Build()
 	expSources := []map[string]interface{}{}
-	jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(query.Sources, &expSources)
+	jsoniter.ConfigFastest.Unmarshal(query.Sources, &expSources)
 	require.Equal(t, expSources, sources)
 	require.Equal(t, 2, query.NBatchSources)
 

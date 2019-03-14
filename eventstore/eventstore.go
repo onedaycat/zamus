@@ -79,7 +79,7 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 			return appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 		}
 
-		if serr = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(dst, agg); err != nil {
+		if serr = jsoniter.ConfigFastest.Unmarshal(dst, agg); err != nil {
 			return appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 		}
 
@@ -145,7 +145,7 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 		aggid := agg.GetAggregateID()
 		seq := agg.GetSequence()
 		eid := eid.CreateEventID(aggid, seq)
-		eventData, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(events[i])
+		eventData, err := jsoniter.ConfigFastest.Marshal(events[i])
 		if err != nil {
 			return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller().WithInput(agg)
 		}
@@ -171,7 +171,7 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 	}
 
 	var snapshot *Snapshot
-	aggData, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(agg)
+	aggData, err := jsoniter.ConfigFastest.Marshal(agg)
 	if err != nil {
 		return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller().WithInput(agg)
 	}

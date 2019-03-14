@@ -11,15 +11,15 @@ import (
 )
 
 type commandBuilder struct {
-	cmd *command.Command
+	req *command.CommandReq
 }
 
-func Command() *commandBuilder {
+func CommandReq() *commandBuilder {
 	username := random.Noun()
 	email := random.Email()
 	ip := random.IpV4Address()
 	return &commandBuilder{
-		cmd: &command.Command{
+		req: &command.CommandReq{
 			Function: random.SillyName(),
 			Identity: &invoke.Identity{
 				Sub:      username,
@@ -36,61 +36,51 @@ func Command() *commandBuilder {
 }
 
 func (b *commandBuilder) Function(fn string) *commandBuilder {
-	b.cmd.Function = fn
+	b.req.Function = fn
 
 	return b
 }
 
 func (b *commandBuilder) Arg(v interface{}) *commandBuilder {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-
-	b.cmd.Args = data
+	b.req.WithArgs(v)
 
 	return b
 }
 
 func (b *commandBuilder) Source(v interface{}) *commandBuilder {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-
-	b.cmd.Source = data
+	b.req.WithSource(v)
 
 	return b
 }
 
 func (b *commandBuilder) ValidPermission(key string, permissions ...string) *commandBuilder {
-	b.cmd.PermissionKey = key
-	b.cmd.Identity.Claims.Permissions[key] = strings.Join(permissions, ",")
+	b.req.PermissionKey = key
+	b.req.Identity.Claims.Permissions[key] = strings.Join(permissions, ",")
 
 	return b
 }
 
 func (b *commandBuilder) InvalidPermission() *commandBuilder {
 	pem := random.SillyName()
-	b.cmd.PermissionKey = pem
-	b.cmd.Identity.Claims.Permissions[pem] = strings.Join([]string{random.SillyName(), random.SillyName()}, ",")
+	b.req.PermissionKey = pem
+	b.req.Identity.Claims.Permissions[pem] = strings.Join([]string{random.SillyName(), random.SillyName()}, ",")
 
 	return b
 }
 
 func (b *commandBuilder) NoIdentity() *commandBuilder {
-	b.cmd.PermissionKey = ""
-	b.cmd.Identity = nil
+	b.req.PermissionKey = ""
+	b.req.Identity = nil
 
 	return b
 }
 
-func (b *commandBuilder) Build() *command.Command {
-	return b.cmd
+func (b *commandBuilder) Build() *command.CommandReq {
+	return b.req
 }
 
 func (b *commandBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.cmd)
+	data, err := jsoniter.ConfigFastest.Marshal(b.req)
 	if err != nil {
 		panic(err)
 	}

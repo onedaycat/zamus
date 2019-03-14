@@ -26,7 +26,7 @@ func handler(ctx context.Context, evs *events.KinesisFirehoseEvent) (*events.Kin
 			continue
 		}
 
-		raw, err = jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(eventmsg)
+		raw, err = jsoniter.ConfigFastest.Marshal(eventmsg)
 		if err != nil {
 			result[i] = events.KinesisFirehoseResponseRecord{
 				RecordID: record.RecordID,

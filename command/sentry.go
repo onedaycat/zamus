@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func PrintPanic(ctx context.Context, cmd *Command, err errors.Error) {
+func PrintPanic(ctx context.Context, cmd *CommandReq, err errors.Error) {
 	if err.GetPanic() {
 		if cause := err.GetCause(); cause != nil {
 			fmt.Println(cause.Error())
@@ -19,7 +19,7 @@ func PrintPanic(ctx context.Context, cmd *Command, err errors.Error) {
 	}
 }
 
-func Sentry(ctx context.Context, cmd *Command, err errors.Error) {
+func Sentry(ctx context.Context, req *CommandReq, err errors.Error) {
 	switch errors.ErrStatus(err) {
 	case errors.InternalErrorStatus:
 		log.Error().
@@ -30,13 +30,13 @@ func Sentry(ctx context.Context, cmd *Command, err errors.Error) {
 	}
 
 	packet := sentry.NewPacket(err)
-	if cmd.Identity != nil && cmd.Identity.GetID() != "" {
+	if req.Identity != nil && req.Identity.GetID() != "" {
 		packet.AddUser(&sentry.User{
-			ID: cmd.Identity.GetID(),
+			ID: req.Identity.GetID(),
 		})
 	}
 
 	packet.AddError(err)
-	packet.AddTag("function", cmd.Function)
+	packet.AddTag("function", req.Function)
 	sentry.CaptureAndWait(packet)
 }

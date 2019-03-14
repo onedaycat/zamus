@@ -16,11 +16,10 @@ import (
 	"github.com/onedaycat/zamus/zamuscontext"
 )
 
-type Command = invoke.InvokeEvent
-type CommandInput = invoke.InvokeRequest
-
-type ErrorHandler func(ctx context.Context, cmd *Command, err errors.Error)
-type CommandHandler func(ctx context.Context, cmd *Command) (interface{}, errors.Error)
+type Identity = invoke.Identity
+type NewAggregateFn = eventstore.NewAggregateFn
+type ErrorHandler func(ctx context.Context, cmd *CommandReq, err errors.Error)
+type CommandHandler func(ctx context.Context, cmd *CommandReq) (interface{}, errors.Error)
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
@@ -90,7 +89,7 @@ func (h *Handler) RegisterCommand(command string, handler CommandHandler, prehan
 	}
 }
 
-func (h *Handler) recovery(ctx context.Context, cmd *Command, err *errors.Error) {
+func (h *Handler) recovery(ctx context.Context, cmd *CommandReq, err *errors.Error) {
 	if r := recover(); r != nil {
 		seg := tracer.GetSegment(ctx)
 		defer tracer.Close(seg)
@@ -100,35 +99,33 @@ func (h *Handler) recovery(ctx context.Context, cmd *Command, err *errors.Error)
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
-			tracer.AddError(seg, *err)
+			tracer.AddError(ctx, *err)
 		}
 	}
 }
 
-func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
-	hctx, seg := tracer.BeginSubsegment(ctx, "handler")
-	defer h.recovery(hctx, cmd, &err)
-	defer tracer.Close(seg)
-	result, err = info.handler(hctx, cmd)
+func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *CommandReq) (result interface{}, err errors.Error) {
+	defer h.recovery(ctx, cmd, &err)
+	result, err = info.handler(ctx, cmd)
 	if err != nil {
 		err.WithCaller().WithInput(cmd)
 		for _, errHandler := range h.errHandlers {
-			errHandler(hctx, cmd, err)
+			errHandler(ctx, cmd, err)
 		}
-		tracer.AddError(seg, err)
+		tracer.AddError(ctx, err)
 		return nil, err
 	}
 
 	return result, nil
 }
 
-func (h *Handler) doPreHandler(ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+func (h *Handler) doPreHandler(ctx context.Context, cmd *CommandReq) (result interface{}, err errors.Error) {
 	defer h.recovery(ctx, cmd, &err)
 	for _, handler := range h.preHandlers {
 		result, err = handler(ctx, cmd)
@@ -147,7 +144,7 @@ func (h *Handler) doPreHandler(ctx context.Context, cmd *Command) (result interf
 	return result, nil
 }
 
-func (h *Handler) doInPreHandler(info *commandinfo, ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+func (h *Handler) doInPreHandler(info *commandinfo, ctx context.Context, cmd *CommandReq) (result interface{}, err errors.Error) {
 	defer h.recovery(ctx, cmd, &err)
 	for _, handler := range info.prehandlers {
 		result, err = handler(ctx, cmd)
@@ -166,7 +163,7 @@ func (h *Handler) doInPreHandler(info *commandinfo, ctx context.Context, cmd *Co
 	return result, nil
 }
 
-func (h *Handler) doPostHandler(ctx context.Context, cmd *Command) (result interface{}, err errors.Error) {
+func (h *Handler) doPostHandler(ctx context.Context, cmd *CommandReq) (result interface{}, err errors.Error) {
 	defer h.recovery(ctx, cmd, &err)
 	for _, handler := range h.postHandlers {
 		result, err = handler(ctx, cmd)
@@ -185,7 +182,7 @@ func (h *Handler) doPostHandler(ctx context.Context, cmd *Command) (result inter
 	return result, nil
 }
 
-func (h *Handler) runWarmer(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
+func (h *Handler) runWarmer(ctx context.Context, cmd *CommandReq) (interface{}, errors.Error) {
 	if h.warmer == nil {
 		sess, serr := session.NewSession()
 		if serr != nil {
@@ -198,7 +195,7 @@ func (h *Handler) runWarmer(ctx context.Context, cmd *Command) (interface{}, err
 	return nil, nil
 }
 
-func (h *Handler) Handle(ctx context.Context, cmd *Command) (interface{}, errors.Error) {
+func (h *Handler) Handle(ctx context.Context, cmd *CommandReq) (interface{}, errors.Error) {
 	if cmd.Warmer {
 		return h.runWarmer(ctx, cmd)
 	}

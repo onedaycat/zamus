@@ -23,7 +23,7 @@ func (k *kinesisBuilder) Build() *kinesisstream.KinesisStreamEvent {
 }
 
 func (b *kinesisBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.event)
+	data, err := jsoniter.ConfigFastest.Marshal(b.event)
 	if err != nil {
 		panic(err)
 	}

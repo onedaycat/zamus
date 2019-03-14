@@ -46,7 +46,7 @@ func (b *batchQueryBuilder) Function(fn string) *batchQueryBuilder {
 }
 
 func (b *batchQueryBuilder) Arg(v interface{}) *batchQueryBuilder {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(v)
+	data, err := jsoniter.ConfigFastest.Marshal(v)
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +58,7 @@ func (b *batchQueryBuilder) Arg(v interface{}) *batchQueryBuilder {
 
 func (b *batchQueryBuilder) RandomSources(n int) *batchQueryBuilder {
 	sources := newRandomSources(n)
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(sources)
+	data, err := jsoniter.ConfigFastest.Marshal(sources)
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,7 @@ func (b *batchQueryBuilder) RandomSources(n int) *batchQueryBuilder {
 }
 
 func (b *batchQueryBuilder) Sources(sources ...interface{}) *batchQueryBuilder {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(sources)
+	data, err := jsoniter.ConfigFastest.Marshal(sources)
 	if err != nil {
 		panic(err)
 	}
@@ -101,7 +101,7 @@ func (b *batchQueryBuilder) Build() *query.Query {
 }
 
 func (b *batchQueryBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(b.query)
+	data, err := jsoniter.ConfigFastest.Marshal(b.query)
 	if err != nil {
 		panic(err)
 	}
