@@ -6,10 +6,13 @@ import (
 	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
+	"github.com/onedaycat/errors/sentry"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/dynamostream"
@@ -22,15 +25,16 @@ const (
 	delim = ","
 )
 
-var (
-	streamList  []string
-	ks          *kinesis.Kinesis
-	streamNames = os.Getenv("KINESIS_STREAM_NAMES")
-	wrm         *warmer.Warmer
-)
+var json = jsoniter.ConfigFastest
 
-func publish(ctx context.Context, streamName string, records []*kinesis.PutRecordsRequestEntry) errors.Error {
-	out, err := ks.PutRecordsWithContext(ctx, &kinesis.PutRecordsInput{
+type Handler struct {
+	streamList []string
+	ks         *kinesis.Kinesis
+	wrm        *warmer.Warmer
+}
+
+func (h *Handler) publish(ctx context.Context, streamName string, records []*kinesis.PutRecordsRequestEntry) errors.Error {
+	out, err := h.ks.PutRecordsWithContext(ctx, &kinesis.PutRecordsInput{
 		Records:    records,
 		StreamName: &streamName,
 	})
@@ -50,9 +54,9 @@ func publish(ctx context.Context, streamName string, records []*kinesis.PutRecor
 	return nil
 }
 
-func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) error {
+func (h *Handler) Handle(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) errors.Error {
 	if stream.Warmer {
-		wrm.Run(ctx, stream.Concurency)
+		h.wrm.Run(ctx, stream.Concurency)
 		return nil
 	}
 
@@ -81,9 +85,9 @@ func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) erro
 	}
 
 	wg := errgroup.Group{}
-	for _, streamName := range streamList {
+	for _, streamName := range h.streamList {
 		wg.Go(func() errors.Error {
-			if err := publish(ctx, streamName, result); err != nil {
+			if err := h.publish(ctx, streamName, result); err != nil {
 				return err
 			}
 
@@ -94,20 +98,47 @@ func handler(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) erro
 	return wg.Wait()
 }
 
-func init() {
+func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	stream := &dynamostream.DynamoDBStreamEvent{}
+	if err := json.Unmarshal(payload, stream); err != nil {
+		xerr := appErr.ErrUnableUnmarshal.WithCaller().WithCause(err).WithInput(payload)
+		Sentry(ctx, stream, xerr)
+		return nil, xerr
+	}
+
+	if xerr := h.Handle(ctx, stream); xerr != nil {
+		Sentry(ctx, stream, xerr)
+		return nil, xerr
+	}
+
+	return nil, nil
+}
+
+func main() {
+	dsn := os.Getenv("APP_SENTRY_DSN")
+	stage := os.Getenv("APP_STAGE")
+	streamNames := os.Getenv("KINESIS_STREAM_NAMES")
+
+	sentry.SetDSN(dsn)
+	sentry.SetOptions(
+		sentry.WithEnv(stage),
+		sentry.WithServerName(lambdacontext.FunctionName),
+		sentry.WithServiceName("dynamodb-kinesis"),
+		sentry.WithTags(sentry.Tags{
+			{"lambdaVersion", lambdacontext.FunctionVersion},
+		}),
+	)
+
 	sess, err := session.NewSession()
 	if err != nil {
 		log.Panic().Msg("AWS Session error: " + err.Error())
 	}
 
-	wrm = warmer.New(sess)
-	streamList = strings.Split(streamNames, delim)
+	dh := &Handler{
+		wrm:        warmer.New(sess),
+		streamList: strings.Split(streamNames, delim),
+		ks:         kinesis.New(sess),
+	}
 
-	tracer.Enable = true
-	ks = kinesis.New(sess)
-	tracer.AWS(ks.Client)
-}
-
-func main() {
-	lambda.Start(handler)
+	lambda.StartHandler(dh)
 }

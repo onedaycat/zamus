@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
@@ -15,54 +14,54 @@ func TestParseBatchInvoke(t *testing.T) {
 
 	testcases := []struct {
 		payload  string
-		expEvent *Query
+		expEvent *QueryReq
 	}{
 		{
 			`[{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "2"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 2, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 2, "pemKey", false, 0},
 		},
 		// no field
 		{
 			`[{"arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "2"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 2, "pemKey", false, 0},
+			&QueryReq{"", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 2, "pemKey", false, 0},
 		},
 		// no args
 		{
 			`[{"function": "testField1","source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "2"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"testField1", nil, []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 2, "pemKey", false, 0},
+			&QueryReq{"testField1", nil, []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 2, "pemKey", false, 0},
 		},
 		// no identity
 		{
 			`[{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "2"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), nil, 2, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}, {"namespace": "2"}]`), nil, 2, "pemKey", false, 0},
 		},
 		// missing source 1
 		{
 			`[{"function": "testField1","arguments": {"arg1": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "2"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 1, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "2"}]`), &invoke.Identity{Sub: "xx"}, 1, "pemKey", false, 0},
 		},
 		// missing source 2
 		{
 			`[{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}]`), &invoke.Identity{Sub: "xx"}, 1, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), []byte(`[ {"namespace": "1"}]`), &invoke.Identity{Sub: "xx"}, 1, "pemKey", false, 0},
 		},
 		// no source
 		{
 			`[{"function": "testField1","arguments": {"arg1": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"},
 			{"function": "testField1","arguments": {"arg1": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}]`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), nil, &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), nil, &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
 		},
 	}
 
 	for i, testcase := range testcases {
-		req := &Query{}
-		err := jsoniter.ConfigFastest.Unmarshal([]byte(testcase.payload), req)
+		req := &QueryReq{}
+		err := req.UnmarshalRequest([]byte(testcase.payload))
 		require.NoError(t, err)
 		require.Equal(t, testcase.expEvent, req, i)
 	}
@@ -71,37 +70,37 @@ func TestParseBatchInvoke(t *testing.T) {
 func TestParseInvoke(t *testing.T) {
 	testcases := []struct {
 		payload  string
-		expEvent *Query
+		expEvent *QueryReq
 	}{
 		{
 			`{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), []byte(` {"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), []byte(` {"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
 		},
 		// no field
 		{
 			`{"arguments": {"arg1": "1"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"", []byte(` {"arg1": "1"}`), []byte(` {"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
+			&QueryReq{"", []byte(` {"arg1": "1"}`), []byte(` {"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
 		},
 		// no args
 		{
 			`{"function": "testField1","source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"testField1", nil, []byte(` {"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
+			&QueryReq{"testField1", nil, []byte(` {"namespace": "1"}`), &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
 		},
 		// no identity
 		{
 			`{"function": "testField1","arguments": {"arg1": "1"},"source": {"namespace": "1"},"pemKey":"pemKey"}`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), []byte(` {"namespace": "1"}`), nil, 0, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), []byte(` {"namespace": "1"}`), nil, 0, "pemKey", false, 0},
 		},
 		// no source
 		{
 			`{"function": "testField1","arguments": {"arg1": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`,
-			&Query{"testField1", []byte(` {"arg1": "1"}`), nil, &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
+			&QueryReq{"testField1", []byte(` {"arg1": "1"}`), nil, &invoke.Identity{Sub: "xx"}, 0, "pemKey", false, 0},
 		},
 	}
 
 	for i, testcase := range testcases {
-		req := &Query{}
-		err := jsoniter.ConfigFastest.Unmarshal([]byte(testcase.payload), req)
+		req := &QueryReq{}
+		err := req.UnmarshalRequest([]byte(testcase.payload))
 		require.NoError(t, err)
 		require.Equal(t, testcase.expEvent, req, i)
 	}
@@ -110,7 +109,7 @@ func TestParseInvoke(t *testing.T) {
 func TestQueryPermission(t *testing.T) {
 	checkFunc := false
 
-	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
+	f := func(ctx context.Context, query *QueryReq) (QueryResult, errors.Error) {
 		checkFunc = true
 		return newQueryResult(), nil
 	}
@@ -120,7 +119,7 @@ func TestQueryPermission(t *testing.T) {
 
 	t.Run("Passed", func(t *testing.T) {
 		checkFunc = false
-		query := &Query{
+		query := &QueryReq{
 			Function:      "testHandlerCommandDenied",
 			PermissionKey: "workspace_1",
 			Identity: &invoke.Identity{
@@ -141,7 +140,7 @@ func TestQueryPermission(t *testing.T) {
 
 	t.Run("Permission Denied", func(t *testing.T) {
 		checkFunc = false
-		query := &Query{
+		query := &QueryReq{
 			Function:      "testHandlerCommandDenied",
 			PermissionKey: "workspace_1",
 			Identity: &invoke.Identity{
@@ -162,7 +161,7 @@ func TestQueryPermission(t *testing.T) {
 
 	t.Run("No Permission", func(t *testing.T) {
 		checkFunc = false
-		query := &Query{
+		query := &QueryReq{
 			Function:      "testHandlerCommandDenied",
 			PermissionKey: "workspace_1",
 			Identity: &invoke.Identity{
@@ -179,7 +178,7 @@ func TestQueryPermission(t *testing.T) {
 
 	t.Run("No Identity", func(t *testing.T) {
 		checkFunc = false
-		query := &Query{
+		query := &QueryReq{
 			Function: "testHandlerCommandDenied",
 		}
 
@@ -192,7 +191,7 @@ func TestQueryPermission(t *testing.T) {
 
 	t.Run("No PermissionKey", func(t *testing.T) {
 		checkFunc = false
-		query := &Query{
+		query := &QueryReq{
 			Function: "testHandlerCommandDenied",
 			Identity: &invoke.Identity{
 				Claims: invoke.Claims{

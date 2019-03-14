@@ -550,11 +550,11 @@ func BenchmarkHandlerSuccess(b *testing.B) {
 	req := random.CommandReq().
 		Function("f").
 		Arg(domain.CreateStockCmd{"p1", 1}).
-		Build()
+		BuildJSON()
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		s.handler.Handle(s.ctx, req)
+		s.handler.Invoke(s.ctx, req)
 	}
 }

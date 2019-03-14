@@ -10,7 +10,7 @@ import (
 )
 
 func TestSentry(t *testing.T) {
-	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
+	f := func(ctx context.Context, query *QueryReq) (QueryResult, errors.Error) {
 		return nil, errors.New("111")
 	}
 
@@ -18,18 +18,18 @@ func TestSentry(t *testing.T) {
 	h.RegisterQuery("hello", f)
 	h.ErrorHandlers(Sentry)
 
-	query := &Query{
+	req := &QueryReq{
 		Function: "hello",
 	}
 
-	resp, err := h.Handle(context.Background(), query)
+	resp, err := h.Handle(context.Background(), req)
 
 	require.Error(t, err)
 	require.Nil(t, resp)
 }
 
 func TestSentryWithAppError(t *testing.T) {
-	f := func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
+	f := func(ctx context.Context, query *QueryReq) (QueryResult, errors.Error) {
 		return nil, errors.InternalError("IN1", "IN_ERR").WithCaller().WithInput(errors.Input{"in": "put"}).WithCause(errors.New("cause"))
 	}
 
@@ -37,14 +37,14 @@ func TestSentryWithAppError(t *testing.T) {
 	h.RegisterQuery("hello", f)
 	h.ErrorHandlers(Sentry)
 
-	query := &Query{
+	req := &QueryReq{
 		Function: "hello",
 		Identity: &invoke.Identity{
 			Username: "u1",
 		},
 	}
 
-	resp, err := h.Handle(context.Background(), query)
+	resp, err := h.Handle(context.Background(), req)
 
 	require.Error(t, err)
 	require.Nil(t, resp)

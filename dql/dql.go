@@ -6,12 +6,11 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
-	"github.com/onedaycat/zamus/eventstore"
 )
 
 //go:generate mockery -name=DQL
 type DQL interface {
-	Save(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error
+	Save(ctx context.Context, data []byte) errors.Error
 	Retry() bool
 	AddError(appErr errors.Error)
 }
@@ -30,20 +29,14 @@ func New(storage Storage, maxRetry int, service, lambdaFunc, version string) *dq
 	return &dql{storage, maxRetry, maxRetry, nil, service, lambdaFunc, version}
 }
 
-func (d *dql) Save(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
-	msgList := eventstore.EventMsgList{
-		EventMsgs: msgs,
-	}
-
-	msgListByte, _ := msgList.Marshal()
-
+func (d *dql) Save(ctx context.Context, data []byte) errors.Error {
 	dqlMsg := &DQLMsg{
 		ID:             eid.GenerateID(),
 		Service:        d.Service,
 		Time:           clock.Now().Unix(),
 		Version:        d.Version,
 		LambdaFunction: d.LambdaFunction,
-		EventMsgs:      msgListByte,
+		EventMsgs:      data,
 		Errors:         d.Errors,
 	}
 
@@ -67,6 +60,10 @@ func (d *dql) Retry() bool {
 }
 
 func (d *dql) AddError(appErr errors.Error) {
+	if appErr == nil {
+		return
+	}
+
 	if d.Errors == nil {
 		d.Errors = make(DQLErrors, 0, 10)
 	}

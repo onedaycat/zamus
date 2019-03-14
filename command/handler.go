@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	appErr "github.com/onedaycat/zamus/errors"
@@ -15,6 +16,8 @@ import (
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
+
+var json = jsoniter.ConfigFastest
 
 type Identity = invoke.Identity
 type NewAggregateFn = eventstore.NewAggregateFn
@@ -239,6 +242,22 @@ func (h *Handler) Handle(ctx context.Context, cmd *CommandReq) (interface{}, err
 	return result, nil
 }
 
+func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	req := &CommandReq{}
+	if err := json.Unmarshal(payload, payload); err != nil {
+		return nil, err
+	}
+
+	result, err := h.Handle(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	resultByte, _ := json.Marshal(result)
+
+	return resultByte, nil
+}
+
 func (h *Handler) StartLambda() {
-	lambda.Start(h.Handle)
+	lambda.StartHandler(h)
 }

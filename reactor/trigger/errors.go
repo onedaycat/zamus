@@ -10,4 +10,5 @@ var (
 	ErrTimeout          = errors.ErrTimeout
 	ErrUnauthorized     = errors.ErrUnauthorized
 	ErrUnavailable      = errors.ErrUnavailable
+	ErrNotImplement     = errors.ErrNotImplement
 )

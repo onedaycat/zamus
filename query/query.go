@@ -3,45 +3,35 @@ package query
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 
 	jsoniter "github.com/json-iterator/go"
+
 	"github.com/onedaycat/errors"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 )
 
-type invokereq struct {
-	Function      string           `json:"function"`
-	Args          json.RawMessage  `json:"arguments"`
-	Source        json.RawMessage  `json:"source,omitempty"`
-	Identity      *invoke.Identity `json:"identity,omitempty"`
-	PermissionKey string           `json:"pemKey,omitempty"`
-	Warmer        bool             `json:"warmer,omitempty"`
-	Concurency    int              `json:"concurency,omitempty"`
+type QueryReq struct {
+	Function      string              `json:"function"`
+	Args          jsoniter.RawMessage `json:"arguments"`
+	Sources       jsoniter.RawMessage `json:"source,omitempty"`
+	Identity      *invoke.Identity    `json:"identity,omitempty"`
+	NBatchSources int                 `json:"-"`
+	PermissionKey string              `json:"pemKey,omitempty"`
+	Warmer        bool                `json:"warmer,omitempty"`
+	Concurency    int                 `json:"concurency,omitempty"`
 }
 
-type Query struct {
-	Function      string           `json:"function"`
-	Args          json.RawMessage  `json:"arguments"`
-	Sources       json.RawMessage  `json:"source,omitempty"`
-	Identity      *invoke.Identity `json:"identity,omitempty"`
-	NBatchSources int              `json:"-"`
-	PermissionKey string           `json:"pemKey,omitempty"`
-	Warmer        bool             `json:"warmer,omitempty"`
-	Concurency    int              `json:"concurency,omitempty"`
-}
-
-func (e *Query) ParseArgs(v interface{}) errors.Error {
-	if err := jsoniter.ConfigFastest.Unmarshal(e.Args, v); err != nil {
+func (e *QueryReq) ParseArgs(v interface{}) errors.Error {
+	if err := json.Unmarshal(e.Args, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
 	return nil
 }
 
-func (e *Query) ParseSource(v interface{}) errors.Error {
-	if err := jsoniter.ConfigFastest.Unmarshal(e.Sources, v); err != nil {
+func (e *QueryReq) ParseSource(v interface{}) errors.Error {
+	if err := json.Unmarshal(e.Sources, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -54,16 +44,16 @@ type queryinfo struct {
 }
 
 func WithPermission(pm string) QueryHandler {
-	return func(ctx context.Context, query *Query) (QueryResult, errors.Error) {
-		if query.Identity == nil {
+	return func(ctx context.Context, req *QueryReq) (QueryResult, errors.Error) {
+		if req.Identity == nil {
 			return nil, appErr.ErrPermissionDenied
 		}
 
-		if query.Identity.Claims.Permissions == nil {
+		if req.Identity.Claims.Permissions == nil {
 			return nil, appErr.ErrPermissionDenied
 		}
 
-		if ok := query.Identity.Claims.Permissions.Has(query.PermissionKey, pm); !ok {
+		if ok := req.Identity.Claims.Permissions.Has(req.PermissionKey, pm); !ok {
 			return nil, appErr.ErrPermissionDenied
 		}
 
@@ -80,13 +70,13 @@ type QueryResult interface {
 	Len() int
 }
 
-func (q *Query) UnmarshalJSON(b []byte) error {
+func (q *QueryReq) UnmarshalRequest(b []byte) error {
 	var err error
 	firstChar := b[0]
 
 	if firstChar == firstCharArray {
-		reqs := make([]*invokereq, 0, 5)
-		if err = jsoniter.ConfigFastest.Unmarshal(b, &reqs); err != nil {
+		reqs := make([]*QueryReq, 0, 5)
+		if err = json.Unmarshal(b, &reqs); err != nil {
 			return appErr.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 
@@ -99,14 +89,14 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 		first := true
 		n := 0
 		for i := 0; i < len(reqs); i++ {
-			if len(reqs[i].Source) == 0 {
+			if len(reqs[i].Sources) == 0 {
 				continue
 			}
 
 			if !first {
 				b.WriteByte(44)
 			}
-			b.Write(reqs[i].Source)
+			b.Write(reqs[i].Sources)
 			first = false
 			n = n + 1
 		}
@@ -125,19 +115,9 @@ func (q *Query) UnmarshalJSON(b []byte) error {
 
 		return nil
 	} else if firstChar == firstCharObject {
-		req := &invokereq{}
-		if err = jsoniter.ConfigFastest.Unmarshal(b, req); err != nil {
+		if err = json.Unmarshal(b, q); err != nil {
 			return appErr.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
-
-		q.Function = req.Function
-		q.Args = req.Args
-		q.Sources = req.Source
-		q.Identity = req.Identity
-		q.PermissionKey = req.PermissionKey
-		q.NBatchSources = 0
-		q.Warmer = req.Warmer
-		q.Concurency = req.Concurency
 
 		return nil
 	}

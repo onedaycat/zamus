@@ -8,6 +8,7 @@ import (
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	appErr "github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/tracer"
 )
 
@@ -90,7 +91,12 @@ DQLRetry:
 				goto DQLRetry
 			}
 
-			return c.dql.Save(ctx, msgs)
+			msgList := eventstore.EventMsgList{
+				EventMsgs: msgs,
+			}
+			msgListByte, _ := msgList.Marshal()
+
+			return c.dql.Save(ctx, msgListByte)
 		}
 		return err
 	}

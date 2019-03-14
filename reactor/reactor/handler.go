@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/dql"
@@ -15,6 +16,8 @@ import (
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
+
+var json = jsoniter.ConfigFastest
 
 type EventHandler = kinesisstream.EventMessagesHandler
 type ErrorHandler = kinesisstream.EventMessagesErrorHandler
@@ -105,8 +108,17 @@ func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
 	return h.streamer.Process(zmctx, event.Records)
 }
 
+func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	req := &LambdaEvent{}
+	if err := json.Unmarshal(payload, req); err != nil {
+		return nil, err
+	}
+
+	return nil, h.Handle(ctx, req)
+}
+
 func (h *Handler) StartLambda() {
-	lambda.Start(h.Handle)
+	lambda.StartHandler(h)
 }
 
 func (h *Handler) runWarmer(ctx context.Context, event *LambdaEvent) errors.Error {

@@ -3,10 +3,10 @@ package query
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/aws/aws-sdk-go/aws/session"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	appErr "github.com/onedaycat/zamus/errors"
@@ -16,8 +16,10 @@ import (
 	"github.com/onedaycat/zamus/zamuscontext"
 )
 
-type ErrorHandler func(ctx context.Context, query *Query, appErr errors.Error)
-type QueryHandler func(ctx context.Context, query *Query) (QueryResult, errors.Error)
+var json = jsoniter.ConfigFastest
+
+type ErrorHandler func(ctx context.Context, req *QueryReq, appErr errors.Error)
+type QueryHandler func(ctx context.Context, req *QueryReq) (QueryResult, errors.Error)
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 
@@ -87,7 +89,7 @@ func (h *Handler) RegisterQuery(query string, handler QueryHandler, prehandlers 
 	}
 }
 
-func (h *Handler) recovery(ctx context.Context, query *Query, err *errors.Error) {
+func (h *Handler) recovery(ctx context.Context, req *QueryReq, err *errors.Error) {
 	if r := recover(); r != nil {
 		seg := tracer.GetSegment(ctx)
 		defer tracer.Close(seg)
@@ -95,32 +97,32 @@ func (h *Handler) recovery(ctx context.Context, query *Query, err *errors.Error)
 		case error:
 			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
-				errhandler(ctx, query, *err)
+				errhandler(ctx, req, *err)
 			}
 			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
 			for _, errhandler := range h.errHandlers {
-				errhandler(ctx, query, *err)
+				errhandler(ctx, req, *err)
 			}
 			tracer.AddError(ctx, *err)
 		}
 	}
 }
 
-func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) (result QueryResult, err errors.Error) {
-	defer h.recovery(ctx, query, &err)
-	result, err = info.handler(ctx, query)
+func (h *Handler) doHandler(info *queryinfo, ctx context.Context, req *QueryReq) (result QueryResult, err errors.Error) {
+	defer h.recovery(ctx, req, &err)
+	result, err = info.handler(ctx, req)
 	if err != nil {
 		for _, errHandler := range h.errHandlers {
-			errHandler(ctx, query, err)
+			errHandler(ctx, req, err)
 		}
 		tracer.AddError(ctx, err)
 		return nil, err
 	}
 
-	if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-		err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+	if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
+		err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
 		tracer.AddError(ctx, err)
 		return nil, err
 	}
@@ -128,19 +130,19 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, query *Query) 
 	return result, nil
 }
 
-func (h *Handler) doPreHandler(ctx context.Context, query *Query) (result QueryResult, err errors.Error) {
-	defer h.recovery(ctx, query, &err)
+func (h *Handler) doPreHandler(ctx context.Context, req *QueryReq) (result QueryResult, err errors.Error) {
+	defer h.recovery(ctx, req, &err)
 	for _, handler := range h.preHandlers {
-		result, err = handler(ctx, query)
+		result, err = handler(ctx, req)
 		if err != nil {
 			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, query, err)
+				errHandler(ctx, req, err)
 			}
 			return nil, err
 		}
 
-		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+		if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
+			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
 			return nil, err
 		}
 
@@ -152,19 +154,19 @@ func (h *Handler) doPreHandler(ctx context.Context, query *Query) (result QueryR
 	return result, nil
 }
 
-func (h *Handler) doInPreHandler(info *queryinfo, ctx context.Context, query *Query) (result QueryResult, err errors.Error) {
-	defer h.recovery(ctx, query, &err)
+func (h *Handler) doInPreHandler(info *queryinfo, ctx context.Context, req *QueryReq) (result QueryResult, err errors.Error) {
+	defer h.recovery(ctx, req, &err)
 	for _, handler := range info.prehandlers {
-		result, err = handler(ctx, query)
+		result, err = handler(ctx, req)
 		if err != nil {
 			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, query, err)
+				errHandler(ctx, req, err)
 			}
 			return nil, err
 		}
 
-		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+		if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
+			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
 			return nil, err
 		}
 
@@ -176,19 +178,19 @@ func (h *Handler) doInPreHandler(info *queryinfo, ctx context.Context, query *Qu
 	return result, nil
 }
 
-func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result QueryResult, err errors.Error) {
-	defer h.recovery(ctx, query, &err)
+func (h *Handler) doPostHandler(ctx context.Context, req *QueryReq) (result QueryResult, err errors.Error) {
+	defer h.recovery(ctx, req, &err)
 	for _, handler := range h.postHandlers {
-		result, err = handler(ctx, query)
+		result, err = handler(ctx, req)
 		if err != nil {
 			for _, errHandler := range h.errHandlers {
-				errHandler(ctx, query, err)
+				errHandler(ctx, req, err)
 			}
 			return nil, err
 		}
 
-		if query.NBatchSources > 0 && result != nil && result.Len() != query.NBatchSources {
-			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(query)
+		if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
+			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
 			return nil, err
 		}
 
@@ -200,7 +202,7 @@ func (h *Handler) doPostHandler(ctx context.Context, query *Query) (result Query
 	return result, nil
 }
 
-func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, errors.Error) {
+func (h *Handler) runWarmer(ctx context.Context, req *QueryReq) (QueryResult, errors.Error) {
 	if h.warmer == nil {
 		sess, serr := session.NewSession()
 		if serr != nil {
@@ -208,27 +210,27 @@ func (h *Handler) runWarmer(ctx context.Context, query *Query) (QueryResult, err
 		}
 		h.warmer = warmer.New(sess)
 	}
-	h.warmer.Run(ctx, query.Concurency)
+	h.warmer.Run(ctx, req.Concurency)
 
 	return nil, nil
 }
 
-func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, errors.Error) {
-	if query == nil {
+func (h *Handler) Handle(ctx context.Context, req *QueryReq) (QueryResult, errors.Error) {
+	if req == nil {
 		return nil, appErr.ErrUnableParseQuery
 	}
-	if query.Warmer {
-		return h.runWarmer(ctx, query)
+	if req.Warmer {
+		return h.runWarmer(ctx, req)
 	}
 
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 
-	info, ok := h.quries[query.Function]
+	info, ok := h.quries[req.Function]
 	if !ok {
-		return nil, appErr.ErrQueryNotFound(query.Function)
+		return nil, appErr.ErrQueryNotFound(req.Function)
 	}
 
-	result, err := h.doPreHandler(zmctx, query)
+	result, err := h.doPreHandler(zmctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +238,7 @@ func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, errors
 		return result, nil
 	}
 
-	result, err = h.doInPreHandler(info, zmctx, query)
+	result, err = h.doInPreHandler(info, zmctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -244,12 +246,12 @@ func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, errors
 		return result, nil
 	}
 
-	result, err = h.doHandler(info, zmctx, query)
+	result, err = h.doHandler(info, zmctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	postresult, err := h.doPostHandler(zmctx, query)
+	postresult, err := h.doPostHandler(zmctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -260,6 +262,22 @@ func (h *Handler) Handle(ctx context.Context, query *Query) (QueryResult, errors
 	return result, nil
 }
 
+func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	req := &QueryReq{}
+	if err := req.UnmarshalRequest(payload); err != nil {
+		return nil, err
+	}
+
+	result, err := h.Handle(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	resultByte, _ := json.Marshal(result)
+
+	return resultByte, nil
+}
+
 func (h *Handler) StartLambda() {
-	lambda.Start(h.Handle)
+	lambda.StartHandler(h)
 }

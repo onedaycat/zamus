@@ -2,6 +2,7 @@ package projection
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -105,8 +106,17 @@ func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
 	return h.streamer.Process(zmctx, event.Records)
 }
 
+func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+	req := &LambdaEvent{}
+	if err := json.Unmarshal(payload, req); err != nil {
+		return nil, err
+	}
+
+	return nil, h.Handle(ctx, req)
+}
+
 func (h *Handler) StartLambda() {
-	lambda.Start(h.Handle)
+	lambda.StartHandler(h)
 }
 
 func (h *Handler) runWarmer(ctx context.Context, event *LambdaEvent) errors.Error {

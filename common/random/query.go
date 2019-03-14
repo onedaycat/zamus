@@ -10,15 +10,15 @@ import (
 )
 
 type queryBuilder struct {
-	query *query.Query
+	query *query.QueryReq
 }
 
-func Query() *queryBuilder {
+func QueryReq() *queryBuilder {
 	username := random.Noun()
 	email := random.Email()
 	ip := random.IpV4Address()
 	return &queryBuilder{
-		query: &query.Query{
+		query: &query.QueryReq{
 			Function: random.SillyName(),
 			Identity: &invoke.Identity{
 				Sub:      username,
@@ -91,7 +91,7 @@ func (b *queryBuilder) Identity(userID, email string) *queryBuilder {
 	return b
 }
 
-func (b *queryBuilder) Build() *query.Query {
+func (b *queryBuilder) Build() *query.QueryReq {
 	return b.query
 }
 

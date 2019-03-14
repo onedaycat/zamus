@@ -60,7 +60,8 @@ func TestDQL(t *testing.T) {
 
 	ctx := context.Background()
 	storage.On("Save", ctx, dqlMsg).Return(nil)
-	err := d.Save(ctx, msgs)
+
+	err := d.Save(ctx, msgListByte)
 
 	require.NoError(t, err)
 	require.Equal(t, 3, d.Remain)

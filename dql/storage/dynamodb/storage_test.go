@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/common/random"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/stretchr/testify/require"
 )
 
@@ -38,6 +38,22 @@ func getDB() *dqlDynamoDB {
 	return _db
 }
 
+func TestJSONSave(t *testing.T) {
+	db := getDB()
+
+	msgsByte := random.EventMsgs().RandomEventMsgs(10).BuildJSON()
+	appErr := errors.ErrUnbleSaveDQLMessages.
+		WithCaller().
+		WithCause(errors.ErrUnknown).
+		WithInput(map[string]interface{}{"input": 1})
+
+	d := dql.New(db, 3, "srv1", "lamb1", "1.0.0")
+	d.AddError(appErr)
+
+	err := d.Save(context.Background(), msgsByte)
+	require.NoError(t, err)
+}
+
 func TestMultiSave(t *testing.T) {
 	db := getDB()
 
@@ -50,12 +66,15 @@ func TestMultiSave(t *testing.T) {
 	d := dql.New(db, 3, "srv1", "lamb1", "1.0.0")
 	d.AddError(appErr)
 
-	eid.FreezeID("111")
+	msgList := eventstore.EventMsgList{
+		EventMsgs: msgs,
+	}
+	msgListByte, _ := msgList.Marshal()
 
-	err := d.Save(context.Background(), msgs)
+	err := d.Save(context.Background(), msgListByte)
 	require.NoError(t, err)
 
 	d.AddError(appErr)
-	err = d.Save(context.Background(), msgs)
+	err = d.Save(context.Background(), msgListByte)
 	require.NoError(t, err)
 }

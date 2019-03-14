@@ -8,16 +8,14 @@ import (
 	"github.com/plimble/mage/mg"
 )
 
-type Build mg.Namespace
-
-func (Build) Linux() {
+func Build() {
 	mg.BuildLinux("./dynamokinesis", "./dynamokinesis/bin/app")
 	mg.BuildLinux("./firehosetransform", "./firehosetransform/bin/app")
 	fmt.Println("Build Done")
 }
 
 func Deploy() {
-	Build{}.Linux()
+	Build()
 	mg.Exec("serverless deploy -v")
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 type batchQueryBuilder struct {
-	query *query.Query
+	query *query.QueryReq
 }
 
 func BatchQuery() *batchQueryBuilder {
@@ -18,7 +18,7 @@ func BatchQuery() *batchQueryBuilder {
 	email := random.Email()
 	ip := random.IpV4Address()
 	bb := &batchQueryBuilder{
-		query: &query.Query{
+		query: &query.QueryReq{
 			Function:      random.SillyName(),
 			NBatchSources: 1,
 			Identity: &invoke.Identity{
@@ -96,7 +96,7 @@ func (b *batchQueryBuilder) InvalidPermission() *batchQueryBuilder {
 	return b
 }
 
-func (b *batchQueryBuilder) Build() *query.Query {
+func (b *batchQueryBuilder) Build() *query.QueryReq {
 	return b.query
 }
 

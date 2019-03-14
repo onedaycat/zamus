@@ -1,8 +1,6 @@
 package command
 
 import (
-	"encoding/json"
-
 	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	appErr "github.com/onedaycat/zamus/errors"
@@ -10,14 +8,14 @@ import (
 )
 
 type CommandReq struct {
-	Function      string           `json:"function"`
-	Args          json.RawMessage  `json:"arguments,omitempty"`
-	Source        json.RawMessage  `json:"source,omitempty"`
-	Identity      *invoke.Identity `json:"identity,omitempty"`
-	PermissionKey string           `json:"pemKey,omitempty"`
-	Warmer        bool             `json:"warmer,omitempty"`
-	Concurency    int              `json:"concurency,omitempty"`
-	CorrelationID string           `json:"correlationID,omitempty"`
+	Function      string              `json:"function"`
+	Args          jsoniter.RawMessage `json:"arguments,omitempty"`
+	Source        jsoniter.RawMessage `json:"source,omitempty"`
+	Identity      *invoke.Identity    `json:"identity,omitempty"`
+	PermissionKey string              `json:"pemKey,omitempty"`
+	Warmer        bool                `json:"warmer,omitempty"`
+	Concurency    int                 `json:"concurency,omitempty"`
+	CorrelationID string              `json:"correlationID,omitempty"`
 }
 
 func NewCommandReq(fn string) *CommandReq {

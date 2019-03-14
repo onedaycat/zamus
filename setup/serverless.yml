@@ -19,6 +19,8 @@ functions:
   dynamodb-kinesis:
     handler: dynamokinesis/bin/app
     environment:
+      APP_STAGE: ${self:provider.stage}
+      APP_SENTRY_DSN: ${file(./setting.yml):dynamokinesis.sentry}
       KINESIS_STREAM_NAMES: ${self:service}-stream-1-${self:provider.stage}
     memorySize: ${file(./setting.yml):dynamokinesis.memorySize}
     timeout: ${file(./setting.yml):dynamokinesis.timeout}

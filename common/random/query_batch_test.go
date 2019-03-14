@@ -11,7 +11,7 @@ import (
 )
 
 func TestBatchQuery(t *testing.T) {
-	var query *query.Query
+	var query *query.QueryReq
 
 	query = BatchQuery().
 		Function("f1").

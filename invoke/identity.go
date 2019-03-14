@@ -1,6 +1,8 @@
 package invoke
 
-import "strings"
+import (
+	"strings"
+)
 
 type Claims struct {
 	Email       string      `json:"email,omitempty"`
