@@ -677,7 +677,7 @@ func BenchmarkInvokeHandler(b *testing.B) {
 		},
 	}
 
-	reqByte, _ := json.Marshal(req)
+	reqByte, _ := common.MarshalJSON(req)
 
 	f := func(ctx context.Context, req *QueryReq) (QueryResult, errors.Error) {
 		return newQueryResult(), nil

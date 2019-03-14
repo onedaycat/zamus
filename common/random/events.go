@@ -1,7 +1,7 @@
 package random
 
 import (
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
 )
 
@@ -92,7 +92,7 @@ func (b *eventsBuilder) RandomEventMsgs(n int) *eventsBuilder {
 }
 
 func (b *eventsBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigFastest.Marshal(b.msgs)
+	data, err := common.MarshalJSON(b.msgs)
 	if err != nil {
 		panic(err)
 	}

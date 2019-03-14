@@ -3,10 +3,8 @@ package random
 import (
 	"time"
 
-	"github.com/golang/snappy"
-	jsoniter "github.com/json-iterator/go"
-
 	random "github.com/Pallinder/go-randomdata"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/eventstore"
 )
@@ -81,22 +79,19 @@ func (b *eventBuilder) Versionn(version string) *eventBuilder {
 }
 
 func (b *eventBuilder) Event(eventType string, event interface{}) *eventBuilder {
-	data, err := jsoniter.ConfigFastest.Marshal(event)
+	data, err := common.MarshalJSONSnappy(event)
 	if err != nil {
 		panic(err)
 	}
 
-	var eventDataSnap []byte
-	eventDataSnap = snappy.Encode(eventDataSnap, data)
-
-	b.msg.Event = eventDataSnap
+	b.msg.Event = data
 	b.msg.EventType = eventType
 
 	return b
 }
 
 func (b *eventBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigFastest.Marshal(b.msg)
+	data, err := common.MarshalJSON(b.msg)
 	if err != nil {
 		panic(err)
 	}

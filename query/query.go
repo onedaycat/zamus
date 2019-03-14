@@ -5,8 +5,8 @@ import (
 	"context"
 
 	jsoniter "github.com/json-iterator/go"
-
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 )
@@ -23,7 +23,7 @@ type QueryReq struct {
 }
 
 func (e *QueryReq) ParseArgs(v interface{}) errors.Error {
-	if err := json.Unmarshal(e.Args, v); err != nil {
+	if err := common.UnmarshalJSON(e.Args, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -31,7 +31,7 @@ func (e *QueryReq) ParseArgs(v interface{}) errors.Error {
 }
 
 func (e *QueryReq) ParseSource(v interface{}) errors.Error {
-	if err := json.Unmarshal(e.Sources, v); err != nil {
+	if err := common.UnmarshalJSON(e.Sources, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -76,7 +76,7 @@ func (q *QueryReq) UnmarshalRequest(b []byte) error {
 
 	if firstChar == firstCharArray {
 		reqs := make([]*QueryReq, 0, 5)
-		if err = json.Unmarshal(b, &reqs); err != nil {
+		if err = common.UnmarshalJSON(b, &reqs); err != nil {
 			return appErr.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 
@@ -115,7 +115,7 @@ func (q *QueryReq) UnmarshalRequest(b []byte) error {
 
 		return nil
 	} else if firstChar == firstCharObject {
-		if err = json.Unmarshal(b, q); err != nil {
+		if err = common.UnmarshalJSON(b, q); err != nil {
 			return appErr.ErrUnableParseQuery.WithCause(err).WithCaller()
 		}
 

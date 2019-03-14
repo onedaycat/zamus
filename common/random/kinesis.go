@@ -1,7 +1,7 @@
 package random
 
 import (
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
@@ -23,7 +23,7 @@ func (k *kinesisBuilder) Build() *kinesisstream.KinesisStreamEvent {
 }
 
 func (b *kinesisBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigFastest.Marshal(b.event)
+	data, err := common.MarshalJSON(b.event)
 	if err != nil {
 		panic(err)
 	}

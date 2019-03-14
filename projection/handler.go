@@ -2,13 +2,13 @@ package projection
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
@@ -108,7 +108,7 @@ func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	req := &LambdaEvent{}
-	if err := json.Unmarshal(payload, req); err != nil {
+	if err := common.UnmarshalJSON(payload, req); err != nil {
 		return nil, err
 	}
 

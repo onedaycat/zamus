@@ -6,17 +6,15 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+	"github.com/onedaycat/zamus/common"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
-
-var json = jsoniter.ConfigFastest
 
 type ErrorHandler func(ctx context.Context, req *QueryReq, appErr errors.Error)
 type QueryHandler func(ctx context.Context, req *QueryReq) (QueryResult, errors.Error)
@@ -271,7 +269,7 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	resultByte, _ := json.Marshal(result)
+	resultByte, _ := common.MarshalJSON(result)
 
 	return resultByte, nil
 }

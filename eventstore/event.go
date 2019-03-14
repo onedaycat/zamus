@@ -3,26 +3,12 @@ package eventstore
 import (
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
-
-	"github.com/golang/snappy"
 	"github.com/onedaycat/errors"
-	appErr "github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/zamus/common"
 )
 
 func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
-	var dst []byte
-	var err error
-	dst, err = snappy.Decode(dst, e.Event)
-	if err != nil {
-		return appErr.ErrUnableDecode.WithCause(err).WithCaller()
-	}
-
-	if err := jsoniter.ConfigFastest.Unmarshal(dst, v); err != nil {
-		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
-	}
-
-	return nil
+	return common.UnmarshalJSONSnappy(e.Event, v)
 }
 
 func (e *EventMsg) AddExpired(d time.Duration) {

@@ -3,6 +3,7 @@ package command
 import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
 )
@@ -38,7 +39,7 @@ func (e *CommandReq) WithPermission(pem string) *CommandReq {
 
 func (e *CommandReq) WithArgs(args interface{}) *CommandReq {
 	var err error
-	e.Args, err = jsoniter.ConfigFastest.Marshal(args)
+	e.Args, err = common.MarshalJSON(args)
 	if err != nil {
 		panic(appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(args))
 	}
@@ -48,7 +49,7 @@ func (e *CommandReq) WithArgs(args interface{}) *CommandReq {
 
 func (e *CommandReq) WithSource(source interface{}) *CommandReq {
 	var err error
-	e.Source, err = jsoniter.ConfigFastest.Marshal(source)
+	e.Source, err = common.MarshalJSON(source)
 	if err != nil {
 		panic(appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(source))
 	}
@@ -57,7 +58,7 @@ func (e *CommandReq) WithSource(source interface{}) *CommandReq {
 }
 
 func (e *CommandReq) ParseArgs(v interface{}) errors.Error {
-	if err := jsoniter.ConfigFastest.Unmarshal(e.Args, v); err != nil {
+	if err := common.UnmarshalJSON(e.Args, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -65,7 +66,7 @@ func (e *CommandReq) ParseArgs(v interface{}) errors.Error {
 }
 
 func (e *CommandReq) ParseSource(v interface{}) errors.Error {
-	if err := jsoniter.ConfigFastest.Unmarshal(e.Source, v); err != nil {
+	if err := common.UnmarshalJSON(e.Source, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller()
 	}
 
@@ -73,7 +74,7 @@ func (e *CommandReq) ParseSource(v interface{}) errors.Error {
 }
 
 func (e *CommandReq) MarshalRequest() ([]byte, errors.Error) {
-	data, err := jsoniter.ConfigFastest.Marshal(e)
+	data, err := common.MarshalJSON(e)
 	if err != nil {
 		return nil, appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(e)
 	}

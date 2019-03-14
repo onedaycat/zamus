@@ -3,10 +3,9 @@ package random
 import (
 	"strings"
 
-	jsoniter "github.com/json-iterator/go"
-
 	random "github.com/Pallinder/go-randomdata"
 	"github.com/onedaycat/zamus/command"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/invoke"
 )
 
@@ -80,7 +79,7 @@ func (b *commandBuilder) Build() *command.CommandReq {
 }
 
 func (b *commandBuilder) BuildJSON() []byte {
-	data, err := jsoniter.ConfigFastest.Marshal(b.req)
+	data, err := common.MarshalJSON(b.req)
 	if err != nil {
 		panic(err)
 	}

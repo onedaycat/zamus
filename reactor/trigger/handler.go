@@ -2,19 +2,19 @@ package trigger
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
-
-var json = jsoniter.ConfigFastest
 
 type TriggerHandler = func(ctx context.Context, payload Payload) (interface{}, errors.Error)
 type ErrorHandler = func(ctx context.Context, payload Payload, err errors.Error)
@@ -22,18 +22,8 @@ type ErrorHandler = func(ctx context.Context, payload Payload, err errors.Error)
 type Payload jsoniter.RawMessage
 
 func (p Payload) Unmarshal(v interface{}) errors.Error {
-	if err := json.Unmarshal(p, v); err != nil {
+	if err := common.UnmarshalJSON(p, v); err != nil {
 		return appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(p)
-	}
-
-	return nil
-}
-
-func (p Payload) Marshal(v interface{}) errors.Error {
-	var err error
-	p, err = json.Marshal(v)
-	if err != nil {
-		return appErr.ErrUnableMarshal.WithCause(err).WithCaller().WithInput(v)
 	}
 
 	return nil

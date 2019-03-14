@@ -3,9 +3,8 @@ package eventstore
 import (
 	"context"
 
-	"github.com/golang/snappy"
-	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
 	appErr "github.com/onedaycat/zamus/errors"
@@ -72,15 +71,8 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 		agg.SetLastEventID(snapshot.EventID)
 		agg.SetLastEventTime(snapshot.Time)
 
-		var dst []byte
-		var serr error
-		dst, serr = snappy.Decode(dst, snapshot.Aggregate)
-		if serr != nil {
-			return appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
-		}
-
-		if serr = jsoniter.ConfigFastest.Unmarshal(dst, agg); err != nil {
-			return appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
+		if err := common.UnmarshalJSONSnappy(snapshot.Aggregate, agg); err != nil {
+			return err
 		}
 
 		seq = snapshot.Seq
@@ -145,13 +137,11 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 		aggid := agg.GetAggregateID()
 		seq := agg.GetSequence()
 		eid := eid.CreateEventID(aggid, seq)
-		eventData, err := jsoniter.ConfigFastest.Marshal(events[i])
-		if err != nil {
-			return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller().WithInput(agg)
-		}
 
-		var eventDataSnap []byte
-		eventDataSnap = snappy.Encode(eventDataSnap, eventData)
+		eventDataSnap, err := common.MarshalJSONSnappy(events[i])
+		if err != nil {
+			return err
+		}
 
 		msgs[i] = &EventMsg{
 			EventID:     eid,
@@ -171,13 +161,10 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 	}
 
 	var snapshot *Snapshot
-	aggData, err := jsoniter.ConfigFastest.Marshal(agg)
+	aggDataSnap, err := common.MarshalJSONSnappy(agg)
 	if err != nil {
-		return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller().WithInput(agg)
+		return err
 	}
-
-	var aggDataSnap []byte
-	aggDataSnap = snappy.Encode(aggDataSnap, aggData)
 
 	snapshot = &Snapshot{
 		AggregateID: agg.GetAggregateID(),
