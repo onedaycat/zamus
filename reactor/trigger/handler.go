@@ -16,9 +16,18 @@ import (
 
 var json = jsoniter.ConfigFastest
 
-type Payload = jsoniter.RawMessage
 type TriggerHandler = func(ctx context.Context, payload Payload) (interface{}, errors.Error)
 type ErrorHandler = func(ctx context.Context, payload Payload, err errors.Error)
+
+type Payload jsoniter.RawMessage
+
+func (p Payload) Unmarshal(v interface{}) error {
+	return json.Unmarshal(p, v)
+}
+
+func (p Payload) Marshal(v interface{}) (jsoniter.RawMessage, error) {
+	return json.Marshal(v)
+}
 
 type Config struct {
 	AppStage      string
