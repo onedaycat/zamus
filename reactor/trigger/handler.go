@@ -29,13 +29,14 @@ func (p Payload) Unmarshal(v interface{}) errors.Error {
 	return nil
 }
 
-func (p Payload) Marshal(v interface{}) (jsoniter.RawMessage, errors.Error) {
-	data, err := json.Marshal(v)
+func (p Payload) Marshal(v interface{}) errors.Error {
+	var err error
+	p, err = json.Marshal(v)
 	if err != nil {
-		return nil, appErr.ErrUnableMarshal.WithCause(err).WithCaller().WithInput(v)
+		return appErr.ErrUnableMarshal.WithCause(err).WithCaller().WithInput(v)
 	}
 
-	return data, nil
+	return nil
 }
 
 type Config struct {
