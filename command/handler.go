@@ -241,7 +241,7 @@ func (h *Handler) Handle(ctx context.Context, cmd *CommandReq) (interface{}, err
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	req := &CommandReq{}
-	if err := common.UnmarshalJSON(payload, payload); err != nil {
+	if err := common.UnmarshalJSON(payload, req); err != nil {
 		return nil, err
 	}
 
