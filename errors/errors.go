@@ -8,7 +8,6 @@ var (
 	ErrQueryResultSizeNotMatch = errors.InternalError("Zamus_ErrQueryResultSizeNotMatch", "Result array size not match")
 	ErrUnableParseQuery        = errors.InternalError("Zamus_ErrUnableParseQuery", "Unable to parse query")
 	ErrUnablePublishKinesis    = errors.InternalError("Zamus_ErrUnablePublishKinesis", "Unable to publish kinesis stream")
-	ErrPanic                   = errors.InternalError("Zamus_ErrPanic", "Server Error").WithPanic()
 	ErrUnknown                 = errors.InternalError("Zamus_ErrUnknown", "Unknown error")
 
 	ErrVersionInconsistency     = errors.BadRequest("Zamus_ErrVersionInconsistency", "Version is inconsistency")
@@ -22,6 +21,7 @@ var (
 )
 
 var (
+	ErrPanic            = errors.InternalError("PanicError", "Panic Error").WithPanic()
 	ErrInternalError    = errors.InternalError("InternalError", "Internal error")
 	ErrInvalidRequest   = errors.BadRequest("InvalidRequest", "Invalid request")
 	ErrValidateError    = errors.BadRequest("ValidateError", "Validation error")

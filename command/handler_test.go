@@ -77,7 +77,7 @@ func (s *CommandHandlerSuite) WithPanicErrorHandler(t *testing.T, req *command.C
 
 	fErr := func(ctx context.Context, xreq *command.CommandReq, xerr errors.Error) {
 		require.Equal(t, req, xreq)
-		require.Equal(t, appErr.ErrInternalError, xerr)
+		require.Equal(t, appErr.ErrPanic, xerr)
 		s.Called(function + "Err")
 	}
 
@@ -96,7 +96,7 @@ func (s *CommandHandlerSuite) WithPanicHandler(t *testing.T, req *command.Comman
 
 	fErr := func(ctx context.Context, xreq *command.CommandReq, xerr errors.Error) {
 		require.Equal(t, req, xreq)
-		require.Equal(t, appErr.ErrInternalError, xerr)
+		require.Equal(t, appErr.ErrPanic, xerr)
 		s.Called(function + "Err")
 	}
 
@@ -417,7 +417,7 @@ func TestPanicHandler(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), req)
 
-	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, appErr.ErrPanic, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)
@@ -456,7 +456,7 @@ func TestPanicStringHandler(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), req)
 
-	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, appErr.ErrPanic, err)
 	require.Nil(t, resp)
 	require.True(t, checkFunc)
 	require.True(t, errorFunc)

@@ -2,6 +2,7 @@ package kinesisstream
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
@@ -254,7 +255,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
-			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithPanic()
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -263,7 +264,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 			}
 			tracer.AddError(ctx, *err)
 		default:
-			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrPanic.WithPanic().WithMessage(fmt.Sprintf("%v\n", cause)).WithCaller()
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}

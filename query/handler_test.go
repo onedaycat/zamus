@@ -137,7 +137,7 @@ func TestInvokeHandlerPanic(t *testing.T) {
 	}
 
 	fErr := func(ctx context.Context, req *QueryReq, err errors.Error) {
-		require.Equal(t, appErr.ErrInternalError, err)
+		require.Equal(t, appErr.ErrPanic, err)
 		nErr++
 	}
 
@@ -147,7 +147,7 @@ func TestInvokeHandlerPanic(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), req)
 
-	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, appErr.ErrPanic, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
 	require.Equal(t, 1, nErr)
@@ -166,7 +166,7 @@ func TestInvokeHandlerPanicString(t *testing.T) {
 	}
 
 	fErr := func(ctx context.Context, req *QueryReq, err errors.Error) {
-		require.Equal(t, appErr.ErrInternalError, err)
+		require.Equal(t, appErr.ErrPanic, err)
 		spy.Called("fErr")
 	}
 
@@ -176,7 +176,7 @@ func TestInvokeHandlerPanicString(t *testing.T) {
 
 	resp, err := h.Handle(context.Background(), req)
 
-	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, appErr.ErrPanic, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, spy.Count("f"))
 	require.Equal(t, 1, spy.Count("fErr"))

@@ -11,11 +11,7 @@ import (
 
 func PrintPanic(ctx context.Context, payload Payload, err errors.Error) {
 	if err.GetPanic() {
-		if cause := err.GetCause(); cause != nil {
-			fmt.Println(cause.Error())
-		} else if input := err.GetInput(); input != nil {
-			fmt.Println(input)
-		}
+		fmt.Printf("%+v", err)
 	}
 }
 

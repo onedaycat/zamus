@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
@@ -94,13 +95,13 @@ func (h *Handler) recovery(ctx context.Context, cmd *CommandReq, err *errors.Err
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
-			*err = appErr.ErrInternalError.WithCause(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
 			tracer.AddError(ctx, *err)
 		default:
-			*err = appErr.ErrInternalError.WithInput(cause).WithCallerSkip(6).WithPanic()
+			*err = appErr.ErrPanic.WithPanic().WithMessage(fmt.Sprintf("%v\n", cause)).WithCaller()
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}

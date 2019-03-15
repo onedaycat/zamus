@@ -24,7 +24,7 @@
   revision = "ec2fec7cfe48fbf48ea1a6855a077c372bbb1b1c"
 
 [[projects]]
-  digest = "1:329e074e4707bb6d61837a170294a2832d451dd2ddb6a5a57a4acbcb830ea27c"
+  digest = "1:291f04c7da63e4aa1dc888d92972ae849c478e4c6340b05e5edb4f689358c4b6"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,12 +69,12 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "b0b23985ea7533af9f94731b2c1030a1e46e6500"
-  version = "v1.18.2"
+  revision = "2410a5b1bbbb4e64c57dd1030f204c8fbfb1c58a"
+  version = "v1.18.3"
 
 [[projects]]
   branch = "master"
-  digest = "1:0a6cdd10c80593c187f6d3b98f7d8f4647c12a4fc6191227d431f2f92c03069b"
+  digest = "1:911f9d56691cb0fee3a32563ad6ad7a4bcfdbf6e0b55b5db497ffac62b2d37fa"
   name = "github.com/aws/aws-xray-sdk-go"
   packages = [
     "daemoncfg",
@@ -91,7 +91,7 @@
     "xraylog",
   ]
   pruneopts = "UT"
-  revision = "9bde01282dadb892c28bb2e9141a37b786c38be8"
+  revision = "68182607ac166a479900032c581b4676299d9724"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -209,7 +209,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:52f4b25494a555a427ac87e8b00c8e2536b012309760db08da673acbeb84fdbd"
+  digest = "1:f188704f34683417006151f43d54fc46d0fb4a1d23587493931f6e9d5cdcd45a"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -217,7 +217,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "dc23a41438bf3be050f4badd4f093833280054d2"
+  revision = "ccfb57750e14178b7500c66a130df13e0107bf50"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"

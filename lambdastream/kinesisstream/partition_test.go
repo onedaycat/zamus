@@ -270,7 +270,8 @@ func TestPartitionStrategyPanic(t *testing.T) {
 
 	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
 		nError++
-		fmt.Println("Error Trigger", err)
+		fmt.Printf("%+v\n", err)
+		// fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
