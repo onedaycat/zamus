@@ -11,7 +11,6 @@ var (
 	ErrPanic                   = errors.InternalError("Zamus_ErrPanic", "Server Error").WithPanic()
 	ErrUnknown                 = errors.InternalError("Zamus_ErrUnknown", "Unknown error")
 
-	ErrNotFound                 = errors.NotFound("Zamus_ErrNotFound", "Not Found")
 	ErrVersionInconsistency     = errors.BadRequest("Zamus_ErrVersionInconsistency", "Version is inconsistency")
 	ErrEncodingNotSupported     = errors.InternalError("Zamus_ErrEncodingNotSupported", "Unable unmarshal payload, unsupport encoding")
 	ErrEventLimitExceed         = errors.InternalError("Zamus_ErrEventLimitExceed", "Number of events in aggregate limit exceed")
