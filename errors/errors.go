@@ -7,12 +7,8 @@ type Input = errors.Input
 var (
 	ErrQueryResultSizeNotMatch = errors.InternalError("Zamus_ErrQueryResultSizeNotMatch", "Result array size not match")
 	ErrUnableParseQuery        = errors.InternalError("Zamus_ErrUnableParseQuery", "Unable to parse query")
-	ErrUnableUnmarshal         = errors.InternalError("Zamus_ErrUnableUnmarshal", "Unable to unmarshal")
-	ErrUnableMarshal           = errors.InternalError("Zamus_ErrUnableMarshal", "Unable to marshal")
-	ErrUnableEncode            = errors.InternalError("Zamus_ErrUnableEncode", "Unable to encode")
-	ErrUnableDecode            = errors.InternalError("Zamus_ErrUnableDecode", "Unable to decode")
 	ErrUnablePublishKinesis    = errors.InternalError("Zamus_ErrUnablePublishKinesis", "Unable to publish kinesis stream")
-	ErrPanic                   = errors.InternalError("Zamus_ErrPanic", "Server Error")
+	ErrPanic                   = errors.InternalError("Zamus_ErrPanic", "Server Error").WithPanic()
 	ErrUnknown                 = errors.InternalError("Zamus_ErrUnknown", "Unknown error")
 
 	ErrNotFound                 = errors.NotFound("Zamus_ErrNotFound", "Not Found")
@@ -35,6 +31,10 @@ var (
 	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "The authorization is required")
 	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
 	ErrNotImplement     = errors.NotImplement("NotImplement", "This operation is not implemented")
+	ErrUnableUnmarshal  = errors.InternalError("ErrUnableUnmarshal", "Unable to unmarshal")
+	ErrUnableMarshal    = errors.InternalError("ErrUnableMarshal", "Unable to marshal")
+	ErrUnableEncode     = errors.InternalError("ErrUnableEncode", "Unable to encode")
+	ErrUnableDecode     = errors.InternalError("ErrUnableDecode", "Unable to decode")
 )
 
 func ErrCommandNotFound(command string) errors.Error {

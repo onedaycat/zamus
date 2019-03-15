@@ -11,4 +11,8 @@ var (
 	ErrUnauthorized     = errors.ErrUnauthorized
 	ErrUnavailable      = errors.ErrUnavailable
 	ErrNotImplement     = errors.ErrNotImplement
+	ErrUnableUnmarshal  = errors.ErrUnableUnmarshal
+	ErrUnableMarshal    = errors.ErrUnableMarshal
+	ErrUnableEncode     = errors.ErrUnableEncode
+	ErrUnableDecode     = errors.ErrUnableDecode
 )
