@@ -44,12 +44,3 @@ func ErrCommandNotFound(command string) errors.Error {
 func ErrQueryNotFound(query string) errors.Error {
 	return errors.BadRequestf("ZAMUS_ErrQueryNotFound", "%s query not found", query)
 }
-
-func Wrap(err error) errors.Error {
-	appErr, ok := errors.FromError(err)
-	if ok {
-		return appErr
-	}
-
-	return ErrUnknown.WithCause(err)
-}
