@@ -36,6 +36,14 @@ func (s Set) Set(key string) {
 	s[key] = struct{}{}
 }
 
+func (s Set) SetMany(keys []string) {
+	for _, key := range keys {
+		if !s.Has(key) {
+			s[key] = struct{}{}
+		}
+	}
+}
+
 func (s Set) Delete(key string) {
 	delete(s, key)
 }

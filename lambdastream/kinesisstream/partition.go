@@ -18,7 +18,7 @@ type partitionStrategy struct {
 	pkPool        sync.Pool
 	errorHandlers []EventMessagesErrorHandler
 	handlers      []*handlerInfo
-	eventTypes    map[string]struct{}
+	eventTypes    common.Set
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
 	dql           dql.DQL
@@ -26,7 +26,7 @@ type partitionStrategy struct {
 
 func NewPartitionStrategy() KinesisHandlerStrategy {
 	ps := &partitionStrategy{
-		eventTypes: make(map[string]struct{}, 20),
+		eventTypes: common.NewSet(),
 		handlers:   make([]*handlerInfo, 0, 10),
 	}
 
@@ -52,12 +52,6 @@ func (c *partitionStrategy) SetDQL(dql dql.DQL) {
 	c.dql = dql
 }
 
-func (c *partitionStrategy) FilterEvents(eventTypes ...string) {
-	for _, eventType := range eventTypes {
-		c.eventTypes[eventType] = struct{}{}
-	}
-}
-
 func (c *partitionStrategy) PreHandlers(handlers ...EventMessagesHandler) {
 	c.preHandlers = handlers
 }
@@ -70,13 +64,14 @@ func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filter
 	if filterEvents == nil {
 		c.handlers = append(c.handlers, &handlerInfo{
 			Handler:      handler,
-			FilterEvents: common.NewSet(),
+			FilterEvents: nil,
 		})
 	} else {
 		c.handlers = append(c.handlers, &handlerInfo{
 			Handler:      handler,
 			FilterEvents: common.NewSetFromList(filterEvents),
 		})
+		c.eventTypes.SetMany(filterEvents)
 	}
 }
 
@@ -96,7 +91,7 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) errors
 		for _, record := range records {
 			// fmt.Println("###", record.Kinesis.Data.EventMsg.EventID, record.Kinesis.Data.EventMsg.Seq)
 			eventType = record.Kinesis.Data.EventMsg.EventType
-			if _, ok := c.eventTypes[eventType]; !ok {
+			if !c.eventTypes.Has(eventType) {
 				continue
 			}
 
@@ -133,9 +128,14 @@ DQLRetry:
 				goto DQLRetry
 			}
 
-			msgs := make(EventMsgs, len(records))
-			for i, record := range records {
-				msgs[i] = record.Kinesis.Data.EventMsg
+			msgs := make(EventMsgs, 0, len(records))
+			for _, record := range records {
+				eventType = record.Kinesis.Data.EventMsg.EventType
+				if !c.eventTypes.Has(eventType) {
+					continue
+				}
+
+				msgs = append(msgs, record.Kinesis.Data.EventMsg)
 			}
 
 			msgList := eventstore.EventMsgList{

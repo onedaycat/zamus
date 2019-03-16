@@ -93,10 +93,6 @@ func (h *Handler) RegisterHandler(handler EventHandler, filterEvents []string) {
 	h.streamer.RegisterHandler(handler, filterEvents)
 }
 
-func (h *Handler) FilterEvents(eventTypes ...string) {
-	h.streamer.FilterEvents(eventTypes...)
-}
-
 func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) {
 	if event.Warmer {
 		h.runWarmer(ctx, event)

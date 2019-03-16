@@ -53,7 +53,6 @@ func TestShardStrategy(t *testing.T) {
 	cm := kinesisstream.NewShardStrategy(12)
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -120,7 +119,6 @@ func TestShardStrategyWithFilter(t *testing.T) {
 	cm := kinesisstream.NewShardStrategy(12)
 	cm.RegisterHandler(handler1, []string{"et1", "et3"})
 	cm.RegisterHandler(handler2, []string{"et3"})
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -196,7 +194,6 @@ func TestShardStrategyError(t *testing.T) {
 	cm := kinesisstream.NewShardStrategy(12)
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -274,7 +271,6 @@ func TestShardStrategyPanic(t *testing.T) {
 	cm := kinesisstream.NewShardStrategy(12)
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -329,7 +325,6 @@ func TestShardStrategyPanicPre(t *testing.T) {
 	cm := kinesisstream.NewShardStrategy(1)
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -379,7 +374,6 @@ func TestShardStrategyPanicPost(t *testing.T) {
 	cm := kinesisstream.NewShardStrategy(12)
 	cm.RegisterHandler(handler, nil)
 	cm.PostHandlers(posthandler)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -441,7 +435,6 @@ func TestShardStrategyPanicPreWithPost(t *testing.T) {
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
-	cm.FilterEvents("et1")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -500,7 +493,6 @@ func TestShardStrategyPanicPostWithPre(t *testing.T) {
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
-	cm.FilterEvents("et1")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)

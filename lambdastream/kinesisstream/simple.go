@@ -14,7 +14,7 @@ import (
 
 type simplehandler struct {
 	Handler      EventMessagesHandler
-	FilterEvents common.SetList
+	FilterEvents common.Set
 	EventMsgs    EventMsgs
 }
 
@@ -39,7 +39,7 @@ func (s *simplehandler) Clear() {
 type simpleStrategy struct {
 	errorHandlers []EventMessagesErrorHandler
 	handlers      []*simplehandler
-	eventTypes    map[string]struct{}
+	eventTypes    common.Set
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
 	dql           dql.DQL
@@ -47,7 +47,7 @@ type simpleStrategy struct {
 
 func NewSimpleStrategy() KinesisHandlerStrategy {
 	s := &simpleStrategy{
-		eventTypes: make(map[string]struct{}, 20),
+		eventTypes: common.NewSet(),
 		handlers:   make([]*simplehandler, 0, 10),
 	}
 
@@ -60,12 +60,6 @@ func (c *simpleStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
 
 func (c *simpleStrategy) SetDQL(dql dql.DQL) {
 	c.dql = dql
-}
-
-func (c *simpleStrategy) FilterEvents(eventTypes ...string) {
-	for _, eventType := range eventTypes {
-		c.eventTypes[eventType] = struct{}{}
-	}
 }
 
 func (c *simpleStrategy) PreHandlers(handlers ...EventMessagesHandler) {
@@ -86,9 +80,10 @@ func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEve
 	} else {
 		c.handlers = append(c.handlers, &simplehandler{
 			Handler:      handler,
-			FilterEvents: common.NewSetListFromList(filterEvents),
+			FilterEvents: common.NewSetFromList(filterEvents),
 			EventMsgs:    make(EventMsgs, 0, 100),
 		})
+		c.eventTypes.SetMany(filterEvents)
 	}
 }
 
@@ -102,7 +97,7 @@ func (c *simpleStrategy) Process(ctx context.Context, records Records) errors.Er
 		var eventType string
 		for _, record := range records {
 			eventType = record.Kinesis.Data.EventMsg.EventType
-			if _, ok := c.eventTypes[eventType]; !ok {
+			if !c.eventTypes.Has(eventType) {
 				continue
 			}
 
@@ -140,7 +135,7 @@ DQLRetry:
 			msgs := make(EventMsgs, len(records))
 			for i, record := range records {
 				eventType = record.Kinesis.Data.EventMsg.EventType
-				if _, ok := c.eventTypes[eventType]; !ok {
+				if !c.eventTypes.Has(eventType) {
 					continue
 				}
 				msgs[i] = record.Kinesis.Data.EventMsg

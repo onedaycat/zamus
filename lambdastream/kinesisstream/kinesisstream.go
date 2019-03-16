@@ -18,7 +18,6 @@ type EventMessagesErrorHandler func(ctx context.Context, msgs EventMsgs, err err
 
 type KinesisHandlerStrategy interface {
 	ErrorHandlers(handlers ...EventMessagesErrorHandler)
-	FilterEvents(eventTypes ...string)
 	PreHandlers(handlers ...EventMessagesHandler)
 	PostHandlers(handlers ...EventMessagesHandler)
 	RegisterHandler(handlers EventMessagesHandler, filterEvents []string)

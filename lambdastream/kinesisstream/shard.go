@@ -120,7 +120,8 @@ func NewShardStrategy(numShard ...int) KinesisHandlerStrategy {
 	}
 
 	s := &shardStrategy{
-		nShard: shard,
+		eventTypes: common.NewSet(),
+		nShard:     shard,
 	}
 
 	s.shardinfoList = newShardInfoList(shard, s)
@@ -136,10 +137,6 @@ func (c *shardStrategy) SetDQL(dql dql.DQL) {
 	c.dql = dql
 }
 
-func (c *shardStrategy) FilterEvents(eventTypes ...string) {
-	c.eventTypes = common.NewSetFromList(eventTypes)
-}
-
 func (c *shardStrategy) PreHandlers(handlers ...EventMessagesHandler) {
 	c.preHandlers = handlers
 }
@@ -152,6 +149,7 @@ func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEven
 	var sl common.SetList
 	if filterEvents != nil {
 		sl = common.NewSetListFromList(filterEvents)
+		c.eventTypes.SetMany(filterEvents)
 	}
 
 	for i := range c.shardinfoList {

@@ -56,7 +56,6 @@ func TestPartitionStrategy(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -124,7 +123,6 @@ func TestPartitionStrategyWithFilter(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, []string{"et1", "et3"})
 	cm.RegisterHandler(handler2, []string{"et3"})
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -200,7 +198,6 @@ func TestPartitionStrategyError(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -279,7 +276,6 @@ func TestPartitionStrategyPanic(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -334,7 +330,6 @@ func TestPartitionStrategyPanicPre(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -384,7 +379,6 @@ func TestPartitionStrategyPanicPost(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler, nil)
 	cm.PostHandlers(posthandler)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -443,10 +437,9 @@ func TestPartitionStrategyPanicPreWithPost(t *testing.T) {
 
 	n := 10
 	cm := kinesisstream.NewPartitionStrategy()
-	cm.RegisterHandler(handler, nil)
+	cm.RegisterHandler(handler, []string{"et1"})
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
-	cm.FilterEvents("et1")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -505,7 +498,6 @@ func TestPartitionStrategyPanicPostWithPre(t *testing.T) {
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
-	cm.FilterEvents("et1")
 	cm.ErrorHandlers(onErr)
 
 	records := make(kinesisstream.Records, n)
@@ -577,7 +569,6 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 	dqlStorage := &mocks.Storage{}
 	d := dql.New(dqlStorage, 3, "srv1", "fn1", "1.0.0")
@@ -659,7 +650,6 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 	dqlStorage := &mocks.Storage{}
 	d := dql.New(dqlStorage, 1, "srv1", "fn1", "1.0.0")
@@ -743,7 +733,6 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
-	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 	dqlStorage := &mocks.Storage{}
 	d := dql.New(dqlStorage, 3, "srv1", "fn1", "1.0.0")

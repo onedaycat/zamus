@@ -24,7 +24,6 @@ func BenchmarkPartition(b *testing.B) {
 
 	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(h, eventTypes)
-	cm.FilterEvents(eventTypes...)
 
 	ctx := context.Background()
 
@@ -72,7 +71,6 @@ func BenchmarkShard(b *testing.B) {
 	}
 
 	cm := kinesisstream.NewShardStrategy()
-	cm.FilterEvents(eventTypes...)
 	cm.RegisterHandler(h, eventTypes)
 
 	ctx := context.Background()
