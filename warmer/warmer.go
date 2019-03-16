@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/invoke"
 )
 
@@ -38,7 +38,7 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 		return
 	}
 
-	payload, _ := jsoniter.ConfigFastest.Marshal(WarmerRequest{
+	payload, _ := common.MarshalJSON(WarmerRequest{
 		Warmer:     true,
 		Concurency: 0,
 	})

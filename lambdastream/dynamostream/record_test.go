@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/golang/snappy"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestParseDynamoDBStreamEvent(t *testing.T) {
-	p, err := jsoniter.ConfigFastest.Marshal(map[string]interface{}{
+	p, err := common.MarshalJSON(map[string]interface{}{
 		"id": "1",
 	})
 	require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	}
 
 	event := &DynamoDBStreamEvent{}
-	err = jsoniter.ConfigFastest.Unmarshal([]byte(payload), event)
+	err = common.UnmarshalJSON([]byte(payload), event)
 	sort.Sort(event.Records)
 	require.NoError(t, err)
 	require.Len(t, event.Records, 2)
@@ -122,7 +122,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 	require.Equal(t, EventInsert, event.Records[1].EventName)
 	require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
 
-	xx, _ := jsoniter.ConfigFastest.Marshal(event.Records[0].DynamoDB.NewImage.EventMsg)
+	xx, _ := common.MarshalJSON(event.Records[0].DynamoDB.NewImage.EventMsg)
 	fmt.Println(string(xx))
 
 	pp := &pdata{}

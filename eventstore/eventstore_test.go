@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/snappy"
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/clock"
 	"github.com/onedaycat/zamus/common/eid"
 	"github.com/onedaycat/zamus/errors"
@@ -142,7 +142,7 @@ func TestGetAggregate(t *testing.T) {
 			WithMockStorage()
 
 		st := domain.NewStockItem()
-		stByte, err := jsoniter.ConfigFastest.Marshal(st)
+		stByte, err := common.MarshalJSON(st)
 		require.NoError(t, err)
 
 		var dst []byte

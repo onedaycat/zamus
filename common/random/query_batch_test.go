@@ -3,7 +3,8 @@ package random
 import (
 	"testing"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
+
 	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/query"
 
@@ -28,7 +29,7 @@ func TestBatchQuery(t *testing.T) {
 		Build()
 
 	expArg := map[string]interface{}{}
-	jsoniter.ConfigFastest.Unmarshal(query.Args, &expArg)
+	common.UnmarshalJSON(query.Args, &expArg)
 	require.Equal(t, expArg, arg)
 
 	source := map[string]interface{}{
@@ -41,7 +42,7 @@ func TestBatchQuery(t *testing.T) {
 		Sources(source, source).
 		Build()
 	expSources := []map[string]interface{}{}
-	jsoniter.ConfigFastest.Unmarshal(query.Sources, &expSources)
+	common.UnmarshalJSON(query.Sources, &expSources)
 	require.Equal(t, expSources, sources)
 	require.Equal(t, 2, query.NBatchSources)
 

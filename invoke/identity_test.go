@@ -3,7 +3,7 @@ package invoke
 import (
 	"testing"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +42,7 @@ func TestIdentity(t *testing.T) {
 
 	id := &Identity{}
 
-	err := jsoniter.ConfigFastest.Unmarshal(payload, id)
+	err := common.UnmarshalJSON(payload, id)
 	if err != nil {
 		require.NoError(t, err)
 	}

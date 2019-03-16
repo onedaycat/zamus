@@ -3,11 +3,12 @@ package invoke
 import (
 	"context"
 
-	jsoniter "github.com/json-iterator/go"
-	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common"
+	appErr "github.com/onedaycat/zamus/errors"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/onedaycat/errors"
 )
 
 type InvokeInput = lambda.InvokeInput
@@ -33,27 +34,37 @@ type InvokeErrorPayload struct {
 
 func UnmarshalInvokeErrorPayload(payload []byte) errors.Error {
 	in := &InvokeErrorPayload{}
-	err := jsoniter.ConfigFastest.Unmarshal(payload, in)
+	err := common.UnmarshalJSON(payload, in)
 	if err != nil {
-		return errors.Wrap(err)
+		return err
 	}
 
 	inappErr := errors.ParseError(in.ErrorMessage)
 	switch inappErr.Code {
-	case "InternalError":
+	case appErr.ErrInternalErrorType:
 		return inappErr.WithInternalError()
-	case "InvalidRequest":
+	case appErr.ErrInvalidRequestType:
 		return inappErr.WithBadRequest()
-	case "ValidateError":
+	case appErr.ErrValidateErrorType:
 		return inappErr.WithBadRequest()
-	case "PermissionDenied":
+	case appErr.ErrPermissionDeniedType:
 		return inappErr.WithForbidden()
-	case "TimeoutError":
+	case appErr.ErrTimeoutType:
 		return inappErr.WithTimeoutError()
-	case "Unauthorized":
+	case appErr.ErrUnauthorizedType:
 		return inappErr.WithUnauthorized()
-	case "Unavailable":
+	case appErr.ErrUnavailableType:
 		return inappErr.WithBadRequest()
+	case appErr.ErrNotImplementType:
+		return inappErr.WithType(errors.NotImplementType).WithStatus(errors.NotImplementStatus)
+	case appErr.ErrUnableUnmarshalType:
+		return inappErr.WithInternalError()
+	case appErr.ErrUnableMarshalType:
+		return inappErr.WithInternalError()
+	case appErr.ErrUnableEncodeType:
+		return inappErr.WithInternalError()
+	case appErr.ErrUnableDecodeType:
+		return inappErr.WithInternalError()
 	}
 
 	return inappErr.WithType(inappErr.Code)

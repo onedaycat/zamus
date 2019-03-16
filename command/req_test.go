@@ -3,7 +3,8 @@ package command
 import (
 	"testing"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
+
 	"github.com/stretchr/testify/require"
 )
 
@@ -16,7 +17,7 @@ func TestParseArguments(t *testing.T) {
 	data := `{"function": "testField1","arguments": {"iD": "1", "NaMe":"hello"},"soUrCE": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
 
 	req := &CommandReq{}
-	err := jsoniter.ConfigFastest.Unmarshal([]byte(data), req)
+	err := common.UnmarshalJSON([]byte(data), req)
 	require.NoError(t, err)
 
 	a := &arg{}
@@ -36,7 +37,7 @@ func TestParseSource(t *testing.T) {
 	data := `{"function": "testField1","arguments": {"id": "1", "name":"hello"},"source": {"namespace": "1"},"identity": {"sub": "xx"},"pemKey":"pemKey"}`
 
 	req := &CommandReq{}
-	err := jsoniter.ConfigFastest.Unmarshal([]byte(data), req)
+	err := common.UnmarshalJSON([]byte(data), req)
 	require.NoError(t, err)
 
 	s := &source{}

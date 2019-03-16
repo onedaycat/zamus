@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/golang/snappy"
-	jsoniter "github.com/json-iterator/go"
 
+	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/stretchr/testify/require"
 )
@@ -53,7 +53,7 @@ func TestEventMsg(t *testing.T) {
 		"id": "1",
 	}
 
-	eventByte, _ := jsoniter.ConfigFastest.Marshal(event)
+	eventByte, _ := common.MarshalJSON(event)
 	var eventDataSnap []byte
 	eventDataSnap = snappy.Encode(eventDataSnap, eventByte)
 	msg = EventMsg().

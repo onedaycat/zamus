@@ -20,20 +20,36 @@ var (
 	ErrUnbleSaveDQLMessages     = errors.InternalError("Zamus_ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
 )
 
+const (
+	ErrPanicType            = "PanicError"
+	ErrInternalErrorType    = "InternalError"
+	ErrInvalidRequestType   = "InvalidRequest"
+	ErrValidateErrorType    = "ValidateError"
+	ErrPermissionDeniedType = "PermissionDenied"
+	ErrTimeoutType          = "TimeoutError"
+	ErrUnauthorizedType     = "Unauthorized"
+	ErrUnavailableType      = "Unavailable"
+	ErrNotImplementType     = "NotImplement"
+	ErrUnableUnmarshalType  = "ErrUnableUnmarshal"
+	ErrUnableMarshalType    = "ErrUnableMarshal"
+	ErrUnableEncodeType     = "ErrUnableEncode"
+	ErrUnableDecodeType     = "ErrUnableDecode"
+)
+
 var (
-	ErrPanic            = errors.InternalError("PanicError", "Panic Error").WithPanic()
-	ErrInternalError    = errors.InternalError("InternalError", "Internal error")
-	ErrInvalidRequest   = errors.BadRequest("InvalidRequest", "Invalid request")
-	ErrValidateError    = errors.BadRequest("ValidateError", "Validation error")
-	ErrPermissionDenied = errors.Forbidden("PermissionDenied", "You don't a permission to access this operation")
-	ErrTimeout          = errors.Timeout("TimeoutError", "The operation is timeout")
-	ErrUnauthorized     = errors.Unauthorized("Unauthorized", "The authorization is required")
-	ErrUnavailable      = errors.Unavailable("Unavailable", "This operation is unavailable")
-	ErrNotImplement     = errors.NotImplement("NotImplement", "This operation is not implemented")
-	ErrUnableUnmarshal  = errors.InternalError("ErrUnableUnmarshal", "Unable to unmarshal")
-	ErrUnableMarshal    = errors.InternalError("ErrUnableMarshal", "Unable to marshal")
-	ErrUnableEncode     = errors.InternalError("ErrUnableEncode", "Unable to encode")
-	ErrUnableDecode     = errors.InternalError("ErrUnableDecode", "Unable to decode")
+	ErrPanic            = errors.InternalError(ErrPanicType, "Panic Error").WithPanic()
+	ErrInternalError    = errors.InternalError(ErrInternalErrorType, "Internal error")
+	ErrInvalidRequest   = errors.BadRequest(ErrInvalidRequestType, "Invalid request")
+	ErrValidateError    = errors.BadRequest(ErrValidateErrorType, "Validation error")
+	ErrPermissionDenied = errors.Forbidden(ErrPermissionDeniedType, "You don't a permission to access this operation")
+	ErrTimeout          = errors.Timeout(ErrTimeoutType, "The operation is timeout")
+	ErrUnauthorized     = errors.Unauthorized(ErrUnauthorizedType, "The authorization is required")
+	ErrUnavailable      = errors.Unavailable(ErrUnavailableType, "This operation is unavailable")
+	ErrNotImplement     = errors.NotImplement(ErrNotImplementType, "This operation is not implemented")
+	ErrUnableUnmarshal  = errors.InternalError(ErrUnableUnmarshalType, "Unable to unmarshal")
+	ErrUnableMarshal    = errors.InternalError(ErrUnableMarshalType, "Unable to marshal")
+	ErrUnableEncode     = errors.InternalError(ErrUnableEncodeType, "Unable to encode")
+	ErrUnableDecode     = errors.InternalError(ErrUnableDecodeType, "Unable to decode")
 )
 
 func ErrCommandNotFound(command string) errors.Error {

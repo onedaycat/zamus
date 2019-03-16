@@ -3,7 +3,7 @@ package command
 import (
 	"context"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/onedaycat/zamus/common"
 
 	"github.com/onedaycat/errors"
 	"github.com/rs/zerolog"
@@ -21,7 +21,7 @@ func ErrorLog(ctx context.Context, req *CommandReq, err errors.Error) {
 	}
 
 	if in := err.GetInput(); in != nil {
-		input, _ = jsoniter.ConfigFastest.Marshal(in)
+		input, _ = common.MarshalJSON(in)
 	}
 
 	if err.GetPanic() {
