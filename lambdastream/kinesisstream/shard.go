@@ -336,6 +336,10 @@ func (c *shardStrategy) handle(ctx context.Context, shard *shardinfo) errors.Err
 		}
 
 		for _, msgs := range shard.handlers[i].EventMsgs {
+			if len(msgs) == 0 {
+				continue
+			}
+
 			if err = c.doHandlers(ctx, msgs, shard.handlers[i].Handler); err != nil {
 				return err
 			}
