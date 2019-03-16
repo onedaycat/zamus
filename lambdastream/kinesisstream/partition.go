@@ -32,12 +32,7 @@ func NewPartitionStrategy() KinesisHandlerStrategy {
 
 	ps.pkPool = sync.Pool{
 		New: func() interface{} {
-			m := make(map[string]EventMsgs, 100)
-			for key := range m {
-				m[key] = make(EventMsgs, 0, 100)
-			}
-
-			return m
+			return make(map[string]EventMsgs, 100)
 		},
 	}
 
@@ -82,7 +77,7 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) errors
 
 	defer func() {
 		for key := range partitions {
-			partitions[key] = partitions[key][:0]
+			delete(partitions, key)
 		}
 		c.pkPool.Put(partitions)
 	}()

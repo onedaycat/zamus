@@ -69,31 +69,65 @@ func (s *shardinfo) AddHandler(handler EventMessagesHandler, sl common.SetList) 
 	s.handlers = append(s.handlers, &shardhandler{
 		Handler:      handler,
 		FilterEvents: sl,
-		EventMsgs:    make(EventMsgs, 0, 100),
+		EventMsgs:    make([]EventMsgs, 100),
+		pk:           make([]string, 0, 100),
 	})
 }
 
 func (s *shardinfo) Clear() {
 	s.pk.Clear()
 	for _, handler := range s.handlers {
-		handler.EventMsgs = handler.EventMsgs[:0]
+		handler.pk = handler.pk[:0]
+		for i := range handler.EventMsgs {
+			handler.EventMsgs[i] = handler.EventMsgs[i][:0]
+		}
 	}
 }
 
 type shardhandler struct {
 	Handler      EventMessagesHandler
 	FilterEvents common.SetList
-	EventMsgs    EventMsgs
+	EventMsgs    []EventMsgs
+	pk           []string
+}
+
+func (s *shardhandler) GetPK(pk string) (int, bool) {
+	for i := range s.pk {
+		if s.pk[i] == pk {
+			return i, true
+		}
+	}
+
+	return 0, false
+}
+
+func (s *shardhandler) AddPK(pk string) int {
+	for i := range s.pk {
+		if s.pk[i] == pk {
+			return i
+		}
+	}
+
+	s.pk = append(s.pk, pk)
+	return len(s.pk) - 1
 }
 
 func (s *shardhandler) AddEventMsg(msg *EventMsg) bool {
 	if s.FilterEvents == nil {
-		s.EventMsgs = append(s.EventMsgs, msg)
+		index, ok := s.GetPK(msg.AggregateID)
+		if !ok {
+			index = s.AddPK(msg.AggregateID)
+		}
+		s.EventMsgs[index] = append(s.EventMsgs[index], msg)
 		return true
 	}
 
 	if s.FilterEvents.Has(msg.EventType) {
-		s.EventMsgs = append(s.EventMsgs, msg)
+		index, ok := s.GetPK(msg.AggregateID)
+		if !ok {
+			index = s.AddPK(msg.AggregateID)
+		}
+		s.EventMsgs[index] = append(s.EventMsgs[index], msg)
 		return true
 	}
 
@@ -209,13 +243,14 @@ DQLRetry:
 				goto DQLRetry
 			}
 
-			msgs := make(EventMsgs, len(records))
-			for i, record := range records {
+			msgs := make(EventMsgs, 0, len(records))
+			for _, record := range records {
 				eventType = record.Kinesis.Data.EventMsg.EventType
 				if !c.eventTypes.Has(eventType) {
 					continue
 				}
-				msgs[i] = record.Kinesis.Data.EventMsg
+
+				msgs = append(msgs, record.Kinesis.Data.EventMsg)
 			}
 
 			msgList := eventstore.EventMsgList{
@@ -300,8 +335,10 @@ func (c *shardStrategy) handle(ctx context.Context, shard *shardinfo) errors.Err
 			continue
 		}
 
-		if err = c.doHandlers(ctx, shard.handlers[i].EventMsgs, shard.handlers[i].Handler); err != nil {
-			return err
+		for _, msgs := range shard.handlers[i].EventMsgs {
+			if err = c.doHandlers(ctx, msgs, shard.handlers[i].Handler); err != nil {
+				return err
+			}
 		}
 
 		if err = shard.c.doPostHandler(ctx, nil); err != nil {
