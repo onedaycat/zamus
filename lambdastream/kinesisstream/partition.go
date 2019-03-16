@@ -66,7 +66,7 @@ func (c *partitionStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
+func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents []string) {
 	if filterEvents == nil {
 		c.handlers = append(c.handlers, &handlerInfo{
 			Handler:      handler,
@@ -75,7 +75,7 @@ func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filter
 	} else {
 		c.handlers = append(c.handlers, &handlerInfo{
 			Handler:      handler,
-			FilterEvents: common.NewSetFromList(filterEvents()),
+			FilterEvents: common.NewSetFromList(filterEvents),
 		})
 	}
 }

@@ -22,7 +22,6 @@ type ErrorHandler = kinesisstream.EventMessagesErrorHandler
 type EventMsg = eventstore.EventMsg
 type EventMsgs = []*eventstore.EventMsg
 type LambdaEvent = kinesisstream.KinesisStreamEvent
-type FilterEvents = kinesisstream.FilterEvents
 
 type Config struct {
 	AppStage      string
@@ -90,7 +89,7 @@ func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
 	h.streamer.ErrorHandlers(handlers...)
 }
 
-func (h *Handler) RegisterHandler(handler EventHandler, filterEvents FilterEvents) {
+func (h *Handler) RegisterHandler(handler EventHandler, filterEvents []string) {
 	h.streamer.RegisterHandler(handler, filterEvents)
 }
 

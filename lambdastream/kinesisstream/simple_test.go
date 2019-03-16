@@ -118,8 +118,8 @@ func TestSimpleStrategyWithFilter(t *testing.T) {
 
 	n := 10
 	cm := kinesisstream.NewSimpleStrategy()
-	cm.RegisterHandler(handler1, func() []string { return []string{"et1", "et3"} })
-	cm.RegisterHandler(handler2, func() []string { return []string{"et3"} })
+	cm.RegisterHandler(handler1, []string{"et1", "et3"})
+	cm.RegisterHandler(handler2, []string{"et3"})
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 

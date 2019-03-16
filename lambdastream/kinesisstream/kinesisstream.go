@@ -15,14 +15,13 @@ type EventMsgs = []*eventstore.EventMsg
 type LambdaHandler func(ctx context.Context, event *KinesisStreamEvent)
 type EventMessagesHandler func(ctx context.Context, msgs EventMsgs) errors.Error
 type EventMessagesErrorHandler func(ctx context.Context, msgs EventMsgs, err errors.Error)
-type FilterEvents func() []string
 
 type KinesisHandlerStrategy interface {
 	ErrorHandlers(handlers ...EventMessagesErrorHandler)
 	FilterEvents(eventTypes ...string)
 	PreHandlers(handlers ...EventMessagesHandler)
 	PostHandlers(handlers ...EventMessagesHandler)
-	RegisterHandler(handlers EventMessagesHandler, filterEvents FilterEvents)
+	RegisterHandler(handlers EventMessagesHandler, filterEvents []string)
 	Process(ctx context.Context, records Records) errors.Error
 	SetDQL(dql dql.DQL)
 }

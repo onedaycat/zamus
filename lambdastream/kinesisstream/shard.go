@@ -148,10 +148,10 @@ func (c *shardStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
+func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents []string) {
 	var sl common.SetList
 	if filterEvents != nil {
-		sl = common.NewSetListFromList(filterEvents())
+		sl = common.NewSetListFromList(filterEvents)
 	}
 
 	for i := range c.shardinfoList {

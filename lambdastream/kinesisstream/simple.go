@@ -76,7 +76,7 @@ func (c *simpleStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 	c.postHandlers = handlers
 }
 
-func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
+func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents []string) {
 	if filterEvents == nil {
 		c.handlers = append(c.handlers, &simplehandler{
 			Handler:      handler,
@@ -86,7 +86,7 @@ func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEve
 	} else {
 		c.handlers = append(c.handlers, &simplehandler{
 			Handler:      handler,
-			FilterEvents: common.NewSetListFromList(filterEvents()),
+			FilterEvents: common.NewSetListFromList(filterEvents),
 			EventMsgs:    make(EventMsgs, 0, 100),
 		})
 	}
