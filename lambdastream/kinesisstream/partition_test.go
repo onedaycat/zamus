@@ -1,4 +1,4 @@
-package kinesisstream
+package kinesisstream_test
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/dql/mocks"
+	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +22,7 @@ func TestPartitionStrategy(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -34,7 +35,7 @@ func TestPartitionStrategy(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h2ET1++
@@ -47,29 +48,29 @@ func TestPartitionStrategy(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -94,7 +95,7 @@ func TestPartitionStrategyWithFilter(t *testing.T) {
 	h2ET2 := 0
 	h2ET3 := 0
 
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -107,7 +108,7 @@ func TestPartitionStrategyWithFilter(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			h2ET3++
 			fmt.Println("h2", msg.EventID, msg.EventType)
@@ -115,29 +116,29 @@ func TestPartitionStrategyWithFilter(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, func() []string { return []string{"et1", "et3"} })
 	cm.RegisterHandler(handler2, func() []string { return []string{"et3"} })
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -161,7 +162,7 @@ func TestPartitionStrategyError(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -174,7 +175,7 @@ func TestPartitionStrategyError(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -190,30 +191,30 @@ func TestPartitionStrategyError(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -237,7 +238,7 @@ func TestPartitionStrategyPanic(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -250,7 +251,7 @@ func TestPartitionStrategyPanic(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -261,38 +262,38 @@ func TestPartitionStrategyPanic(t *testing.T) {
 			}
 
 			if msg.EventID == "4" {
-				var x *KinesisStreamEvent
+				var x *kinesisstream.KinesisStreamEvent
 				_ = x.Records
 			}
 		}
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 		fmt.Printf("%+v\n", err)
 		// fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -311,43 +312,43 @@ func TestPartitionStrategyPanic(t *testing.T) {
 func TestPartitionStrategyPanicPre(t *testing.T) {
 	nError := 0
 	isPre := false
-	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	prehandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
-			var x *KinesisStreamEvent
+			var x *kinesisstream.KinesisStreamEvent
 			_ = x.Records
 		}
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -361,43 +362,43 @@ func TestPartitionStrategyPanicPre(t *testing.T) {
 func TestPartitionStrategyPanicPost(t *testing.T) {
 	isError := false
 	isPost := false
-	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	posthandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
-			var x *KinesisStreamEvent
+			var x *kinesisstream.KinesisStreamEvent
 			_ = x.Records
 		}
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler, nil)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1", "et3")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -413,53 +414,53 @@ func TestPartitionStrategyPanicPreWithPost(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	prehandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		isPre = true
 		if msgs[0].EventType == "et1" {
-			var x *KinesisStreamEvent
+			var x *kinesisstream.KinesisStreamEvent
 			_ = x.Records
 		}
 		return nil
 	}
 
-	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	posthandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
-			var x *KinesisStreamEvent
+			var x *kinesisstream.KinesisStreamEvent
 			_ = x.Records
 		}
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -476,49 +477,49 @@ func TestPartitionStrategyPanicPostWithPre(t *testing.T) {
 	isPost := false
 	isPre := false
 
-	prehandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	prehandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		isPre = true
 		return nil
 	}
 
-	posthandler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	posthandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		isPost = true
 		if msgs[0].EventType == "et1" {
-			var x *KinesisStreamEvent
+			var x *kinesisstream.KinesisStreamEvent
 			_ = x.Records
 		}
 		return nil
 	}
 
-	handler := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		isError = true
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler, nil)
 	cm.PreHandlers(prehandler)
 	cm.PostHandlers(posthandler)
 	cm.FilterEvents("et1")
 	cm.ErrorHandlers(onErr)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -538,7 +539,7 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -551,7 +552,7 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -567,13 +568,13 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
@@ -585,18 +586,18 @@ func TestPartitionStrategyErrorWithRetry(t *testing.T) {
 		require.Len(t, d.Errors, 3)
 	}).Return(nil)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -620,7 +621,7 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -633,7 +634,7 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -649,13 +650,13 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
@@ -667,18 +668,18 @@ func TestPartitionStrategyErrorWithRetryOnce(t *testing.T) {
 		require.Len(t, d.Errors, 1)
 	}).Return(nil)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}
@@ -702,7 +703,7 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 	h2ET1 := 0
 	h2ET2 := 0
 	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			if msg.EventType == "et1" {
 				h1ET1++
@@ -715,7 +716,7 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 		return nil
 	}
 
-	handler2 := func(ctx context.Context, msgs EventMsgs) errors.Error {
+	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
 		for _, msg := range msgs {
 			fmt.Println("h2", msg.EventID, msg.EventType)
 			if msg.EventType == "et1" {
@@ -726,20 +727,20 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 			}
 
 			if msg.EventID == "4" {
-				var x *KinesisStreamEvent
+				var x *kinesisstream.KinesisStreamEvent
 				_ = x.Records
 			}
 		}
 		return nil
 	}
 
-	onErr := func(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
 		nError++
 		fmt.Println("Error Trigger", err)
 	}
 
 	n := 10
-	cm := NewPartitionStrategy()
+	cm := kinesisstream.NewPartitionStrategy()
 	cm.RegisterHandler(handler1, nil)
 	cm.RegisterHandler(handler2, nil)
 	cm.FilterEvents("et1", "et3")
@@ -751,18 +752,18 @@ func TestPartitionStrategyPanicWithRetry(t *testing.T) {
 		require.Len(t, d.Errors, 3)
 	}).Return(nil)
 
-	records := make(Records, n)
+	records := make(kinesisstream.Records, n)
 	for i := range records {
-		rec := &Record{}
+		rec := &kinesisstream.Record{}
 		istr := strconv.Itoa(i)
 		if i == 0 || i == 4 || i == 7 {
-			rec.add("p1", istr, "et1")
+			rec.Add("p1", istr, "et1")
 		}
 		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.add("p2", istr, "et2")
+			rec.Add("p2", istr, "et2")
 		}
 		if i == 2 || i == 3 || i == 8 {
-			rec.add("p3", istr, "et3")
+			rec.Add("p3", istr, "et3")
 		}
 		records[i] = rec
 	}

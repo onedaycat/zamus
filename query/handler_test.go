@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-	"runtime"
 	"testing"
 
 	"github.com/onedaycat/errors"
@@ -660,10 +659,6 @@ func TestBatchInvokePreHandlerEachHandlerReturn(t *testing.T) {
 	require.Equal(t, 0, nF)
 	require.Equal(t, 0, nErr)
 	require.Equal(t, 1, nPre)
-}
-
-func init() {
-	runtime.GOMAXPROCS(1)
 }
 
 func BenchmarkInvokeHandler(b *testing.B) {

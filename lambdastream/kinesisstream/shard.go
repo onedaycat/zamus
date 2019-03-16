@@ -3,6 +3,7 @@ package kinesisstream
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
@@ -13,22 +14,118 @@ import (
 	"github.com/onedaycat/zamus/tracer"
 )
 
+type shardinfoList []*shardinfo
+
+func newShardInfoList(n int, c *shardStrategy) shardinfoList {
+	shardinfoList := make([]*shardinfo, n)
+	for i := range shardinfoList {
+		shardinfoList[i] = &shardinfo{
+			handlers: make([]*shardhandler, 0),
+			pk:       common.NewSetListFromList(make([]string, 0, 100)),
+			c:        c,
+		}
+	}
+
+	return shardinfoList
+}
+
+func (s shardinfoList) GetPK(key string) (int, bool) {
+	for i := range s {
+		if s[i].pk.Has(key) {
+			return i, true
+		}
+	}
+
+	return 0, false
+}
+
+func (s shardinfoList) AddPK(shard int, key string) {
+	s[shard].pk.Set(key)
+}
+
+func (s shardinfoList) Clear() {
+	for i := range s {
+		s[i].Clear()
+	}
+}
+
+type shardinfo struct {
+	handlers    []*shardhandler
+	pk          common.SetList
+	eventLength int
+	ctx         context.Context
+	c           *shardStrategy
+}
+
+func (s *shardinfo) AddEventMsg(msg *EventMsg) {
+	for _, handler := range s.handlers {
+		if handler.AddEventMsg(msg) {
+			s.eventLength++
+		}
+	}
+}
+
+func (s *shardinfo) AddHandler(handler EventMessagesHandler, sl common.SetList) {
+	s.handlers = append(s.handlers, &shardhandler{
+		Handler:      handler,
+		FilterEvents: sl,
+		EventMsgs:    make(EventMsgs, 0, 100),
+	})
+}
+
+func (s *shardinfo) Clear() {
+	s.pk.Clear()
+	for _, handler := range s.handlers {
+		handler.EventMsgs = handler.EventMsgs[:0]
+	}
+}
+
+type shardhandler struct {
+	Handler      EventMessagesHandler
+	FilterEvents common.SetList
+	EventMsgs    EventMsgs
+}
+
+func (s *shardhandler) AddEventMsg(msg *EventMsg) bool {
+	if s.FilterEvents == nil {
+		s.EventMsgs = append(s.EventMsgs, msg)
+		return true
+	}
+
+	if s.FilterEvents.Has(msg.EventType) {
+		s.EventMsgs = append(s.EventMsgs, msg)
+		return true
+	}
+
+	return false
+}
+
 type shardStrategy struct {
+	wg            errgroup.Group
 	nShard        int
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []*handlerInfo
-	eventTypes    map[string]struct{}
+	shardinfoList shardinfoList
+	eventTypes    common.Set
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
 	dql           dql.DQL
 }
 
-func NewShardStrategy(shard int) KinesisHandlerStrategy {
-	return &shardStrategy{
-		nShard:     shard,
-		eventTypes: make(map[string]struct{}, 20),
-		handlers:   make([]*handlerInfo, 0, 10),
+func NewShardStrategy(numShard ...int) KinesisHandlerStrategy {
+	var shard int
+	if len(numShard) == 0 {
+		shard = runtime.NumCPU()
+	} else {
+		shard = numShard[0]
 	}
+
+	s := &shardStrategy{
+		nShard: shard,
+	}
+
+	s.shardinfoList = newShardInfoList(shard, s)
+
+	return s
 }
 
 func (c *shardStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
@@ -40,9 +137,7 @@ func (c *shardStrategy) SetDQL(dql dql.DQL) {
 }
 
 func (c *shardStrategy) FilterEvents(eventTypes ...string) {
-	for _, eventType := range eventTypes {
-		c.eventTypes[eventType] = struct{}{}
-	}
+	c.eventTypes = common.NewSetFromList(eventTypes)
 }
 
 func (c *shardStrategy) PreHandlers(handlers ...EventMessagesHandler) {
@@ -54,78 +149,63 @@ func (c *shardStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 }
 
 func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
-	if filterEvents == nil {
-		c.handlers = append(c.handlers, &handlerInfo{
-			Handler:      handler,
-			FilterEvents: common.NewSet(),
-		})
-	} else {
-		c.handlers = append(c.handlers, &handlerInfo{
-			Handler:      handler,
-			FilterEvents: common.NewSetFromList(filterEvents()),
-		})
+	var sl common.SetList
+	if filterEvents != nil {
+		sl = common.NewSetListFromList(filterEvents())
+	}
+
+	for i := range c.shardinfoList {
+		c.shardinfoList[i].AddHandler(handler, sl)
 	}
 }
 
 func (c *shardStrategy) Process(ctx context.Context, records Records) errors.Error {
 	var eventType string
 	var pk string
-	var shardPos int
 	var pos int
 	var ok bool
-	shards := make([]EventMsgs, c.nShard)
-	pkPos := make(map[string]int, 100)
 
-	for i := 0; i < c.nShard; i++ {
-		shards[i] = make(EventMsgs, 0, 100)
-	}
+	c.shardinfoList.Clear()
 
 	if len(c.eventTypes) > 0 {
 		for i, record := range records {
 			eventType = record.Kinesis.Data.EventMsg.EventType
-			if _, ok := c.eventTypes[eventType]; !ok {
+			if !c.eventTypes.Has(eventType) {
 				continue
 			}
 
 			pk = record.Kinesis.PartitionKey
-			shardPos = i % c.nShard
-			pos, ok = pkPos[pk]
+			pos, ok = c.shardinfoList.GetPK(pk)
 			if !ok {
-				pkPos[pk] = shardPos
-				pos = shardPos
+				pos = i % c.nShard
+				c.shardinfoList.AddPK(pos, pk)
 			}
 
-			shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
+			c.shardinfoList[pos].AddEventMsg(record.Kinesis.Data.EventMsg)
 		}
 	} else {
 		for i, record := range records {
 			pk = record.Kinesis.PartitionKey
-			shardPos = i % c.nShard
-			pos, ok = pkPos[pk]
+			pos, ok = c.shardinfoList.GetPK(pk)
 			if !ok {
-				pkPos[pk] = shardPos
-				pos = shardPos
+				pos = i % c.nShard
+				c.shardinfoList.AddPK(pos, pk)
 			}
 
-			shards[pos] = append(shards[pos], record.Kinesis.Data.EventMsg)
+			c.shardinfoList[pos].AddEventMsg(record.Kinesis.Data.EventMsg)
 		}
 	}
-
 DQLRetry:
-	wg := errgroup.Group{}
-
-	for _, shard := range shards {
-		shard := shard
-		if len(shard) == 0 {
+	for _, shard := range c.shardinfoList {
+		if shard.eventLength == 0 {
 			continue
 		}
 
-		wg.Go(func() (err errors.Error) {
-			return c.handle(ctx, shard)
-		})
+		shard.ctx = ctx
+		c.wg.Go(shard.handleShard)
 	}
 
-	if err := wg.Wait(); err != nil {
+	if err := c.wg.Wait(); err != nil {
 		if c.dql != nil {
 			if ok := c.dql.Retry(); ok {
 				goto DQLRetry
@@ -133,6 +213,10 @@ DQLRetry:
 
 			msgs := make(EventMsgs, len(records))
 			for i, record := range records {
+				eventType = record.Kinesis.Data.EventMsg.EventType
+				if !c.eventTypes.Has(eventType) {
+					continue
+				}
 				msgs[i] = record.Kinesis.Data.EventMsg
 			}
 
@@ -186,76 +270,55 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err 
 	return
 }
 
-func (c *shardStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMsgs {
-	if info.FilterEvents.IsEmpty() {
-		return msgs
+func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs, handler EventMessagesHandler) (err errors.Error) {
+	defer c.recover(ctx, msgs, &err)
+	if err = handler(ctx, msgs); err != nil {
+		tracer.AddError(ctx, err)
+		if c.dql != nil {
+			c.dql.AddError(err)
+		}
+		for _, errhandler := range c.errorHandlers {
+			errhandler(ctx, msgs, err)
+		}
+		return err
 	}
 
-	var ok bool
-	fillter := make(EventMsgs, 0, len(msgs))
-	for _, msg := range msgs {
-		if ok = info.FilterEvents.Has(msg.EventType); ok {
-			fillter = append(fillter, msg)
+	return nil
+}
+
+func (s *shardinfo) handleShard() (err errors.Error) {
+	return s.c.handle(s.ctx, s)
+}
+
+func (c *shardStrategy) handle(ctx context.Context, shard *shardinfo) errors.Error {
+	var err errors.Error
+
+	for i := range shard.handlers {
+		if err = shard.c.doPreHandlers(ctx, nil); err != nil {
+			return err
+		}
+
+		if len(shard.handlers[i].EventMsgs) == 0 {
+			continue
+		}
+
+		if err = c.doHandlers(ctx, shard.handlers[i].EventMsgs, shard.handlers[i].Handler); err != nil {
+			return err
+		}
+
+		if err = shard.c.doPostHandler(ctx, nil); err != nil {
+			return err
 		}
 	}
 
-	return fillter
-}
-
-func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
-	wg := errgroup.Group{}
-	for _, handlerinfo := range c.handlers {
-		handlerinfo := handlerinfo
-		wg.Go(func() (aerr errors.Error) {
-			defer c.recover(ctx, msgs, &aerr)
-			newmsgs := c.filterEvents(handlerinfo, msgs)
-			if len(newmsgs) == 0 {
-				return nil
-			}
-
-			if aerr = handlerinfo.Handler(ctx, c.filterEvents(handlerinfo, newmsgs)); aerr != nil {
-				tracer.AddError(ctx, aerr)
-				if c.dql != nil {
-					c.dql.AddError(aerr)
-				}
-				for _, errhandler := range c.errorHandlers {
-					errhandler(ctx, newmsgs, aerr)
-				}
-				return aerr
-			}
-
-			return
-		})
-	}
-
-	return wg.Wait()
-}
-
-func (c *shardStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.Error) {
-	if len(msgs) == 0 {
-		return nil
-	}
-
-	if err = c.doPreHandlers(ctx, msgs); err != nil {
-		return err
-	}
-
-	if err = c.doHandlers(ctx, msgs); err != nil {
-		return err
-	}
-
-	if err = c.doPostHandler(ctx, msgs); err != nil {
-		return err
-	}
-
-	return
+	return nil
 }
 
 func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors.Error) {
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
-			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithPanic()
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(msgs)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -264,7 +327,7 @@ func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors
 			}
 			tracer.AddError(ctx, *err)
 		default:
-			*err = appErr.ErrPanic.WithPanic().WithMessage(fmt.Sprintf("%v\n", cause)).WithCaller()
+			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}

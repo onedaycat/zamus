@@ -95,13 +95,13 @@ func (h *Handler) recovery(ctx context.Context, cmd *CommandReq, err *errors.Err
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
-			*err = appErr.ErrPanic.WithCause(cause).WithCaller()
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(cmd)
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
 			tracer.AddError(ctx, *err)
 		default:
-			*err = appErr.ErrPanic.WithPanic().WithMessage(fmt.Sprintf("%v\n", cause)).WithCaller()
+			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(cmd)
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}

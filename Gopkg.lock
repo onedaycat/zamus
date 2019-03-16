@@ -11,7 +11,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1e6f0273571cc6932989e8a30d5360e77cf4d27152981e5a906a9232f20ff663"
+  digest = "1:95fd14230b48a74765db94f7064f0b5617f52739a164f6d41e5b57bec5b3ff9b"
   name = "github.com/aws/aws-lambda-go"
   packages = [
     "events",
@@ -21,7 +21,7 @@
     "lambdacontext",
   ]
   pruneopts = "UT"
-  revision = "ec2fec7cfe48fbf48ea1a6855a077c372bbb1b1c"
+  revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
   digest = "1:291f04c7da63e4aa1dc888d92972ae849c478e4c6340b05e5edb4f689358c4b6"
@@ -74,7 +74,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:911f9d56691cb0fee3a32563ad6ad7a4bcfdbf6e0b55b5db497ffac62b2d37fa"
+  digest = "1:05aa8a1c5137504002de093e06d72d6384a24e5223326fe544c879242dae73d5"
   name = "github.com/aws/aws-xray-sdk-go"
   packages = [
     "daemoncfg",
@@ -91,7 +91,7 @@
     "xraylog",
   ]
   pruneopts = "UT"
-  revision = "68182607ac166a479900032c581b4676299d9724"
+  revision = "7b1b7844235c182d02a6b03949df68a00ec81090"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -127,11 +127,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e8aed6a962c25dc86fa885a9386129a9f2bb6f641849dd09a698285e946accbc"
+  digest = "1:e7d2b08efdf41cda983b5c42458b50f78543b40de51be50f1c0e6338d48ad6a8"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "2c9d54fefcfb443251f5b92cd5106cf4dc07b880"
+  revision = "1fbca2aabb09915d4f1006d01b271ad7778eec4f"
 
 [[projects]]
   branch = "master"
@@ -139,7 +139,7 @@
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
+  revision = "b85cd75de734650db18a99a943fe351d41387800"
 
 [[projects]]
   branch = "master"
@@ -209,7 +209,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f188704f34683417006151f43d54fc46d0fb4a1d23587493931f6e9d5cdcd45a"
+  digest = "1:f10c4835cd5a1cbf00338d1f8a2336ff77947e9b155bacfd0b136462093fa3e3"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -217,7 +217,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "ccfb57750e14178b7500c66a130df13e0107bf50"
+  revision = "fb555b91a696e085917647a4add96fa4f0698ea0"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"

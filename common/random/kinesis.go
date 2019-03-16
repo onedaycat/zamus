@@ -31,6 +31,15 @@ func (b *kinesisBuilder) BuildJSON() []byte {
 	return data
 }
 
+func (k *kinesisBuilder) RandomMessage(n int) *kinesisBuilder {
+	msgs := EventMsgs().RandomEventMsgs(n).Build()
+	for i := 0; i < n; i++ {
+		k.Add(msgs[i].AggregateID, msgs[i])
+	}
+
+	return k
+}
+
 func (k *kinesisBuilder) Add(partitionKey string, events ...*eventstore.EventMsg) *kinesisBuilder {
 	for _, event := range events {
 		k.event.Records = append(k.event.Records, &kinesisstream.Record{

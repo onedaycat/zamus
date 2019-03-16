@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/onedaycat/errors"
-	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
 	appErr "github.com/onedaycat/zamus/errors"
@@ -13,9 +12,33 @@ import (
 	"github.com/onedaycat/zamus/tracer"
 )
 
+type simplehandler struct {
+	Handler      EventMessagesHandler
+	FilterEvents common.SetList
+	EventMsgs    EventMsgs
+}
+
+func (s *simplehandler) AddEventMsg(msg *EventMsg) bool {
+	if s.FilterEvents == nil {
+		s.EventMsgs = append(s.EventMsgs, msg)
+		return true
+	}
+
+	if s.FilterEvents.Has(msg.EventType) {
+		s.EventMsgs = append(s.EventMsgs, msg)
+		return true
+	}
+
+	return false
+}
+
+func (s *simplehandler) Clear() {
+	s.EventMsgs = s.EventMsgs[:0]
+}
+
 type simpleStrategy struct {
 	errorHandlers []EventMessagesErrorHandler
-	handlers      []*handlerInfo
+	handlers      []*simplehandler
 	eventTypes    map[string]struct{}
 	preHandlers   []EventMessagesHandler
 	postHandlers  []EventMessagesHandler
@@ -23,10 +46,12 @@ type simpleStrategy struct {
 }
 
 func NewSimpleStrategy() KinesisHandlerStrategy {
-	return &simpleStrategy{
+	s := &simpleStrategy{
 		eventTypes: make(map[string]struct{}, 20),
-		handlers:   make([]*handlerInfo, 0, 10),
+		handlers:   make([]*simplehandler, 0, 10),
 	}
+
+	return s
 }
 
 func (c *simpleStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
@@ -53,43 +78,72 @@ func (c *simpleStrategy) PostHandlers(handlers ...EventMessagesHandler) {
 
 func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents FilterEvents) {
 	if filterEvents == nil {
-		c.handlers = append(c.handlers, &handlerInfo{
+		c.handlers = append(c.handlers, &simplehandler{
 			Handler:      handler,
-			FilterEvents: common.NewSet(),
+			FilterEvents: nil,
+			EventMsgs:    make(EventMsgs, 0, 100),
 		})
 	} else {
-		c.handlers = append(c.handlers, &handlerInfo{
+		c.handlers = append(c.handlers, &simplehandler{
 			Handler:      handler,
-			FilterEvents: common.NewSetFromList(filterEvents()),
+			FilterEvents: common.NewSetListFromList(filterEvents()),
+			EventMsgs:    make(EventMsgs, 0, 100),
 		})
 	}
 }
 
 func (c *simpleStrategy) Process(ctx context.Context, records Records) errors.Error {
-	var eventType string
-	msgs := make(EventMsgs, 0, 100)
+
+	for i := 0; i < len(c.handlers); i++ {
+		c.handlers[i].Clear()
+	}
 
 	if len(c.eventTypes) > 0 {
+		var eventType string
 		for _, record := range records {
 			eventType = record.Kinesis.Data.EventMsg.EventType
 			if _, ok := c.eventTypes[eventType]; !ok {
 				continue
 			}
 
-			msgs = append(msgs, record.Kinesis.Data.EventMsg)
+			for i := 0; i < len(c.handlers); i++ {
+				c.handlers[i].AddEventMsg(record.Kinesis.Data.EventMsg)
+			}
 		}
 	} else {
 		for _, record := range records {
-			msgs = append(msgs, record.Kinesis.Data.EventMsg)
+			for i := 0; i < len(c.handlers); i++ {
+				c.handlers[i].AddEventMsg(record.Kinesis.Data.EventMsg)
+			}
+		}
+	}
+DQLRetry:
+
+	var err errors.Error
+	var eventType string
+	for i := 0; i < len(c.handlers); i++ {
+		if len(c.handlers[i].EventMsgs) == 0 {
+			continue
+		}
+
+		if err = c.handle(ctx, c.handlers[i].Handler, c.handlers[i].EventMsgs); err != nil {
+			break
 		}
 	}
 
-DQLRetry:
-
-	if err := c.handle(ctx, msgs); err != nil {
+	if err != nil {
 		if c.dql != nil {
 			if ok := c.dql.Retry(); ok {
 				goto DQLRetry
+			}
+
+			msgs := make(EventMsgs, len(records))
+			for i, record := range records {
+				eventType = record.Kinesis.Data.EventMsg.EventType
+				if _, ok := c.eventTypes[eventType]; !ok {
+					continue
+				}
+				msgs[i] = record.Kinesis.Data.EventMsg
 			}
 
 			msgList := eventstore.EventMsgList{
@@ -121,36 +175,23 @@ func (c *simpleStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMs
 	return fillter
 }
 
-func (c *simpleStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
-	wg := errgroup.Group{}
-	for _, handlerinfo := range c.handlers {
-		handlerinfo := handlerinfo
-		wg.Go(func() (aerr errors.Error) {
-			defer c.recover(ctx, msgs, &aerr)
-			newmsgs := c.filterEvents(handlerinfo, msgs)
-			if len(newmsgs) == 0 {
-				return nil
-			}
-
-			if aerr = handlerinfo.Handler(ctx, c.filterEvents(handlerinfo, newmsgs)); aerr != nil {
-				tracer.AddError(ctx, aerr)
-				if c.dql != nil {
-					c.dql.AddError(aerr)
-				}
-				for _, errhandler := range c.errorHandlers {
-					errhandler(ctx, newmsgs, aerr)
-				}
-				return aerr
-			}
-
-			return
-		})
+func (c *simpleStrategy) doHandlers(ctx context.Context, handler EventMessagesHandler, msgs EventMsgs) (err errors.Error) {
+	defer c.recover(ctx, msgs, &err)
+	if err = handler(ctx, msgs); err != nil {
+		tracer.AddError(ctx, err)
+		if c.dql != nil {
+			c.dql.AddError(err)
+		}
+		for _, errhandler := range c.errorHandlers {
+			errhandler(ctx, msgs, err)
+		}
+		return err
 	}
 
-	return wg.Wait()
+	return nil
 }
 
-func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors.Error) {
+func (c *simpleStrategy) handle(ctx context.Context, handler EventMessagesHandler, msgs EventMsgs) (err errors.Error) {
 	if len(msgs) == 0 {
 		return nil
 	}
@@ -169,7 +210,7 @@ func (c *simpleStrategy) handle(ctx context.Context, msgs EventMsgs) (err errors
 		}
 	}
 
-	if err = c.doHandlers(ctx, msgs); err != nil {
+	if err = c.doHandlers(ctx, handler, msgs); err != nil {
 		return err
 	}
 
@@ -193,7 +234,7 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
-			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithPanic()
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(msgs)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -202,7 +243,7 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error
 			}
 			tracer.AddError(ctx, *err)
 		default:
-			*err = appErr.ErrPanic.WithPanic().WithMessage(fmt.Sprintf("%v\n", cause)).WithCaller()
+			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}

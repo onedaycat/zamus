@@ -32,7 +32,12 @@ func NewPartitionStrategy() KinesisHandlerStrategy {
 
 	ps.pkPool = sync.Pool{
 		New: func() interface{} {
-			return make(map[string]EventMsgs, 100)
+			m := make(map[string]EventMsgs, 100)
+			for key := range m {
+				m[key] = make(EventMsgs, 0, 100)
+			}
+
+			return m
 		},
 	}
 
@@ -79,15 +84,12 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) errors
 	var eventType string
 	var pk string
 	partitions := c.pkPool.Get().(map[string]EventMsgs)
+
 	defer func() {
 		for key := range partitions {
-			partitions[key] = make(EventMsgs, 0, 100)
-		}
-		for key := range partitions {
-			delete(partitions, key)
+			partitions[key] = partitions[key][:0]
 		}
 		c.pkPool.Put(partitions)
-
 	}()
 
 	if len(c.eventTypes) > 0 {
@@ -99,18 +101,12 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) errors
 			}
 
 			pk = record.Kinesis.PartitionKey
-			if _, ok := partitions[pk]; !ok {
-				partitions[pk] = make(EventMsgs, 0, 100)
-			}
 
 			partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
 		}
 	} else {
 		for _, record := range records {
 			pk = record.Kinesis.PartitionKey
-			if _, ok := partitions[pk]; !ok {
-				partitions[pk] = make(EventMsgs, 0, 100)
-			}
 
 			partitions[pk] = append(partitions[pk], record.Kinesis.Data.EventMsg)
 		}
@@ -153,6 +149,10 @@ DQLRetry:
 		return err
 	}
 
+	return nil
+}
+
+func jack() errors.Error {
 	return nil
 }
 
@@ -261,7 +261,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 	if r := recover(); r != nil {
 		switch cause := r.(type) {
 		case error:
-			*err = appErr.ErrPanic.WithPanic().WithCause(cause).WithCaller()
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(msgs)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}
@@ -270,7 +270,7 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			}
 			tracer.AddError(ctx, *err)
 		default:
-			*err = appErr.ErrPanic.WithPanic().WithMessage(fmt.Sprintf("%v\n", cause)).WithCaller()
+			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
 			if c.dql != nil {
 				c.dql.AddError(*err)
 			}

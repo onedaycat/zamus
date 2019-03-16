@@ -55,3 +55,7 @@ func (s Set) List() []string {
 
 	return keys
 }
+
+func (s Set) Clear() {
+	s = make(map[string]struct{})
+}
