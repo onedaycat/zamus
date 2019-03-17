@@ -1,4 +1,4 @@
-package eventhandler
+package reactor
 
 import (
 	"context"

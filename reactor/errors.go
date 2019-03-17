@@ -1,4 +1,4 @@
-package eventhandler
+package reactor
 
 import "github.com/onedaycat/zamus/errors"
 
