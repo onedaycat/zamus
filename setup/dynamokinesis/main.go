@@ -16,7 +16,6 @@ import (
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/reactor/dynamostream"
-	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/rs/zerolog/log"
 )
@@ -41,13 +40,11 @@ func (h *Handler) publish(ctx context.Context, streamName string, records []*kin
 
 	if err != nil {
 		appErr := appErr.ErrUnablePublishKinesis.WithCaller().WithCause(err)
-		tracer.AddError(ctx, appErr)
 		return appErr
 	}
 
 	if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
 		appErr := appErr.ErrUnablePublishKinesis.WithCaller().WithCause(errors.New("One or more events published failed"))
-		tracer.AddError(ctx, appErr)
 		return appErr
 	}
 

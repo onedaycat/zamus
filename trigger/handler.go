@@ -2,7 +2,6 @@ package trigger
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -19,7 +18,6 @@ import (
 
 type TriggerHandler = func(ctx context.Context, payload Payload) (interface{}, errors.Error)
 type ErrorHandler = func(ctx context.Context, payload Payload, err errors.Error)
-
 type Payload jsoniter.RawMessage
 
 func (p Payload) Unmarshal(v interface{}) errors.Error {
@@ -124,7 +122,7 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) (resultByte []byte
 		return nil, err
 	}
 
-	resultByte, _ = json.Marshal(result)
+	resultByte, _ = common.MarshalJSON(result)
 
 	return resultByte, nil
 }

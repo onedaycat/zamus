@@ -40,14 +40,11 @@ func TestEventMsg(t *testing.T) {
 		Build()
 	require.Equal(t, now, msg.Time)
 
-	metadata := &eventstore.Metadata{
-		UserID: "u1",
-	}
-	metadataByte, _ := metadata.Marshal()
+	metadata := eventstore.NewMetadata().SetUserID("u1")
 	msg = EventMsg().
 		Metadata(metadata).
 		Build()
-	require.Equal(t, metadataByte, msg.Metadata)
+	require.Equal(t, metadata, msg.Metadata)
 
 	event := map[string]interface{}{
 		"id": "1",

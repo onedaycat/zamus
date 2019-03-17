@@ -22,85 +22,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-type Metadata struct {
-	Extra                map[string]string `protobuf:"bytes,1,rep,name=extra,proto3" json:"e,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	UserID               string            `protobuf:"bytes,2,opt,name=userID,proto3" json:"u,omitempty"`
-	Ip                   string            `protobuf:"bytes,3,opt,name=ip,proto3" json:"i,omitempty"`
-	CorrelationID        string            `protobuf:"bytes,4,opt,name=correlationID,proto3" json:"c,omitempty"`
-	TxID                 string            `protobuf:"bytes,5,opt,name=txID,proto3" json:"t,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
-	XXX_unrecognized     []byte            `json:"-"`
-	XXX_sizecache        int32             `json:"-"`
-}
-
-func (m *Metadata) Reset()         { *m = Metadata{} }
-func (m *Metadata) String() string { return proto.CompactTextString(m) }
-func (*Metadata) ProtoMessage()    {}
-func (*Metadata) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d17a9d3f0ddf27e, []int{0}
-}
-func (m *Metadata) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Metadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Metadata.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalTo(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Metadata) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Metadata.Merge(m, src)
-}
-func (m *Metadata) XXX_Size() int {
-	return m.Size()
-}
-func (m *Metadata) XXX_DiscardUnknown() {
-	xxx_messageInfo_Metadata.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Metadata proto.InternalMessageInfo
-
-func (m *Metadata) GetExtra() map[string]string {
-	if m != nil {
-		return m.Extra
-	}
-	return nil
-}
-
-func (m *Metadata) GetUserID() string {
-	if m != nil {
-		return m.UserID
-	}
-	return ""
-}
-
-func (m *Metadata) GetIp() string {
-	if m != nil {
-		return m.Ip
-	}
-	return ""
-}
-
-func (m *Metadata) GetCorrelationID() string {
-	if m != nil {
-		return m.CorrelationID
-	}
-	return ""
-}
-
-func (m *Metadata) GetTxID() string {
-	if m != nil {
-		return m.TxID
-	}
-	return ""
-}
-
 type EventMsg struct {
 	EventID              string   `protobuf:"bytes,1,opt,name=eventID,proto3" json:"i,omitempty"`
 	EventType            string   `protobuf:"bytes,2,opt,name=eventType,proto3" json:"b,omitempty"`
@@ -110,7 +31,7 @@ type EventMsg struct {
 	Time                 int64    `protobuf:"varint,6,opt,name=time,proto3" json:"t,omitempty"`
 	Seq                  int64    `protobuf:"varint,7,opt,name=seq,proto3" json:"s,omitempty"`
 	Expired              int64    `protobuf:"varint,8,opt,name=expired,proto3" json:"l,omitempty"`
-	Metadata             []byte   `protobuf:"bytes,9,opt,name=metadata,proto3" json:"m,omitempty"`
+	Metadata             Metadata `protobuf:"bytes,9,rep,name=metadata,proto3" json:"m,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -120,7 +41,7 @@ func (m *EventMsg) Reset()         { *m = EventMsg{} }
 func (m *EventMsg) String() string { return proto.CompactTextString(m) }
 func (*EventMsg) ProtoMessage()    {}
 func (*EventMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d17a9d3f0ddf27e, []int{1}
+	return fileDescriptor_2d17a9d3f0ddf27e, []int{0}
 }
 func (m *EventMsg) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -205,7 +126,7 @@ func (m *EventMsg) GetExpired() int64 {
 	return 0
 }
 
-func (m *EventMsg) GetMetadata() []byte {
+func (m *EventMsg) GetMetadata() map[string]string {
 	if m != nil {
 		return m.Metadata
 	}
@@ -223,7 +144,7 @@ func (m *EventMsgList) Reset()         { *m = EventMsgList{} }
 func (m *EventMsgList) String() string { return proto.CompactTextString(m) }
 func (*EventMsgList) ProtoMessage()    {}
 func (*EventMsgList) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d17a9d3f0ddf27e, []int{2}
+	return fileDescriptor_2d17a9d3f0ddf27e, []int{1}
 }
 func (m *EventMsgList) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -260,101 +181,34 @@ func (m *EventMsgList) GetEventMsgs() []*EventMsg {
 }
 
 func init() {
-	proto.RegisterType((*Metadata)(nil), "eventstore.Metadata")
-	proto.RegisterMapType((map[string]string)(nil), "eventstore.Metadata.ExtraEntry")
 	proto.RegisterType((*EventMsg)(nil), "eventstore.EventMsg")
+	proto.RegisterMapType((map[string]string)(nil), "eventstore.EventMsg.MetadataEntry")
 	proto.RegisterType((*EventMsgList)(nil), "eventstore.EventMsgList")
 }
 
 func init() { proto.RegisterFile("event.proto", fileDescriptor_2d17a9d3f0ddf27e) }
 
 var fileDescriptor_2d17a9d3f0ddf27e = []byte{
-	// 364 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x92, 0x4f, 0x6b, 0xe2, 0x40,
-	0x18, 0xc6, 0x77, 0x12, 0xff, 0xc4, 0x57, 0x77, 0x91, 0x41, 0x96, 0x41, 0x96, 0x6c, 0x08, 0x7b,
-	0xf0, 0x94, 0x83, 0xcb, 0x82, 0xec, 0x51, 0xe2, 0x21, 0x50, 0x2f, 0xa1, 0xf4, 0x3e, 0xad, 0x2f,
-	0x21, 0x54, 0x93, 0x74, 0x66, 0x14, 0xfd, 0x26, 0xfd, 0x48, 0x3d, 0xf6, 0x0b, 0x14, 0x8a, 0xfd,
-	0x16, 0x3d, 0x95, 0xbc, 0x26, 0x46, 0x6f, 0xcf, 0xf3, 0xcc, 0x33, 0x93, 0xf7, 0xc7, 0x1b, 0xe8,
-	0xe3, 0x0e, 0x33, 0x13, 0x14, 0x2a, 0x37, 0x39, 0x07, 0x32, 0xda, 0xe4, 0x0a, 0xfd, 0x37, 0x06,
-	0xce, 0x12, 0x8d, 0x5c, 0x49, 0x23, 0xf9, 0x3f, 0x68, 0xe3, 0xde, 0x28, 0x29, 0x98, 0x67, 0x4f,
-	0xfa, 0xd3, 0xdf, 0x41, 0x53, 0x0c, 0xea, 0x52, 0xb0, 0x28, 0x1b, 0x8b, 0xcc, 0xa8, 0x43, 0x7c,
-	0x6a, 0xf3, 0x9f, 0xd0, 0xd9, 0x6a, 0x54, 0x51, 0x28, 0x2c, 0x8f, 0x4d, 0x7a, 0x71, 0xe5, 0xf8,
-	0x0f, 0xb0, 0xd2, 0x42, 0xd8, 0x94, 0x59, 0x69, 0xc1, 0xff, 0xc0, 0xf7, 0x87, 0x5c, 0x29, 0x5c,
-	0x4b, 0x93, 0xe6, 0x59, 0x14, 0x8a, 0x16, 0x1d, 0x5d, 0x87, 0x9c, 0x43, 0xcb, 0xec, 0xa3, 0x50,
-	0xb4, 0xe9, 0x90, 0xf4, 0x78, 0x06, 0xd0, 0x7c, 0x96, 0x0f, 0xc1, 0x7e, 0xc4, 0x83, 0x60, 0x54,
-	0x28, 0x25, 0x1f, 0x41, 0x7b, 0x27, 0xd7, 0x5b, 0xac, 0x06, 0x38, 0x99, 0xff, 0xd6, 0x8c, 0xf9,
-	0x9f, 0x0c, 0x9c, 0x45, 0x49, 0xb1, 0xd4, 0x09, 0x17, 0xd0, 0x25, 0xa2, 0x28, 0xac, 0x2e, 0xd7,
-	0x96, 0xff, 0x82, 0x1e, 0xc9, 0xdb, 0x43, 0x51, 0x3f, 0xd2, 0x04, 0xdc, 0x87, 0x01, 0x99, 0x3b,
-	0x54, 0x3a, 0xcd, 0xb3, 0x0a, 0xe9, 0x2a, 0xe3, 0x1e, 0xf4, 0x65, 0x92, 0x28, 0x4c, 0xa4, 0xc1,
-	0x33, 0xda, 0x65, 0x54, 0x0e, 0x49, 0x37, 0x88, 0x6c, 0x10, 0x9f, 0x0c, 0xe1, 0xa6, 0x1b, 0x14,
-	0x1d, 0x8f, 0x4d, 0xec, 0x98, 0x74, 0x09, 0xa8, 0xf1, 0x49, 0x74, 0x29, 0x2a, 0x25, 0x4d, 0xbe,
-	0x2f, 0x52, 0x85, 0x2b, 0xe1, 0x50, 0x5a, 0x5b, 0x3e, 0x06, 0x67, 0x53, 0xad, 0x46, 0xf4, 0xe8,
-	0xe1, 0xb3, 0xf7, 0xe7, 0x30, 0xa8, 0xd9, 0x6f, 0x52, 0x6d, 0xf8, 0xb4, 0xa2, 0x5c, 0xea, 0x44,
-	0x57, 0x3b, 0x1e, 0x5d, 0xee, 0xb8, 0x2e, 0xc7, 0x4d, 0x6d, 0x3e, 0x7c, 0x39, 0xba, 0xec, 0xf5,
-	0xe8, 0xb2, 0xf7, 0xa3, 0xcb, 0x9e, 0x3f, 0xdc, 0x6f, 0xf7, 0x1d, 0xfa, 0x8b, 0xfe, 0x7e, 0x05,
-	0x00, 0x00, 0xff, 0xff, 0x72, 0x07, 0xeb, 0x38, 0x54, 0x02, 0x00, 0x00,
-}
-
-func (m *Metadata) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalTo(dAtA)
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Metadata) MarshalTo(dAtA []byte) (int, error) {
-	var i int
-	_ = i
-	var l int
-	_ = l
-	if len(m.Extra) > 0 {
-		for k, _ := range m.Extra {
-			dAtA[i] = 0xa
-			i++
-			v := m.Extra[k]
-			mapSize := 1 + len(k) + sovEvent(uint64(len(k))) + 1 + len(v) + sovEvent(uint64(len(v)))
-			i = encodeVarintEvent(dAtA, i, uint64(mapSize))
-			dAtA[i] = 0xa
-			i++
-			i = encodeVarintEvent(dAtA, i, uint64(len(k)))
-			i += copy(dAtA[i:], k)
-			dAtA[i] = 0x12
-			i++
-			i = encodeVarintEvent(dAtA, i, uint64(len(v)))
-			i += copy(dAtA[i:], v)
-		}
-	}
-	if len(m.UserID) > 0 {
-		dAtA[i] = 0x12
-		i++
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.UserID)))
-		i += copy(dAtA[i:], m.UserID)
-	}
-	if len(m.Ip) > 0 {
-		dAtA[i] = 0x1a
-		i++
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.Ip)))
-		i += copy(dAtA[i:], m.Ip)
-	}
-	if len(m.CorrelationID) > 0 {
-		dAtA[i] = 0x22
-		i++
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.CorrelationID)))
-		i += copy(dAtA[i:], m.CorrelationID)
-	}
-	if len(m.TxID) > 0 {
-		dAtA[i] = 0x2a
-		i++
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.TxID)))
-		i += copy(dAtA[i:], m.TxID)
-	}
-	if m.XXX_unrecognized != nil {
-		i += copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	return i, nil
+	// 301 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x91, 0x4f, 0x4b, 0xc3, 0x40,
+	0x10, 0xc5, 0xdd, 0xa6, 0xff, 0x32, 0x89, 0x50, 0x96, 0x1e, 0x16, 0x91, 0x10, 0x72, 0xca, 0x29,
+	0x87, 0x7a, 0x11, 0x05, 0x0f, 0xa5, 0x3d, 0x14, 0xcc, 0x25, 0x88, 0xf7, 0x95, 0x0e, 0x21, 0x68,
+	0x93, 0xb8, 0xbb, 0x16, 0xf3, 0x4d, 0xfc, 0x48, 0x1e, 0xbd, 0x7b, 0x91, 0xf8, 0x45, 0x24, 0xd3,
+	0xc4, 0x58, 0xf0, 0xf6, 0x7e, 0x6f, 0xde, 0xb2, 0x6f, 0x67, 0xc1, 0xc1, 0x3d, 0xe6, 0x26, 0x2a,
+	0x55, 0x61, 0x0a, 0x0e, 0x04, 0xda, 0x14, 0x0a, 0x83, 0xcf, 0x01, 0x4c, 0xd7, 0x0d, 0xc6, 0x3a,
+	0xe5, 0x02, 0x26, 0x34, 0xda, 0xac, 0x04, 0xf3, 0x59, 0x68, 0x27, 0x1d, 0xf2, 0x73, 0xb0, 0x49,
+	0xde, 0x55, 0x25, 0x8a, 0x01, 0xcd, 0x7a, 0x83, 0x07, 0xe0, 0x12, 0xdc, 0xa3, 0xd2, 0x59, 0x91,
+	0x0b, 0x8b, 0x02, 0x47, 0x1e, 0xf7, 0xc1, 0x91, 0x69, 0xaa, 0x30, 0x95, 0x06, 0x37, 0x2b, 0x31,
+	0xa4, 0xc8, 0x5f, 0x8b, 0xcf, 0x61, 0x44, 0x27, 0xc4, 0xc8, 0x67, 0xa1, 0x9b, 0x1c, 0x80, 0x73,
+	0x18, 0x9a, 0x6c, 0x87, 0x62, 0xec, 0xb3, 0xd0, 0x4a, 0x48, 0xf3, 0x19, 0x58, 0x1a, 0x9f, 0xc5,
+	0x84, 0xac, 0x46, 0x52, 0xf3, 0xd7, 0x32, 0x53, 0xb8, 0x15, 0x53, 0x72, 0x3b, 0xe4, 0x37, 0x30,
+	0xdd, 0xa1, 0x91, 0x5b, 0x69, 0xa4, 0xb0, 0x7d, 0x2b, 0x74, 0x16, 0x41, 0xd4, 0xbf, 0x3f, 0xea,
+	0xde, 0x1e, 0xc5, 0x6d, 0x68, 0x9d, 0x1b, 0x55, 0x25, 0xbf, 0x67, 0xce, 0xae, 0xe1, 0xf4, 0x68,
+	0xd4, 0x5c, 0xfe, 0x88, 0x55, 0xbb, 0xa0, 0x46, 0x36, 0xc5, 0xf7, 0xf2, 0xe9, 0xa5, 0x5b, 0xcc,
+	0x01, 0xae, 0x06, 0x97, 0x2c, 0x58, 0x82, 0xdb, 0x5d, 0x70, 0x9b, 0x69, 0xc3, 0x17, 0xed, 0x1a,
+	0x63, 0x9d, 0x6a, 0xc1, 0xa8, 0xcd, 0xfc, 0xbf, 0x36, 0x49, 0x1f, 0x5b, 0xce, 0xde, 0x6b, 0x8f,
+	0x7d, 0xd4, 0x1e, 0xfb, 0xaa, 0x3d, 0xf6, 0xf6, 0xed, 0x9d, 0x3c, 0x8c, 0xe9, 0x1b, 0x2f, 0x7e,
+	0x02, 0x00, 0x00, 0xff, 0xff, 0xab, 0x7d, 0xbe, 0x51, 0xd5, 0x01, 0x00, 0x00,
 }
 
 func (m *EventMsg) Marshal() (dAtA []byte, err error) {
@@ -418,10 +272,21 @@ func (m *EventMsg) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintEvent(dAtA, i, uint64(m.Expired))
 	}
 	if len(m.Metadata) > 0 {
-		dAtA[i] = 0x4a
-		i++
-		i = encodeVarintEvent(dAtA, i, uint64(len(m.Metadata)))
-		i += copy(dAtA[i:], m.Metadata)
+		for k, _ := range m.Metadata {
+			dAtA[i] = 0x4a
+			i++
+			v := m.Metadata[k]
+			mapSize := 1 + len(k) + sovEvent(uint64(len(k))) + 1 + len(v) + sovEvent(uint64(len(v)))
+			i = encodeVarintEvent(dAtA, i, uint64(mapSize))
+			dAtA[i] = 0xa
+			i++
+			i = encodeVarintEvent(dAtA, i, uint64(len(k)))
+			i += copy(dAtA[i:], k)
+			dAtA[i] = 0x12
+			i++
+			i = encodeVarintEvent(dAtA, i, uint64(len(v)))
+			i += copy(dAtA[i:], v)
+		}
 	}
 	if m.XXX_unrecognized != nil {
 		i += copy(dAtA[i:], m.XXX_unrecognized)
@@ -471,42 +336,6 @@ func encodeVarintEvent(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return offset + 1
 }
-func (m *Metadata) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if len(m.Extra) > 0 {
-		for k, v := range m.Extra {
-			_ = k
-			_ = v
-			mapEntrySize := 1 + len(k) + sovEvent(uint64(len(k))) + 1 + len(v) + sovEvent(uint64(len(v)))
-			n += mapEntrySize + 1 + sovEvent(uint64(mapEntrySize))
-		}
-	}
-	l = len(m.UserID)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	l = len(m.Ip)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	l = len(m.CorrelationID)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	l = len(m.TxID)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
-	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
 func (m *EventMsg) Size() (n int) {
 	if m == nil {
 		return 0
@@ -542,9 +371,13 @@ func (m *EventMsg) Size() (n int) {
 	if m.Expired != 0 {
 		n += 1 + sovEvent(uint64(m.Expired))
 	}
-	l = len(m.Metadata)
-	if l > 0 {
-		n += 1 + l + sovEvent(uint64(l))
+	if len(m.Metadata) > 0 {
+		for k, v := range m.Metadata {
+			_ = k
+			_ = v
+			mapEntrySize := 1 + len(k) + sovEvent(uint64(len(k))) + 1 + len(v) + sovEvent(uint64(len(v)))
+			n += mapEntrySize + 1 + sovEvent(uint64(mapEntrySize))
+		}
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -582,291 +415,6 @@ func sovEvent(x uint64) (n int) {
 }
 func sozEvent(x uint64) (n int) {
 	return sovEvent(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *Metadata) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowEvent
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= (uint64(b) & 0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Metadata: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Metadata: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Extra", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= (int(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + msglen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.Extra == nil {
-				m.Extra = make(map[string]string)
-			}
-			var mapkey string
-			var mapvalue string
-			for iNdEx < postIndex {
-				entryPreIndex := iNdEx
-				var wire uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return ErrIntOverflowEvent
-					}
-					if iNdEx >= l {
-						return io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					wire |= (uint64(b) & 0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				fieldNum := int32(wire >> 3)
-				if fieldNum == 1 {
-					var stringLenmapkey uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEvent
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapkey |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapkey := int(stringLenmapkey)
-					if intStringLenmapkey < 0 {
-						return ErrInvalidLengthEvent
-					}
-					postStringIndexmapkey := iNdEx + intStringLenmapkey
-					if postStringIndexmapkey > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
-					iNdEx = postStringIndexmapkey
-				} else if fieldNum == 2 {
-					var stringLenmapvalue uint64
-					for shift := uint(0); ; shift += 7 {
-						if shift >= 64 {
-							return ErrIntOverflowEvent
-						}
-						if iNdEx >= l {
-							return io.ErrUnexpectedEOF
-						}
-						b := dAtA[iNdEx]
-						iNdEx++
-						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
-						if b < 0x80 {
-							break
-						}
-					}
-					intStringLenmapvalue := int(stringLenmapvalue)
-					if intStringLenmapvalue < 0 {
-						return ErrInvalidLengthEvent
-					}
-					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
-					if postStringIndexmapvalue > l {
-						return io.ErrUnexpectedEOF
-					}
-					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
-					iNdEx = postStringIndexmapvalue
-				} else {
-					iNdEx = entryPreIndex
-					skippy, err := skipEvent(dAtA[iNdEx:])
-					if err != nil {
-						return err
-					}
-					if skippy < 0 {
-						return ErrInvalidLengthEvent
-					}
-					if (iNdEx + skippy) > postIndex {
-						return io.ErrUnexpectedEOF
-					}
-					iNdEx += skippy
-				}
-			}
-			m.Extra[mapkey] = mapvalue
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UserID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.UserID = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ip", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Ip = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CorrelationID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.CorrelationID = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxID", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvent
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= (uint64(b) & 0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvent
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.TxID = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipEvent(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthEvent
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *EventMsg) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1105,7 +653,7 @@ func (m *EventMsg) Unmarshal(dAtA []byte) error {
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
 			}
-			var byteLen int
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowEvent
@@ -1115,22 +663,109 @@ func (m *EventMsg) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				byteLen |= (int(b) & 0x7F) << shift
+				msglen |= (int(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			if byteLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthEvent
 			}
-			postIndex := iNdEx + byteLen
+			postIndex := iNdEx + msglen
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Metadata = append(m.Metadata[:0], dAtA[iNdEx:postIndex]...)
 			if m.Metadata == nil {
-				m.Metadata = []byte{}
+				m.Metadata = make(map[string]string)
 			}
+			var mapkey string
+			var mapvalue string
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowEvent
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= (uint64(b) & 0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					var stringLenmapkey uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowEvent
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapkey |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapkey := int(stringLenmapkey)
+					if intStringLenmapkey < 0 {
+						return ErrInvalidLengthEvent
+					}
+					postStringIndexmapkey := iNdEx + intStringLenmapkey
+					if postStringIndexmapkey > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapkey = string(dAtA[iNdEx:postStringIndexmapkey])
+					iNdEx = postStringIndexmapkey
+				} else if fieldNum == 2 {
+					var stringLenmapvalue uint64
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowEvent
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						stringLenmapvalue |= (uint64(b) & 0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					intStringLenmapvalue := int(stringLenmapvalue)
+					if intStringLenmapvalue < 0 {
+						return ErrInvalidLengthEvent
+					}
+					postStringIndexmapvalue := iNdEx + intStringLenmapvalue
+					if postStringIndexmapvalue > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = string(dAtA[iNdEx:postStringIndexmapvalue])
+					iNdEx = postStringIndexmapvalue
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipEvent(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if skippy < 0 {
+						return ErrInvalidLengthEvent
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.Metadata[mapkey] = mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

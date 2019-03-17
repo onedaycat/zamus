@@ -3,13 +3,13 @@ package eventstore;
 
 // protoc --gofast_out=. event.proto
 
-message Metadata {
-  map<string,string> extra = 1;
-  string userID = 2;
-  string ip = 3;
-  string correlationID = 4;
-  string txID = 5;
-}
+// message Metadata {
+//   map<string,string> extra = 1;
+//   string userID = 2;
+//   string ip = 3;
+//   string correlationID = 4;
+//   string txID = 5;
+// }
 
 message EventMsg {
   string eventID = 1;
@@ -20,7 +20,7 @@ message EventMsg {
   int64 time = 6;
   int64 seq = 7;
   int64 expired = 8;
-  bytes metadata = 9;
+  map<string,string> metadata = 9;
 }
 
 message EventMsgList {

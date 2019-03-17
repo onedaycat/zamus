@@ -9,7 +9,7 @@ import (
 type EventMsgsOption func(opts *eventMsgsOptions)
 
 type eventMsgsOptions struct {
-	meatadata *eventstore.Metadata
+	meatadata eventstore.Metadata
 	aggid     string
 	eventTime int64
 	eventType string
@@ -17,7 +17,7 @@ type eventMsgsOptions struct {
 	events    []interface{}
 }
 
-func WithMetadata(meatadata *eventstore.Metadata) EventMsgsOption {
+func WithMetadata(meatadata eventstore.Metadata) EventMsgsOption {
 	return func(opts *eventMsgsOptions) {
 		opts.meatadata = meatadata
 	}

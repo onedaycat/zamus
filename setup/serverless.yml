@@ -14,6 +14,7 @@ provider:
       Action:
         - "dynamodb:*"
         - "kinesis:*"
+        - "lambda:*"
 
 functions:
   dynamodb-kinesis:
@@ -45,6 +46,9 @@ functions:
         - ./dynamokinesis/bin/**
   firehose-transform:
     handler: firehosetransform/bin/app
+    environment:
+      APP_STAGE: ${self:provider.stage}
+      APP_SENTRY_DSN: ${file(./setting.yml):firehosetransform.sentry}
     memorySize: ${file(./setting.yml):firehosetransform.memorySize}
     timeout: ${file(./setting.yml):firehosetransform.timeout}
     package:
@@ -165,9 +169,7 @@ resources:
                 - Effect: Allow
                   Action:
                     - logs:PutLogEvents
-                  Resource:
-                    "*"
-                    # - arn:aws:logs:${self:provider.region}:${file(./setting.yml):account}:log-group:/aws/kinesisfirehose/${self:service}-firehose-${self:provider.stage}:log-stream:*
+                  Resource: "*"
                 - Effect: Allow
                   Action:
                     - glue:GetTableVersions
@@ -200,8 +202,8 @@ resources:
               - - "arn:aws:s3:::"
                 - Ref: S3Event
           RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
-          Prefix: "firehose/"
-          # ErrorOutputPrefix: '/firehose-error'
+          Prefix: "firehose/dt=!{timestamp:yyyy-MM-dd}/"
+          # ErrorOutputPrefix: "errors/!{firehose:error-output-type}/dt=!{timestamp:yyyy-MM-dd}/"
           CompressionFormat: UNCOMPRESSED
           BufferingHints:
             IntervalInSeconds: ${file(./setting.yml):firehose.intervalInSeconds}
@@ -232,7 +234,7 @@ resources:
       # DeletionPolicy: Retain
       Properties:
         DatabaseInput:
-          Name: ${self:service}_${self:provider.stage}
+          Name: ${file(./setting.yml):glue.database}_${self:provider.stage}
         CatalogId: ${file(./setting.yml):account}
     GlueCreateTable:
       Type: AWS::Glue::Table
@@ -241,11 +243,13 @@ resources:
         - S3Event
         - GlueCreateDatabase
       Properties:
-        DatabaseName: ${self:service}_${self:provider.stage}
+        DatabaseName: ${file(./setting.yml):glue.database}_${self:provider.stage}
         CatalogId: ${file(./setting.yml):account}
         TableInput:
           Name: eventstore
           TableType: EXTERNAL_TABLE
+          PartitionKeys:
+            - { Name: dt, Type: string }
           StorageDescriptor:
             Compressed: false
             Location: "s3://${self:service}-${self:provider.stage}/firehose/"
@@ -257,7 +261,7 @@ resources:
               - { Name: v, Type: string }
               - { Name: a, Type: string }
               - { Name: e, Type: string }
-              - { Name: timestamp, Type: bigint }
+              - { Name: t, Type: bigint }
               - { Name: s, Type: bigint }
               - { Name: m, Type: "map<string,string>" }
             SerdeInfo:

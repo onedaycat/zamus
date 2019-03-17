@@ -22,10 +22,7 @@ func TestEventMsgs(t *testing.T) {
 	var eventDataSnap []byte
 	eventDataSnap = snappy.Encode(eventDataSnap, eventData)
 
-	metadata := &eventstore.Metadata{
-		UserID: "u1",
-	}
-	metadataByte, _ := metadata.Marshal()
+	metadata := eventstore.NewMetadata().SetUserID("u1")
 
 	now := time.Now().Unix()
 
@@ -48,7 +45,7 @@ func TestEventMsgs(t *testing.T) {
 	require.Equal(t, eventDataSnap, msgs[1].Event)
 	require.Equal(t, eventDataSnap, msgs[2].Event)
 	require.Equal(t, eventDataSnap, msgs[3].Event)
-	require.Equal(t, metadataByte, msgs[2].Metadata)
+	require.Equal(t, metadata, msgs[2].Metadata)
 	require.Equal(t, now, msgs[3].Time)
 	require.Equal(t, "2", msgs[4].EventVersion)
 

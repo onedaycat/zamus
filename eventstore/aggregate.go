@@ -33,7 +33,6 @@ type AggregateBase struct {
 	time           int64
 	eventid        string
 	id             string
-	metadata       *Metadata
 	currentVersion int
 	snpshotVersion int
 }

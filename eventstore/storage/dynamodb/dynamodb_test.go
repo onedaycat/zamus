@@ -48,11 +48,11 @@ func TestGetEvents(t *testing.T) {
 		db.Truncate()
 
 		msgs := random.EventMsgs().
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 			Build()
 
 		err := db.saveEvents(context.Background(), msgs)
@@ -68,11 +68,11 @@ func TestGetEvents(t *testing.T) {
 		db.Truncate()
 
 		msgs := random.EventMsgs().
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 			Build()
 
 		err := db.saveEvents(context.Background(), msgs)
@@ -88,11 +88,11 @@ func TestGetEvents(t *testing.T) {
 		db.Truncate()
 
 		msgs := random.EventMsgs().
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 			Build()
 
 		err := db.saveEvents(context.Background(), msgs)
@@ -108,11 +108,11 @@ func TestGetEvents(t *testing.T) {
 		db.Truncate()
 
 		msgs := random.EventMsgs().
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 			Build()
 
 		err := db.saveEvents(context.Background(), msgs)
@@ -228,11 +228,11 @@ func TestSave(t *testing.T) {
 		db.Truncate()
 
 		msgs := random.EventMsgs().
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-			Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+			Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 			Build()
 
 		v1 := &eventstore.Snapshot{
@@ -263,11 +263,11 @@ func TestSave(t *testing.T) {
 
 		wg.Go(func() errors.Error {
 			msgs := random.EventMsgs().
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 				Build()
 
 			v1 := &eventstore.Snapshot{
@@ -284,8 +284,8 @@ func TestSave(t *testing.T) {
 
 		wg.Go(func() errors.Error {
 			msgs := random.EventMsgs().
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
-				Add(domain.StockItemCreatedEvent, domain.StockItemCreated{}, random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
+				Add(random.WithEvent(domain.StockItemCreatedEvent, domain.StockItemCreated{}), random.WithAggregateID("a1")).
 				Build()
 
 			v1 := &eventstore.Snapshot{

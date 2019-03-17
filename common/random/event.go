@@ -65,8 +65,8 @@ func (b *eventBuilder) Time(t int64) *eventBuilder {
 	return b
 }
 
-func (b *eventBuilder) Metadata(metadata *eventstore.Metadata) *eventBuilder {
-	b.msg.Metadata, _ = metadata.Marshal()
+func (b *eventBuilder) Metadata(metadata eventstore.Metadata) *eventBuilder {
+	b.msg.Metadata = metadata
 
 	return b
 }

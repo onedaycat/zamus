@@ -178,9 +178,7 @@ func TestSaveAndGet(t *testing.T) {
 	now1 := time.Now().UTC().Add(time.Second * -10)
 	now2 := time.Now().UTC().Add(time.Second * -5)
 
-	metadata := &eventstore.Metadata{
-		UserID: "u1",
-	}
+	metadata := eventstore.NewMetadata().SetUserID("u1")
 
 	id := eid.GenerateID()
 	st := domain.NewStockItem()
@@ -217,7 +215,7 @@ func TestSaveAndGet(t *testing.T) {
 	require.Equal(t, int64(6), events[0].Seq)
 	require.Equal(t, domain.StockItemRemovedEvent, events[1].EventType)
 	require.Equal(t, int64(7), events[1].Seq)
-	require.Equal(t, metadata, events[0].UnmarshalMetadata())
+	require.Equal(t, metadata, events[0].Metadata)
 
 	// GetAggregateByTimeSeq
 	st4 := domain.NewStockItem()

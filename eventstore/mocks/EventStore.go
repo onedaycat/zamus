@@ -86,11 +86,11 @@ func (_m *EventStore) Save(ctx context.Context, agg eventstore.AggregateRoot) er
 }
 
 // SaveWithMetadata provides a mock function with given fields: ctx, agg, metadata
-func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg eventstore.AggregateRoot, metadata *eventstore.Metadata) errors.Error {
+func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg eventstore.AggregateRoot, metadata eventstore.Metadata) errors.Error {
 	ret := _m.Called(ctx, agg, metadata)
 
 	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot, *eventstore.Metadata) errors.Error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot, eventstore.Metadata) errors.Error); ok {
 		r0 = rf(ctx, agg, metadata)
 	} else {
 		if ret.Get(0) != nil {

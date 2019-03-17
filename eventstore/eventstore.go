@@ -19,7 +19,7 @@ type EventStore interface {
 	GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) errors.Error
 	GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) errors.Error
 	Save(ctx context.Context, agg AggregateRoot) errors.Error
-	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) errors.Error
+	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata Metadata) errors.Error
 }
 
 type eventStore struct {
@@ -110,7 +110,7 @@ func (es *eventStore) GetSnapshot(ctx context.Context, aggID string, version int
 	return es.storage.GetSnapshot(ctx, aggID, version)
 }
 
-func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata *Metadata) errors.Error {
+func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata Metadata) errors.Error {
 	events := agg.GetEvents()
 	n := len(events)
 	if n == 0 {
@@ -126,11 +126,6 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 	eventTypes := agg.GetEventTypes()
 
 	var lastEvent *EventMsg
-
-	var metadataByte []byte
-	if metadata != nil {
-		metadataByte, _ = metadata.Marshal()
-	}
 
 	for i := 0; i < n; i++ {
 		agg.IncreaseSequence()
@@ -150,7 +145,7 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 			Seq:         seq,
 			Event:       eventDataSnap,
 			Time:        now,
-			Metadata:    metadataByte,
+			Metadata:    metadata,
 		}
 	}
 
