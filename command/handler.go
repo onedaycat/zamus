@@ -44,6 +44,17 @@ type Handler struct {
 }
 
 func NewHandler(config *Config) *Handler {
+	h := &Handler{
+		zcctx: &zamuscontext.ZamusContext{
+			AppStage:       config.AppStage,
+			Service:        config.Service,
+			LambdaFunction: lambdacontext.FunctionName,
+			LambdaVersion:  lambdacontext.FunctionVersion,
+			Version:        config.Version,
+		},
+		commands: make(map[string]*commandinfo, 30),
+	}
+
 	if config.SentryDNS != "" {
 		sentry.SetDSN(config.SentryDNS)
 		sentry.SetOptions(
@@ -56,32 +67,27 @@ func NewHandler(config *Config) *Handler {
 				{"lambdaVersion", lambdacontext.FunctionVersion},
 			}),
 		)
+		h.ErrorHandlers(Sentry)
 	}
 
-	tracer.Enable = config.EnableTrace
-
-	return &Handler{
-		zcctx: &zamuscontext.ZamusContext{
-			AppStage:       config.AppStage,
-			Service:        config.Service,
-			LambdaFunction: lambdacontext.FunctionName,
-			LambdaVersion:  lambdacontext.FunctionVersion,
-			Version:        config.Version,
-		},
-		commands: make(map[string]*commandinfo, 30),
+	if config.EnableTrace {
+		tracer.Enable = config.EnableTrace
+		h.ErrorHandlers(TraceError)
 	}
+
+	return h
 }
 
 func (h *Handler) PreHandlers(handlers ...CommandHandler) {
-	h.preHandlers = handlers
+	h.preHandlers = append(h.preHandlers, handlers...)
 }
 
 func (h *Handler) PostHandlers(handlers ...CommandHandler) {
-	h.postHandlers = handlers
+	h.postHandlers = append(h.postHandlers, handlers...)
 }
 
 func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
-	h.errHandlers = handlers
+	h.errHandlers = append(h.errHandlers, handlers...)
 }
 
 func (h *Handler) RegisterCommand(command string, handler CommandHandler, prehandlers ...CommandHandler) {
@@ -99,13 +105,11 @@ func (h *Handler) recovery(ctx context.Context, cmd *CommandReq, err *errors.Err
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
-			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(cmd)
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, cmd, *err)
 			}
-			tracer.AddError(ctx, *err)
 		}
 	}
 }
@@ -118,7 +122,6 @@ func (h *Handler) doHandler(info *commandinfo, ctx context.Context, cmd *Command
 		for _, errHandler := range h.errHandlers {
 			errHandler(ctx, cmd, err)
 		}
-		tracer.AddError(ctx, err)
 		return nil, err
 	}
 

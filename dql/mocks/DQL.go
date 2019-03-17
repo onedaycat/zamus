@@ -3,7 +3,7 @@
 package mocks
 
 import context "context"
-
+import dql "github.com/onedaycat/zamus/dql"
 import errors "github.com/onedaycat/errors"
 import mock "github.com/stretchr/testify/mock"
 
@@ -15,6 +15,22 @@ type DQL struct {
 // AddError provides a mock function with given fields: appErr
 func (_m *DQL) AddError(appErr errors.Error) {
 	_m.Called(appErr)
+}
+
+// GetDQLErrors provides a mock function with given fields:
+func (_m *DQL) GetDQLErrors() []*dql.DQLError {
+	ret := _m.Called()
+
+	var r0 []*dql.DQLError
+	if rf, ok := ret.Get(0).(func() []*dql.DQLError); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*dql.DQLError)
+		}
+	}
+
+	return r0
 }
 
 // Retry provides a mock function with given fields:

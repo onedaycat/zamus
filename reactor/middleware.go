@@ -1,4 +1,4 @@
-package sagas
+package eventhandler
 
 import (
 	"context"
@@ -6,8 +6,13 @@ import (
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+	"github.com/onedaycat/zamus/tracer"
 	"github.com/rs/zerolog/log"
 )
+
+func TraceError(ctx context.Context, msgs EventMsgs, err errors.Error) {
+	tracer.AddError(ctx, err)
+}
 
 func PrintPanic(ctx context.Context, msgs EventMsgs, err errors.Error) {
 	if err.GetPanic() {

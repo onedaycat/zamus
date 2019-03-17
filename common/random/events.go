@@ -3,31 +3,48 @@ package random
 import (
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
+	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 )
 
-type EventMsgOption func(opts *eventMsgOptions)
+type EventMsgsOption func(opts *eventMsgsOptions)
 
-type eventMsgOptions struct {
+type eventMsgsOptions struct {
 	meatadata *eventstore.Metadata
 	aggid     string
 	eventTime int64
+	eventType string
+	version   string
+	events    []interface{}
 }
 
-func WithMetadata(meatadata *eventstore.Metadata) EventMsgOption {
-	return func(opts *eventMsgOptions) {
+func WithMetadata(meatadata *eventstore.Metadata) EventMsgsOption {
+	return func(opts *eventMsgsOptions) {
 		opts.meatadata = meatadata
 	}
 }
 
-func WithAggregateID(aggid string) EventMsgOption {
-	return func(opts *eventMsgOptions) {
+func WithAggregateID(aggid string) EventMsgsOption {
+	return func(opts *eventMsgsOptions) {
 		opts.aggid = aggid
 	}
 }
 
-func WithTime(t int64) EventMsgOption {
-	return func(opts *eventMsgOptions) {
+func WithTime(t int64) EventMsgsOption {
+	return func(opts *eventMsgsOptions) {
 		opts.eventTime = t
+	}
+}
+
+func WithEventType(eventType string, events ...interface{}) EventMsgsOption {
+	return func(opts *eventMsgsOptions) {
+		opts.eventType = eventType
+		opts.events = events
+	}
+}
+
+func WithVersion(version string) EventMsgsOption {
+	return func(opts *eventMsgsOptions) {
+		opts.version = version
 	}
 }
 
@@ -47,25 +64,15 @@ func (b *eventsBuilder) Build() []*eventstore.EventMsg {
 	return b.msgs
 }
 
-func (b *eventsBuilder) Add(eventType string, event interface{}, options ...EventMsgOption) *eventsBuilder {
-	msgBuilder := EventMsg().Event(eventType, event).Seq(b.seq)
-
-	opts := &eventMsgOptions{}
+func (b *eventsBuilder) Add(options ...EventMsgsOption) *eventsBuilder {
+	opts := &eventMsgsOptions{}
 	for _, opt := range options {
 		opt(opts)
 	}
 
-	if opts.meatadata != nil {
-		msgBuilder.Metadata(opts.meatadata)
-	}
+	msgBuilder := EventMsg().Seq(b.seq)
 
-	if opts.aggid != "" {
-		msgBuilder.AggregateID(opts.aggid)
-	}
-
-	if opts.eventTime > 0 {
-		msgBuilder.Time(opts.eventTime)
-	}
+	b.setOptions(opts, msgBuilder, 0)
 
 	b.msgs = append(b.msgs, msgBuilder.Build())
 	b.seq++
@@ -82,9 +89,16 @@ func (b *eventsBuilder) AddEventMsgs(msgs ...*eventstore.EventMsg) *eventsBuilde
 	return b
 }
 
-func (b *eventsBuilder) RandomEventMsgs(n int) *eventsBuilder {
+func (b *eventsBuilder) RandomEventMsgs(n int, options ...EventMsgsOption) *eventsBuilder {
+	opts := &eventMsgsOptions{}
+	for _, opt := range options {
+		opt(opts)
+	}
+
 	for i := 0; i < n; i++ {
-		b.msgs = append(b.msgs, EventMsg().Build())
+		msg := EventMsg()
+		b.setOptions(opts, msg, i)
+		b.msgs = append(b.msgs, msg.Build())
 		b.seq++
 	}
 
@@ -98,4 +112,38 @@ func (b *eventsBuilder) BuildJSON() []byte {
 	}
 
 	return data
+}
+
+func (b *eventsBuilder) BuildKinesis() *kinesisstream.KinesisStreamEvent {
+	return KinesisEvents().Add(b.msgs...).Build()
+}
+
+func (b *eventsBuilder) BuildKinesisWithEventTypes() (*kinesisstream.KinesisStreamEvent, []string) {
+	return KinesisEvents().Add(b.msgs...).BuildWithEventTypes()
+}
+
+func (b *eventsBuilder) setOptions(opts *eventMsgsOptions, builder *eventBuilder, index int) {
+	if opts.meatadata != nil {
+		builder.Metadata(opts.meatadata)
+	}
+
+	if opts.aggid != "" {
+		builder.AggregateID(opts.aggid)
+	}
+
+	if opts.eventTime > 0 {
+		builder.Time(opts.eventTime)
+	}
+
+	if opts.eventType != "" {
+		builder.EventType(opts.eventType)
+	}
+
+	if opts.version != "" {
+		builder.Versionn(opts.version)
+	}
+
+	if len(opts.events) > 0 && len(opts.events) > index {
+		builder.Event(opts.eventType, opts.events[index])
+	}
 }

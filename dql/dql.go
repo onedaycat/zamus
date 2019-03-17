@@ -13,6 +13,7 @@ type DQL interface {
 	Save(ctx context.Context, data []byte) errors.Error
 	Retry() bool
 	AddError(appErr errors.Error)
+	GetDQLErrors() DQLErrors
 }
 
 type dql struct {
@@ -82,4 +83,8 @@ func (d *dql) AddError(appErr errors.Error) {
 	}
 
 	d.Errors = append(d.Errors, dqlErr)
+}
+
+func (d *dql) GetDQLErrors() DQLErrors {
+	return d.Errors
 }

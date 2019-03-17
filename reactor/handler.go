@@ -1,4 +1,4 @@
-package sagas
+package eventhandler
 
 import (
 	"context"
@@ -10,29 +10,11 @@ import (
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
-	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
-
-type EventHandler = kinesisstream.EventMessagesHandler
-type ErrorHandler = kinesisstream.EventMessagesErrorHandler
-type EventMsg = eventstore.EventMsg
-type EventMsgs = []*eventstore.EventMsg
-type LambdaEvent = kinesisstream.KinesisStreamEvent
-
-type Config struct {
-	AppStage      string
-	Service       string
-	Version       string
-	SentryRelease string
-	SentryDNS     string
-	EnableTrace   bool
-	DQLMaxRetry   int
-	DQLStorage    dql.Storage
-}
 
 type Handler struct {
 	streamer kinesisstream.KinesisHandlerStrategy
@@ -41,6 +23,26 @@ type Handler struct {
 }
 
 func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *Handler {
+	h := &Handler{
+		zcctx: &zamuscontext.ZamusContext{
+			AppStage:       config.AppStage,
+			Service:        config.Service,
+			LambdaFunction: lambdacontext.FunctionName,
+			LambdaVersion:  lambdacontext.FunctionVersion,
+			Version:        config.Version,
+		},
+		streamer: streamer,
+	}
+
+	if config.DQLMaxRetry > 0 && config.DQLStorage != nil {
+		h.streamer.SetDQL(dql.New(config.DQLStorage, config.DQLMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
+	}
+
+	if config.EnableTrace {
+		tracer.Enable = config.EnableTrace
+		h.ErrorHandlers(TraceError)
+	}
+
 	if config.SentryDNS != "" {
 		sentry.SetDSN(config.SentryDNS)
 		sentry.SetOptions(
@@ -53,24 +55,10 @@ func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *
 				{"lambdaVersion", lambdacontext.FunctionVersion},
 			}),
 		)
+		h.ErrorHandlers(Sentry)
 	}
 
-	tracer.Enable = config.EnableTrace
-
-	if config.DQLMaxRetry > 0 && config.DQLStorage != nil {
-		streamer.SetDQL(dql.New(config.DQLStorage, config.DQLMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
-	}
-
-	return &Handler{
-		zcctx: &zamuscontext.ZamusContext{
-			AppStage:       config.AppStage,
-			Service:        config.Service,
-			LambdaFunction: lambdacontext.FunctionName,
-			LambdaVersion:  lambdacontext.FunctionVersion,
-			Version:        config.Version,
-		},
-		streamer: streamer,
-	}
+	return h
 }
 
 func (h *Handler) StreamStrategy(streamStrategy kinesisstream.KinesisHandlerStrategy) {
@@ -93,12 +81,13 @@ func (h *Handler) RegisterHandler(handler EventHandler, filterEvents []string) {
 	h.streamer.RegisterHandler(handler, filterEvents)
 }
 
-func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) {
+func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
 	if event.Warmer {
-		h.runWarmer(ctx, event)
+		return h.runWarmer(ctx, event)
 	}
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
-	h.streamer.Process(zmctx, event.Records)
+
+	return h.streamer.Process(zmctx, event.Records)
 }
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
@@ -107,9 +96,7 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	h.Handle(ctx, req)
-
-	return nil, nil
+	return nil, h.Handle(ctx, req)
 }
 
 func (h *Handler) StartLambda() {

@@ -41,6 +41,22 @@ type Handler struct {
 }
 
 func NewHandler(config *Config) *Handler {
+	h := &Handler{
+		zcctx: &zamuscontext.ZamusContext{
+			AppStage:       config.AppStage,
+			Service:        config.Service,
+			LambdaFunction: lambdacontext.FunctionName,
+			LambdaVersion:  lambdacontext.FunctionVersion,
+			Version:        config.Version,
+		},
+		quries: make(map[string]*queryinfo, 30),
+	}
+
+	if config.EnableTrace {
+		tracer.Enable = config.EnableTrace
+		h.ErrorHandlers(TraceError)
+	}
+
 	if config.SentryDNS != "" {
 		sentry.SetDSN(config.SentryDNS)
 		sentry.SetOptions(
@@ -53,32 +69,22 @@ func NewHandler(config *Config) *Handler {
 				{"lambdaVersion", lambdacontext.FunctionVersion},
 			}),
 		)
+		h.ErrorHandlers(Sentry)
 	}
 
-	tracer.Enable = config.EnableTrace
-
-	return &Handler{
-		zcctx: &zamuscontext.ZamusContext{
-			AppStage:       config.AppStage,
-			Service:        config.Service,
-			LambdaFunction: lambdacontext.FunctionName,
-			LambdaVersion:  lambdacontext.FunctionVersion,
-			Version:        config.Version,
-		},
-		quries: make(map[string]*queryinfo, 30),
-	}
+	return h
 }
 
 func (h *Handler) PreHandlers(handlers ...QueryHandler) {
-	h.preHandlers = handlers
+	h.preHandlers = append(h.preHandlers, handlers...)
 }
 
 func (h *Handler) PostHandlers(handlers ...QueryHandler) {
-	h.postHandlers = handlers
+	h.postHandlers = append(h.postHandlers, handlers...)
 }
 
 func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
-	h.errHandlers = handlers
+	h.errHandlers = append(h.errHandlers, handlers...)
 }
 
 func (h *Handler) RegisterQuery(query string, handler QueryHandler, prehandlers ...QueryHandler) {
@@ -96,13 +102,11 @@ func (h *Handler) recovery(ctx context.Context, req *QueryReq, err *errors.Error
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, req, *err)
 			}
-			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(req)
 			for _, errhandler := range h.errHandlers {
 				errhandler(ctx, req, *err)
 			}
-			tracer.AddError(ctx, *err)
 		}
 	}
 }
@@ -114,13 +118,14 @@ func (h *Handler) doHandler(info *queryinfo, ctx context.Context, req *QueryReq)
 		for _, errHandler := range h.errHandlers {
 			errHandler(ctx, req, err)
 		}
-		tracer.AddError(ctx, err)
 		return nil, err
 	}
 
 	if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
 		err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
-		tracer.AddError(ctx, err)
+		for _, errHandler := range h.errHandlers {
+			errHandler(ctx, req, err)
+		}
 		return nil, err
 	}
 
@@ -140,6 +145,9 @@ func (h *Handler) doPreHandler(ctx context.Context, req *QueryReq) (result Query
 
 		if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
 			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, req, err)
+			}
 			return nil, err
 		}
 
@@ -164,6 +172,9 @@ func (h *Handler) doInPreHandler(info *queryinfo, ctx context.Context, req *Quer
 
 		if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
 			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, req, err)
+			}
 			return nil, err
 		}
 
@@ -188,6 +199,9 @@ func (h *Handler) doPostHandler(ctx context.Context, req *QueryReq) (result Quer
 
 		if req.NBatchSources > 0 && result != nil && result.Len() != req.NBatchSources {
 			err = appErr.ErrQueryResultSizeNotMatch.WithCaller().WithInput(req)
+			for _, errHandler := range h.errHandlers {
+				errHandler(ctx, req, err)
+			}
 			return nil, err
 		}
 

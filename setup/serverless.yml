@@ -257,9 +257,9 @@ resources:
               - { Name: v, Type: string }
               - { Name: a, Type: string }
               - { Name: e, Type: string }
-              - { Name: t, Type: bigint }
+              - { Name: timestamp, Type: bigint }
               - { Name: s, Type: bigint }
-              - { Name: m, Type: string }
+              - { Name: m, Type: "map<string,string>" }
             SerdeInfo:
               SerializationLibrary: "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
               Parameters:

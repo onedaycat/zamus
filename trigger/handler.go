@@ -49,22 +49,6 @@ type Handler struct {
 }
 
 func NewHandler(handler TriggerHandler, config *Config) *Handler {
-	if config.SentryDNS != "" {
-		sentry.SetDSN(config.SentryDNS)
-		sentry.SetOptions(
-			sentry.WithEnv(config.AppStage),
-			sentry.WithRelease(config.SentryRelease),
-			sentry.WithServerName(lambdacontext.FunctionName),
-			sentry.WithServiceName(config.Service),
-			sentry.WithVersion(config.Version),
-			sentry.WithTags(sentry.Tags{
-				{"lambdaVersion", lambdacontext.FunctionVersion},
-			}),
-		)
-	}
-
-	tracer.Enable = config.EnableTrace
-
 	h := &Handler{
 		zcctx: &zamuscontext.ZamusContext{
 			AppStage:       config.AppStage,
@@ -80,11 +64,31 @@ func NewHandler(handler TriggerHandler, config *Config) *Handler {
 		h.dql = dql.New(config.DQLStorage, config.DQLMaxRetry, config.Service, lambdacontext.FunctionName, config.Version)
 	}
 
+	if config.EnableTrace {
+		tracer.Enable = config.EnableTrace
+		h.ErrorHandlers(TraceError)
+	}
+
+	if config.SentryDNS != "" {
+		sentry.SetDSN(config.SentryDNS)
+		sentry.SetOptions(
+			sentry.WithEnv(config.AppStage),
+			sentry.WithRelease(config.SentryRelease),
+			sentry.WithServerName(lambdacontext.FunctionName),
+			sentry.WithServiceName(config.Service),
+			sentry.WithVersion(config.Version),
+			sentry.WithTags(sentry.Tags{
+				{"lambdaVersion", lambdacontext.FunctionVersion},
+			}),
+		)
+		h.ErrorHandlers(Sentry)
+	}
+
 	return h
 }
 
 func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
-	h.errorhandlers = handlers
+	h.errorhandlers = append(h.errorhandlers, handlers...)
 }
 
 func (h *Handler) Handle(ctx context.Context, payload Payload) (result interface{}, err errors.Error) {
@@ -137,13 +141,11 @@ func (h *Handler) recovery(ctx context.Context, payload Payload, err *errors.Err
 			for _, errhandler := range h.errorhandlers {
 				errhandler(ctx, payload, *err)
 			}
-			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(payload)
 			for _, errhandler := range h.errorhandlers {
 				errhandler(ctx, payload, *err)
 			}
-			tracer.AddError(ctx, *err)
 		}
 	}
 }

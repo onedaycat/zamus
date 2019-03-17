@@ -11,7 +11,6 @@ import (
 	"github.com/onedaycat/zamus/dql"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/tracer"
 )
 
 type partitionStrategy struct {
@@ -40,7 +39,7 @@ func NewPartitionStrategy() KinesisHandlerStrategy {
 }
 
 func (c *partitionStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
-	c.errorHandlers = handlers
+	c.errorHandlers = append(c.errorHandlers, handlers...)
 }
 
 func (c *partitionStrategy) SetDQL(dql dql.DQL) {
@@ -48,11 +47,11 @@ func (c *partitionStrategy) SetDQL(dql dql.DQL) {
 }
 
 func (c *partitionStrategy) PreHandlers(handlers ...EventMessagesHandler) {
-	c.preHandlers = handlers
+	c.preHandlers = append(c.preHandlers, handlers...)
 }
 
 func (c *partitionStrategy) PostHandlers(handlers ...EventMessagesHandler) {
-	c.postHandlers = handlers
+	c.postHandlers = append(c.postHandlers, handlers...)
 }
 
 func (c *partitionStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents []string) {
@@ -84,7 +83,6 @@ func (c *partitionStrategy) Process(ctx context.Context, records Records) errors
 
 	if len(c.eventTypes) > 0 {
 		for _, record := range records {
-			// fmt.Println("###", record.Kinesis.Data.EventMsg.EventID, record.Kinesis.Data.EventMsg.Seq)
 			eventType = record.Kinesis.Data.EventMsg.EventType
 			if !c.eventTypes.Has(eventType) {
 				continue
@@ -124,13 +122,19 @@ DQLRetry:
 			}
 
 			msgs := make(EventMsgs, 0, len(records))
-			for _, record := range records {
-				eventType = record.Kinesis.Data.EventMsg.EventType
-				if !c.eventTypes.Has(eventType) {
-					continue
-				}
+			if len(c.eventTypes) > 0 {
+				for _, record := range records {
+					eventType = record.Kinesis.Data.EventMsg.EventType
+					if !c.eventTypes.Has(eventType) {
+						continue
+					}
 
-				msgs = append(msgs, record.Kinesis.Data.EventMsg)
+					msgs = append(msgs, record.Kinesis.Data.EventMsg)
+				}
+			} else {
+				for _, record := range records {
+					msgs = append(msgs, record.Kinesis.Data.EventMsg)
+				}
 			}
 
 			msgList := eventstore.EventMsgList{
@@ -179,9 +183,9 @@ func (c *partitionStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
 			}
-		}
 
-		return err
+			return err
+		}
 	}
 
 	return
@@ -215,7 +219,6 @@ func (c *partitionStrategy) doHandlers(ctx context.Context, msgs EventMsgs) (err
 			}
 
 			if aerr = handlerinfo.Handler(ctx, newmsgs); aerr != nil {
-				tracer.AddError(ctx, aerr)
 				if c.dql != nil {
 					c.dql.AddError(aerr)
 				}
@@ -263,7 +266,6 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
 			if c.dql != nil {
@@ -272,7 +274,6 @@ func (c *partitionStrategy) recover(ctx context.Context, msgs EventMsgs, err *er
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(ctx, *err)
 		}
 	}
 }

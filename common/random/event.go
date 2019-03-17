@@ -15,9 +15,8 @@ type eventBuilder struct {
 
 func EventMsg() *eventBuilder {
 	aggid := eid.GenerateID()
-	seq := int64(random.Number(1, 10))
 	t := time.Now().Unix()
-	eventID := eid.CreateEventID(aggid, seq)
+	eventID := eid.CreateEventID(aggid, 1)
 
 	return &eventBuilder{
 		msg: &eventstore.EventMsg{
@@ -26,7 +25,7 @@ func EventMsg() *eventBuilder {
 			EventVersion: "1",
 			AggregateID:  aggid,
 			Time:         t,
-			Seq:          seq,
+			Seq:          1,
 		},
 	}
 }

@@ -1,6 +1,11 @@
 package common
 
+import (
+	"sync"
+)
+
 type SpyTest struct {
+	locker   sync.Mutex
 	counters map[string]int
 }
 
@@ -11,7 +16,9 @@ func Spy() *SpyTest {
 }
 
 func (s *SpyTest) Called(key string) {
+	s.locker.Lock()
 	s.counters[key] += 1
+	s.locker.Unlock()
 }
 
 func (s *SpyTest) Count(key string) int {

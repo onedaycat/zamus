@@ -9,7 +9,6 @@ import (
 	"github.com/onedaycat/zamus/dql"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/tracer"
 )
 
 type simplehandler struct {
@@ -55,7 +54,7 @@ func NewSimpleStrategy() KinesisHandlerStrategy {
 }
 
 func (c *simpleStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
-	c.errorHandlers = handlers
+	c.errorHandlers = append(c.errorHandlers, handlers...)
 }
 
 func (c *simpleStrategy) SetDQL(dql dql.DQL) {
@@ -63,11 +62,11 @@ func (c *simpleStrategy) SetDQL(dql dql.DQL) {
 }
 
 func (c *simpleStrategy) PreHandlers(handlers ...EventMessagesHandler) {
-	c.preHandlers = handlers
+	c.preHandlers = append(c.preHandlers, handlers...)
 }
 
 func (c *simpleStrategy) PostHandlers(handlers ...EventMessagesHandler) {
-	c.postHandlers = handlers
+	c.postHandlers = append(c.postHandlers, handlers...)
 }
 
 func (c *simpleStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents []string) {
@@ -133,12 +132,18 @@ DQLRetry:
 			}
 
 			msgs := make(EventMsgs, len(records))
-			for i, record := range records {
-				eventType = record.Kinesis.Data.EventMsg.EventType
-				if !c.eventTypes.Has(eventType) {
-					continue
+			if len(c.eventTypes) > 0 {
+				for i, record := range records {
+					eventType = record.Kinesis.Data.EventMsg.EventType
+					if !c.eventTypes.Has(eventType) {
+						continue
+					}
+					msgs[i] = record.Kinesis.Data.EventMsg
 				}
-				msgs[i] = record.Kinesis.Data.EventMsg
+			} else {
+				for i, record := range records {
+					msgs[i] = record.Kinesis.Data.EventMsg
+				}
 			}
 
 			msgList := eventstore.EventMsgList{
@@ -173,7 +178,6 @@ func (c *simpleStrategy) filterEvents(info *handlerInfo, msgs EventMsgs) EventMs
 func (c *simpleStrategy) doHandlers(ctx context.Context, handler EventMessagesHandler, msgs EventMsgs) (err errors.Error) {
 	defer c.recover(ctx, msgs, &err)
 	if err = handler(ctx, msgs); err != nil {
-		tracer.AddError(ctx, err)
 		if c.dql != nil {
 			c.dql.AddError(err)
 		}
@@ -217,9 +221,8 @@ func (c *simpleStrategy) handle(ctx context.Context, handler EventMessagesHandle
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, err)
 			}
+			return err
 		}
-
-		return err
 	}
 
 	return
@@ -236,7 +239,6 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(ctx, *err)
 		default:
 			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
 			if c.dql != nil {
@@ -245,7 +247,6 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs EventMsgs, err *error
 			for _, errhandler := range c.errorHandlers {
 				errhandler(ctx, msgs, *err)
 			}
-			tracer.AddError(ctx, *err)
 		}
 	}
 }

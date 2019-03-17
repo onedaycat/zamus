@@ -30,28 +30,33 @@ func TestEventMsgs(t *testing.T) {
 	now := time.Now().Unix()
 
 	msgs = EventMsgs().
-		Add("f1", event).
-		Add("f2", event, WithAggregateID("a1")).
-		Add("f3", event, WithMetadata(metadata)).
-		Add("f4", event, WithTime(now)).
+		Add(WithEventType("f1", event)).
+		Add(WithEventType("f2", event), WithAggregateID("a1")).
+		Add(WithEventType("f3", event), WithMetadata(metadata)).
+		Add(WithEventType("f4", event), WithTime(now)).
+		Add(WithEventType("f5", event), WithVersion("2")).
+		Add(WithEventType("f6", event), WithEventType("et1")).
 		Build()
-	require.Len(t, msgs, 4)
+	require.Len(t, msgs, 6)
 	require.Equal(t, "f1", msgs[0].EventType)
 	require.Equal(t, "f2", msgs[1].EventType)
 	require.Equal(t, "f3", msgs[2].EventType)
 	require.Equal(t, "f4", msgs[3].EventType)
+	require.Equal(t, "f5", msgs[4].EventType)
+	require.Equal(t, "et1", msgs[5].EventType)
 	require.Equal(t, eventDataSnap, msgs[0].Event)
 	require.Equal(t, eventDataSnap, msgs[1].Event)
 	require.Equal(t, eventDataSnap, msgs[2].Event)
 	require.Equal(t, eventDataSnap, msgs[3].Event)
 	require.Equal(t, metadataByte, msgs[2].Metadata)
 	require.Equal(t, now, msgs[3].Time)
+	require.Equal(t, "2", msgs[4].EventVersion)
 
 	msgsByte := EventMsgs().
-		Add("f1", event).
-		Add("f2", event, WithAggregateID("a1")).
-		Add("f3", event, WithMetadata(metadata)).
-		Add("f4", event, WithTime(now)).
+		Add(WithEventType("f1", event)).
+		Add(WithEventType("f2", event), WithAggregateID("a1")).
+		Add(WithEventType("f3", event), WithMetadata(metadata)).
+		Add(WithEventType("f4", event), WithTime(now)).
 		BuildJSON()
 
 	require.NotNil(t, msgsByte)

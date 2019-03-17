@@ -1,4 +1,4 @@
-package projection
+package eventhandler
 
 import "github.com/onedaycat/zamus/errors"
 

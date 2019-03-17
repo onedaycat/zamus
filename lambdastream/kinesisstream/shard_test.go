@@ -2,768 +2,395 @@ package kinesisstream_test
 
 import (
 	"context"
-	"fmt"
-	"strconv"
 	"testing"
 
-	"github.com/onedaycat/errors"
-	"github.com/onedaycat/zamus/dql"
-	"github.com/onedaycat/zamus/dql/mocks"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func TestShardStrategy(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
+func TestShardHandler(t *testing.T) {
+	s := setupShard().
+		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_3).
+		WithHandler("h2", MODE_NORMAL, EVENT_TYPE_3).
+		WithError("err")
 
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h2ET1++
-			}
-			if msg.EventType == "et3" {
-				h2ET3++
-			}
-			fmt.Println("h2", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
+	err := s.strategy.Process(context.Background(), s.records)
 
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, nil)
-	cm.RegisterHandler(handler2, nil)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
 	require.NoError(t, err)
-	require.Equal(t, 0, nError)
-	require.Equal(t, 3, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 3, h1ET3)
-	require.Equal(t, 3, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 3, h2ET3)
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+	require.Equal(t, 6, s.spy.Count(EVENT_TYPE_3))
+	require.Equal(t, 0, s.spy.Count("err"))
+	require.Equal(t, 2, s.spy.Count("h1"))
+	require.Equal(t, 1, s.spy.Count("h2"))
 }
 
-func TestShardStrategyWithFilter(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
+func TestShardHandlerWithPreAndPost(t *testing.T) {
+	s := setupShard().
+		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_3).
+		WithHandler("h2", MODE_NORMAL, EVENT_TYPE_3).
+		WithPreHandler("pre1", MODE_NORMAL).
+		WithPreHandler("pre2", MODE_NORMAL).
+		WithPostHandler("post1", MODE_NORMAL).
+		WithPostHandler("post2", MODE_NORMAL).
+		WithError("err")
 
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
+	err := s.strategy.Process(context.Background(), s.records)
 
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			h2ET3++
-			fmt.Println("h2", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, []string{"et1", "et3"})
-	cm.RegisterHandler(handler2, []string{"et3"})
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
 	require.NoError(t, err)
-	require.Equal(t, 0, nError)
-	require.Equal(t, 3, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 3, h1ET3)
-	require.Equal(t, 0, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 3, h2ET3)
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+	require.Equal(t, 6, s.spy.Count(EVENT_TYPE_3))
+	require.Equal(t, 0, s.spy.Count("err"))
+	require.Equal(t, 2, s.spy.Count("h1"))
+	require.Equal(t, 1, s.spy.Count("h2"))
+	require.Equal(t, 3, s.spy.Count("pre1"))
+	require.Equal(t, 3, s.spy.Count("pre2"))
+	require.Equal(t, 3, s.spy.Count("post1"))
+	require.Equal(t, 3, s.spy.Count("post2"))
 }
 
-func TestShardStrategyError(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
+func TestShardHandlerNoFilter(t *testing.T) {
+	s := setupShard().
+		WithHandler("h1", MODE_NORMAL).
+		WithError("err")
 
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			fmt.Println("h2", msg.EventID, msg.EventType)
-			if msg.EventType == "et1" {
-				h2ET1++
-			}
-			if msg.EventType == "et3" {
-				h2ET3++
-			}
-			if msg.EventID == "4" {
-				return errors.InternalError("ABC", "error on 4").WithCaller()
-			}
-		}
-		return nil
-	}
+	err := s.strategy.Process(context.Background(), s.records)
 
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, nil)
-	cm.RegisterHandler(handler2, nil)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.Error(t, err)
-	require.Equal(t, 1, nError)
-	require.Equal(t, 3, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 3, h1ET3)
-	require.Equal(t, 2, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 0, h2ET3)
-}
-
-func TestShardStrategyPanic(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
-
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			fmt.Println("h2", msg.EventID, msg.EventType)
-			if msg.EventType == "et1" {
-				h2ET1++
-			}
-			if msg.EventType == "et3" {
-				h2ET3++
-			}
-
-			if msg.EventID == "4" {
-				var x *kinesisstream.KinesisStreamEvent
-				_ = x.Records
-			}
-		}
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-		fmt.Printf("%+v\n", err)
-		// fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, nil)
-	cm.RegisterHandler(handler2, nil)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.Error(t, err)
-	require.Equal(t, 1, nError)
-	require.Equal(t, 3, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 3, h1ET3)
-	require.Equal(t, 2, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 0, h2ET3)
-}
-
-func TestShardStrategyPanicPre(t *testing.T) {
-	nError := 0
-	isPre := false
-	prehandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		isPre = true
-		if msgs[0].EventType == "et1" {
-			var x *kinesisstream.KinesisStreamEvent
-			_ = x.Records
-		}
-		return nil
-	}
-
-	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler, nil)
-	cm.PreHandlers(prehandler)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.Error(t, err)
-	require.Equal(t, 1, nError)
-	require.True(t, isPre)
-}
-
-func TestShardStrategyPanicPost(t *testing.T) {
-	isError := false
-	isPost := false
-	posthandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		isPost = true
-		if msgs[0].EventType == "et1" {
-			var x *kinesisstream.KinesisStreamEvent
-			_ = x.Records
-		}
-		return nil
-	}
-
-	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		isError = true
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler, nil)
-	cm.PostHandlers(posthandler)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.Error(t, err)
-	require.True(t, isError)
-	require.True(t, isPost)
-}
-
-func TestShardStrategyPanicPreWithPost(t *testing.T) {
-	isError := false
-	isPost := false
-	isPre := false
-
-	prehandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		isPre = true
-		if msgs[0].EventType == "et1" {
-			var x *kinesisstream.KinesisStreamEvent
-			_ = x.Records
-		}
-		return nil
-	}
-
-	posthandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		isPost = true
-		if msgs[0].EventType == "et1" {
-			var x *kinesisstream.KinesisStreamEvent
-			_ = x.Records
-		}
-		return nil
-	}
-
-	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		isError = true
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler, []string{"et1"})
-	cm.PreHandlers(prehandler)
-	cm.PostHandlers(posthandler)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.Error(t, err)
-	require.True(t, isError)
-	require.True(t, isPre)
-	require.False(t, isPost)
-}
-
-func TestShardStrategyPanicPostWithPre(t *testing.T) {
-	isError := false
-	isPost := false
-	isPre := false
-
-	prehandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		isPre = true
-		return nil
-	}
-
-	posthandler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		isPost = true
-		if msgs[0].EventType == "et1" {
-			var x *kinesisstream.KinesisStreamEvent
-			_ = x.Records
-		}
-		return nil
-	}
-
-	handler := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		isError = true
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler, nil)
-	cm.PreHandlers(prehandler)
-	cm.PostHandlers(posthandler)
-	cm.ErrorHandlers(onErr)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.Error(t, err)
-	require.True(t, isError)
-	require.True(t, isPre)
-	require.True(t, isPost)
-}
-
-func TestShardStrategyErrorWithRetry(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
-
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			fmt.Println("h2", msg.EventID, msg.EventType)
-			if msg.EventType == "et1" {
-				h2ET1++
-			}
-			if msg.EventType == "et3" {
-				h2ET3++
-			}
-			if msg.EventID == "4" {
-				return errors.InternalError("ABC", "error on 4").WithCaller()
-			}
-		}
-		return nil
-	}
-
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, nil)
-	cm.RegisterHandler(handler2, nil)
-	cm.ErrorHandlers(onErr)
-	dqlStorage := &mocks.Storage{}
-	d := dql.New(dqlStorage, 3, "srv1", "fn1", "1.0.0")
-	cm.SetDQL(d)
-	dqlStorage.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-		require.Len(t, d.Errors, 3)
-	}).Return(nil)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
 	require.NoError(t, err)
-	require.Equal(t, 3, nError)
-	require.Equal(t, 9, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 9, h1ET3)
-	require.Equal(t, 6, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 0, h2ET3)
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_2))
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_3))
+	require.Equal(t, 0, s.spy.Count("err"))
+	require.Equal(t, 3, s.spy.Count("h1"))
 }
 
-func TestShardStrategyErrorWithRetryOnce(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
+func TestShardError(t *testing.T) {
+	s := setupShard().
+		WithHandler("h1", MODE_ERROR, EVENT_TYPE_1, EVENT_TYPE_2).
+		WithPreHandler("pre1", MODE_NORMAL).
+		WithPostHandler("post1", MODE_NORMAL).
+		WithError("err")
 
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			fmt.Println("h2", msg.EventID, msg.EventType)
-			if msg.EventType == "et1" {
-				h2ET1++
-			}
-			if msg.EventType == "et3" {
-				h2ET3++
-			}
-			if msg.EventID == "4" {
-				return errors.InternalError("ABC", "error on 4").WithCaller()
-			}
-		}
-		return nil
-	}
+	err := s.strategy.Process(context.Background(), s.records)
 
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-		fmt.Println("Error Trigger", err)
-	}
-
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, nil)
-	cm.RegisterHandler(handler2, nil)
-	cm.ErrorHandlers(onErr)
-	dqlStorage := &mocks.Storage{}
-	d := dql.New(dqlStorage, 1, "srv1", "fn1", "1.0.0")
-	cm.SetDQL(d)
-	dqlStorage.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-		require.Len(t, d.Errors, 1)
-	}).Return(nil)
-
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
-
-	err := cm.Process(context.Background(), records)
-	require.NoError(t, err)
-	require.Equal(t, 1, nError)
-	require.Equal(t, 3, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 3, h1ET3)
-	require.Equal(t, 2, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 0, h2ET3)
+	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+	require.Equal(t, 1, s.spy.Count("err"))
+	require.Equal(t, 1, s.spy.Count("h1"))
+	require.Equal(t, 1, s.spy.Count("pre1"))
+	require.Equal(t, 0, s.spy.Count("post1"))
 }
 
-func TestShardStrategyPanicWithRetry(t *testing.T) {
-	nError := 0
-	h1ET1 := 0
-	h1ET2 := 0
-	h1ET3 := 0
-	h2ET1 := 0
-	h2ET2 := 0
-	h2ET3 := 0
-	handler1 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			if msg.EventType == "et1" {
-				h1ET1++
-			}
-			if msg.EventType == "et3" {
-				h1ET3++
-			}
-			// fmt.Println("h1", msg.EventID, msg.EventType)
-		}
-		return nil
-	}
+func TestShardPanic(t *testing.T) {
+	t.Run("Panic Error", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_PANIC, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err")
 
-	handler2 := func(ctx context.Context, msgs kinesisstream.EventMsgs) errors.Error {
-		for _, msg := range msgs {
-			fmt.Println("h2", msg.EventID, msg.EventType)
-			if msg.EventType == "et1" {
-				h2ET1++
-			}
-			if msg.EventType == "et3" {
-				h2ET3++
-			}
+		err := s.strategy.Process(context.Background(), s.records)
 
-			if msg.EventID == "4" {
-				var x *kinesisstream.KinesisStreamEvent
-				_ = x.Records
-			}
-		}
-		return nil
-	}
+		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+	})
 
-	onErr := func(ctx context.Context, msgs kinesisstream.EventMsgs, err errors.Error) {
-		nError++
-		fmt.Println("Error Trigger", err)
-	}
+	t.Run("Panic String", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_PANIC_STRING, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err")
 
-	n := 10
-	cm := kinesisstream.NewShardStrategy(1)
-	cm.RegisterHandler(handler1, []string{"et1", "et3"})
-	cm.RegisterHandler(handler2, []string{"et1", "et3"})
-	cm.ErrorHandlers(onErr)
-	dqlStorage := &mocks.Storage{}
-	d := dql.New(dqlStorage, 3, "srv1", "fn1", "1.0.0")
-	cm.SetDQL(d)
-	dqlStorage.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-		require.Len(t, d.Errors, 3)
-	}).Return(nil)
+		err := s.strategy.Process(context.Background(), s.records)
 
-	records := make(kinesisstream.Records, n)
-	for i := range records {
-		rec := &kinesisstream.Record{}
-		istr := strconv.Itoa(i)
-		if i == 0 || i == 4 || i == 7 {
-			rec.Add("p1", istr, "et1")
-		}
-		if i == 1 || i == 5 || i == 6 || i == 9 {
-			rec.Add("p2", istr, "et2")
-		}
-		if i == 2 || i == 3 || i == 8 {
-			rec.Add("p3", istr, "et3")
-		}
-		records[i] = rec
-	}
+		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+	})
+}
 
-	err := cm.Process(context.Background(), records)
+func TestShardPreError(t *testing.T) {
+	s := setupShard().
+		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+		WithPreHandler("pre1", MODE_ERROR).
+		WithPreHandler("pre2", MODE_ERROR).
+		WithPostHandler("post1", MODE_NORMAL).
+		WithError("err")
+
+	err := s.strategy.Process(context.Background(), s.records)
+
+	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, 1, s.spy.Count("err"))
+	require.Equal(t, 0, s.spy.Count("h1"))
+	require.Equal(t, 1, s.spy.Count("pre1"))
+	require.Equal(t, 0, s.spy.Count("pre2"))
+	require.Equal(t, 0, s.spy.Count("post1"))
+}
+
+func TestShardPrePanic(t *testing.T) {
+	t.Run("Panic Error", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_PANIC).
+			WithPreHandler("pre2", MODE_PANIC).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err")
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 0, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+	})
+
+	t.Run("Panic String", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_PANIC_STRING).
+			WithPreHandler("pre2", MODE_PANIC_STRING).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err")
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 0, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+	})
+}
+
+func TestShardPostError(t *testing.T) {
+	s := setupShard().
+		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+		WithPreHandler("pre1", MODE_NORMAL).
+		WithPostHandler("post1", MODE_ERROR).
+		WithPostHandler("post2", MODE_ERROR).
+		WithError("err")
+
+	err := s.strategy.Process(context.Background(), s.records)
+
+	require.Equal(t, appErr.ErrInternalError, err)
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+	require.Equal(t, 1, s.spy.Count("err"))
+	require.Equal(t, 1, s.spy.Count("h1"))
+	require.Equal(t, 1, s.spy.Count("pre1"))
+	require.Equal(t, 1, s.spy.Count("post1"))
+	require.Equal(t, 0, s.spy.Count("post2"))
+}
+
+func TestShardPostPanic(t *testing.T) {
+	t.Run("Panic Error", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_PANIC).
+			WithPostHandler("post2", MODE_PANIC).
+			WithError("err")
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 1, s.spy.Count("post1"))
+		require.Equal(t, 0, s.spy.Count("post2"))
+	})
+
+	t.Run("Panic String", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_PANIC_STRING).
+			WithPostHandler("post2", MODE_PANIC_STRING).
+			WithError("err")
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 1, s.spy.Count("post1"))
+		require.Equal(t, 0, s.spy.Count("post2"))
+	})
+}
+
+func TestShardDQL(t *testing.T) {
+	t.Run("Retry 3", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_ERROR, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err").
+			WithDQL(3)
+
+		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+			require.Len(t, s.dql.GetDQLErrors(), 3)
+		}).Return(nil)
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.NoError(t, err)
+		require.Equal(t, 9, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 3, s.spy.Count("err"))
+		require.Equal(t, 3, s.spy.Count("h1"))
+		require.Equal(t, 3, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+		s.dqlMock.AssertExpectations(t)
+	})
+
+	t.Run("Retry 1", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_ERROR, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err").
+			WithDQL(1)
+
+		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+			require.Len(t, s.dql.GetDQLErrors(), 1)
+		}).Return(nil)
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.NoError(t, err)
+		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+		s.dqlMock.AssertExpectations(t)
+	})
+
+	t.Run("Retry 3 on Panic", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_PANIC, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err").
+			WithDQL(1)
+
+		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+			require.Len(t, s.dql.GetDQLErrors(), 1)
+		}).Return(nil)
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.NoError(t, err)
+		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+		s.dqlMock.AssertExpectations(t)
+	})
+
+	t.Run("Retry 3 on Panic String", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_PANIC_STRING, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_NORMAL).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err").
+			WithDQL(1)
+
+		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+			require.Len(t, s.dql.GetDQLErrors(), 1)
+		}).Return(nil)
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.NoError(t, err)
+		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 1, s.spy.Count("err"))
+		require.Equal(t, 1, s.spy.Count("h1"))
+		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+		s.dqlMock.AssertExpectations(t)
+	})
+}
+
+func TestSharPredDQL(t *testing.T) {
+	t.Run("Retry 3", func(t *testing.T) {
+		s := setupShard().
+			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
+			WithPreHandler("pre1", MODE_ERROR).
+			WithPostHandler("post1", MODE_NORMAL).
+			WithError("err").
+			WithDQL(3)
+
+		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+			require.Len(t, s.dql.GetDQLErrors(), 3)
+		}).Return(nil)
+
+		err := s.strategy.Process(context.Background(), s.records)
+
+		require.NoError(t, err)
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+		require.Equal(t, 3, s.spy.Count("err"))
+		require.Equal(t, 0, s.spy.Count("h1"))
+		require.Equal(t, 3, s.spy.Count("pre1"))
+		require.Equal(t, 0, s.spy.Count("post1"))
+		s.dqlMock.AssertExpectations(t)
+	})
+}
+
+func TestMultiShardHandlerWithPreAndPost(t *testing.T) {
+	s := setupMultiShard().
+		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_3).
+		WithHandler("h2", MODE_NORMAL, EVENT_TYPE_3).
+		WithPreHandler("pre1", MODE_NORMAL).
+		WithPreHandler("pre2", MODE_NORMAL).
+		WithPostHandler("post1", MODE_NORMAL).
+		WithPostHandler("post2", MODE_NORMAL).
+		WithError("err")
+
+	err := s.strategy.Process(context.Background(), s.records)
+
 	require.NoError(t, err)
-	require.Equal(t, 3, nError)
-	require.Equal(t, 9, h1ET1)
-	require.Equal(t, 0, h1ET2)
-	require.Equal(t, 9, h1ET3)
-	require.Equal(t, 6, h2ET1)
-	require.Equal(t, 0, h2ET2)
-	require.Equal(t, 0, h2ET3)
+	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
+	require.Equal(t, 6, s.spy.Count(EVENT_TYPE_3))
+	require.Equal(t, 0, s.spy.Count("err"))
+	require.Equal(t, 6, s.spy.Count("h1"))
+	require.Equal(t, 3, s.spy.Count("h2"))
+	require.Equal(t, 9, s.spy.Count("pre1"))
+	require.Equal(t, 9, s.spy.Count("pre2"))
+	require.Equal(t, 9, s.spy.Count("post1"))
+	require.Equal(t, 9, s.spy.Count("post2"))
 }

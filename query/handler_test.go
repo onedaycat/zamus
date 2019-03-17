@@ -238,7 +238,7 @@ func TestBatchInvokeHandlerNBatchSourcesMisMatched(t *testing.T) {
 	require.Equal(t, appErr.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
-	require.Equal(t, 0, nErr)
+	require.Equal(t, 1, nErr)
 }
 
 func TestBatchInvokePreHandler(t *testing.T) {
@@ -351,7 +351,7 @@ func TestBatchInvokePreHandlerNBatchSourcesMisMatched(t *testing.T) {
 	require.Equal(t, appErr.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 0, nF)
-	require.Equal(t, 0, nErr)
+	require.Equal(t, 1, nErr)
 	require.Equal(t, 1, nPre)
 }
 
@@ -505,7 +505,7 @@ func TestBatchInvokePostHandlerNBatchSourcesMisMatched(t *testing.T) {
 	require.Equal(t, appErr.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 1, nF)
-	require.Equal(t, 0, nErr)
+	require.Equal(t, 1, nErr)
 	require.Equal(t, 1, nPost)
 }
 
@@ -620,7 +620,7 @@ func TestBatchInvokePreHandlerEachHandlerNBatchSourcesMisMatched(t *testing.T) {
 	require.Equal(t, appErr.ErrQueryResultSizeNotMatch, err)
 	require.Nil(t, resp)
 	require.Equal(t, 0, nF)
-	require.Equal(t, 0, nErr)
+	require.Equal(t, 1, nErr)
 	require.Equal(t, 1, nPre)
 }
 

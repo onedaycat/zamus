@@ -1,4 +1,4 @@
-package projection
+package trigger
 
 import (
 	"context"
@@ -6,16 +6,21 @@ import (
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+	"github.com/onedaycat/zamus/tracer"
 	"github.com/rs/zerolog/log"
 )
 
-func PrintPanic(ctx context.Context, msgs EventMsgs, err errors.Error) {
+func TraceError(ctx context.Context, payload Payload, err errors.Error) {
+	tracer.AddError(ctx, err)
+}
+
+func PrintPanic(ctx context.Context, payload Payload, err errors.Error) {
 	if err.GetPanic() {
 		fmt.Printf("%+v", err)
 	}
 }
 
-func Sentry(ctx context.Context, msgs EventMsgs, err errors.Error) {
+func Sentry(ctx context.Context, payload Payload, err errors.Error) {
 	switch err.GetStatus() {
 	case errors.InternalErrorStatus:
 		log.Error().
