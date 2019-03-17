@@ -202,7 +202,8 @@ resources:
               - - "arn:aws:s3:::"
                 - Ref: S3Event
           RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
-          Prefix: "firehose/dt=!{timestamp:yyyy-MM-dd}/"
+          # firehose/dt=!{timestamp:yyyy-MM-dd}/
+          Prefix: "firehose/"
           # ErrorOutputPrefix: "errors/!{firehose:error-output-type}/dt=!{timestamp:yyyy-MM-dd}/"
           CompressionFormat: UNCOMPRESSED
           BufferingHints:
