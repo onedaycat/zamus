@@ -35,7 +35,7 @@ func WithTime(t int64) EventMsgsOption {
 	}
 }
 
-func WithEventType(eventType string, events ...interface{}) EventMsgsOption {
+func WithEvent(eventType string, events ...interface{}) EventMsgsOption {
 	return func(opts *eventMsgsOptions) {
 		opts.eventType = eventType
 		opts.events = events

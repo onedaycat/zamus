@@ -30,12 +30,12 @@ func TestEventMsgs(t *testing.T) {
 	now := time.Now().Unix()
 
 	msgs = EventMsgs().
-		Add(WithEventType("f1", event)).
-		Add(WithEventType("f2", event), WithAggregateID("a1")).
-		Add(WithEventType("f3", event), WithMetadata(metadata)).
-		Add(WithEventType("f4", event), WithTime(now)).
-		Add(WithEventType("f5", event), WithVersion("2")).
-		Add(WithEventType("f6", event), WithEventType("et1")).
+		Add(WithEvent("f1", event)).
+		Add(WithEvent("f2", event), WithAggregateID("a1")).
+		Add(WithEvent("f3", event), WithMetadata(metadata)).
+		Add(WithEvent("f4", event), WithTime(now)).
+		Add(WithEvent("f5", event), WithVersion("2")).
+		Add(WithEvent("f6", event), WithEvent("et1")).
 		Build()
 	require.Len(t, msgs, 6)
 	require.Equal(t, "f1", msgs[0].EventType)
@@ -53,10 +53,10 @@ func TestEventMsgs(t *testing.T) {
 	require.Equal(t, "2", msgs[4].EventVersion)
 
 	msgsByte := EventMsgs().
-		Add(WithEventType("f1", event)).
-		Add(WithEventType("f2", event), WithAggregateID("a1")).
-		Add(WithEventType("f3", event), WithMetadata(metadata)).
-		Add(WithEventType("f4", event), WithTime(now)).
+		Add(WithEvent("f1", event)).
+		Add(WithEvent("f2", event), WithAggregateID("a1")).
+		Add(WithEvent("f3", event), WithMetadata(metadata)).
+		Add(WithEvent("f4", event), WithTime(now)).
 		BuildJSON()
 
 	require.NotNil(t, msgsByte)

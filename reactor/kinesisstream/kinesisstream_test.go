@@ -65,17 +65,17 @@ func setupSuite(strategy kinesisstream.KinesisHandlerStrategy) *StrategySuite {
 	if _records == nil {
 		e1 := random.EventMsgs().RandomEventMsgs(3,
 			random.WithAggregateID(AGG_1),
-			random.WithEventType(EVENT_TYPE_1),
+			random.WithEvent(EVENT_TYPE_1),
 		).Build()
 
 		e2 := random.EventMsgs().RandomEventMsgs(3,
 			random.WithAggregateID(AGG_2),
-			random.WithEventType(EVENT_TYPE_2),
+			random.WithEvent(EVENT_TYPE_2),
 		).Build()
 
 		e3 := random.EventMsgs().RandomEventMsgs(3,
 			random.WithAggregateID(AGG_3),
-			random.WithEventType(EVENT_TYPE_3),
+			random.WithEvent(EVENT_TYPE_3),
 		).Build()
 
 		_records = random.KinesisEvents().Add(e1...).Add(e2...).Add(e3...).Build().Records
