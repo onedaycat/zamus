@@ -10,7 +10,7 @@ import (
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	"github.com/onedaycat/zamus/reactor/kinesisstream"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"

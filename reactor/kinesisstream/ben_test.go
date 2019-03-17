@@ -7,7 +7,7 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common/random"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	"github.com/onedaycat/zamus/reactor/kinesisstream"
 )
 
 func BenchmarkPartition(b *testing.B) {

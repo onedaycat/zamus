@@ -15,7 +15,7 @@ import (
 	"github.com/onedaycat/errors/sentry"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/lambdastream/dynamostream"
+	"github.com/onedaycat/zamus/reactor/dynamostream"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/rs/zerolog/log"

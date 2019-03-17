@@ -9,7 +9,7 @@ import (
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/dql/mocks"
 	appErr "github.com/onedaycat/zamus/errors"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	"github.com/onedaycat/zamus/reactor/kinesisstream"
 )
 
 const (

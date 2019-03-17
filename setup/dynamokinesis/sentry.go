@@ -5,7 +5,7 @@ import (
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/lambdastream/dynamostream"
+	"github.com/onedaycat/zamus/reactor/dynamostream"
 	"github.com/rs/zerolog/log"
 )
 

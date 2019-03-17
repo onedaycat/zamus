@@ -9,7 +9,7 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/dql"
 	"github.com/onedaycat/zamus/dql/mocks"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	"github.com/onedaycat/zamus/reactor/kinesisstream"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

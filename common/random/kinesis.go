@@ -3,7 +3,7 @@ package random
 import (
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	"github.com/onedaycat/zamus/reactor/kinesisstream"
 )
 
 type kinesisBuilder struct {

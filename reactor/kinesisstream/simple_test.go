@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/onedaycat/errors"
-	"github.com/onedaycat/zamus/lambdastream/kinesisstream"
+	"github.com/onedaycat/zamus/reactor/kinesisstream"
 	"github.com/stretchr/testify/require"
 )
 
