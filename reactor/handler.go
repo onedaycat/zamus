@@ -10,16 +10,36 @@ import (
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
+	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/reactor/kinesisstream"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/onedaycat/zamus/zamuscontext"
 )
 
+type EventHandler = kinesisstream.EventMessagesHandler
+type ErrorHandler = kinesisstream.EventMessagesErrorHandler
+type EventMsg = eventstore.EventMsg
+type EventMsgs = []*eventstore.EventMsg
+type LambdaEvent = kinesisstream.KinesisStreamEvent
+
+type Config struct {
+	AppStage            string
+	Service             string
+	Version             string
+	SentryRelease       string
+	SentryDNS           string
+	DisableReponseError bool
+	EnableTrace         bool
+	DQLMaxRetry         int
+	DQLStorage          dql.Storage
+}
+
 type Handler struct {
-	streamer kinesisstream.KinesisHandlerStrategy
-	zcctx    *zamuscontext.ZamusContext
-	warmer   *warmer.Warmer
+	streamer            kinesisstream.KinesisHandlerStrategy
+	zcctx               *zamuscontext.ZamusContext
+	warmer              *warmer.Warmer
+	disableReponseError bool
 }
 
 func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *Handler {
@@ -31,7 +51,8 @@ func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *
 			LambdaVersion:  lambdacontext.FunctionVersion,
 			Version:        config.Version,
 		},
-		streamer: streamer,
+		streamer:            streamer,
+		disableReponseError: config.DisableReponseError,
 	}
 
 	if config.DQLMaxRetry > 0 && config.DQLStorage != nil {
@@ -94,6 +115,11 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	req := &LambdaEvent{}
 	if err := common.UnmarshalJSON(payload, req); err != nil {
 		return nil, err
+	}
+
+	if h.disableReponseError {
+		h.Handle(ctx, req)
+		return nil, nil
 	}
 
 	return nil, h.Handle(ctx, req)

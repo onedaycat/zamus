@@ -298,21 +298,21 @@ func TestShardDQL(t *testing.T) {
 			WithPreHandler("pre1", MODE_NORMAL).
 			WithPostHandler("post1", MODE_NORMAL).
 			WithError("err").
-			WithDQL(1)
+			WithDQL(3)
 
 		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-			require.Len(t, s.dql.GetDQLErrors(), 1)
+			require.Len(t, s.dql.GetDQLErrors(), 3)
 		}).Return(nil)
 
 		err := s.strategy.Process(context.Background(), s.records)
 
 		require.NoError(t, err)
-		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 9, s.spy.Count(EVENT_TYPE_1))
 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
-		require.Equal(t, 1, s.spy.Count("err"))
-		require.Equal(t, 1, s.spy.Count("h1"))
-		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 3, s.spy.Count("err"))
+		require.Equal(t, 3, s.spy.Count("h1"))
+		require.Equal(t, 3, s.spy.Count("pre1"))
 		require.Equal(t, 0, s.spy.Count("post1"))
 		s.dqlMock.AssertExpectations(t)
 	})
@@ -323,27 +323,27 @@ func TestShardDQL(t *testing.T) {
 			WithPreHandler("pre1", MODE_NORMAL).
 			WithPostHandler("post1", MODE_NORMAL).
 			WithError("err").
-			WithDQL(1)
+			WithDQL(3)
 
 		s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-			require.Len(t, s.dql.GetDQLErrors(), 1)
+			require.Len(t, s.dql.GetDQLErrors(), 3)
 		}).Return(nil)
 
 		err := s.strategy.Process(context.Background(), s.records)
 
 		require.NoError(t, err)
-		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
+		require.Equal(t, 9, s.spy.Count(EVENT_TYPE_1))
 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
-		require.Equal(t, 1, s.spy.Count("err"))
-		require.Equal(t, 1, s.spy.Count("h1"))
-		require.Equal(t, 1, s.spy.Count("pre1"))
+		require.Equal(t, 3, s.spy.Count("err"))
+		require.Equal(t, 3, s.spy.Count("h1"))
+		require.Equal(t, 3, s.spy.Count("pre1"))
 		require.Equal(t, 0, s.spy.Count("post1"))
 		s.dqlMock.AssertExpectations(t)
 	})
 }
 
-func TestSharPredDQL(t *testing.T) {
+func TestShardPredDQL(t *testing.T) {
 	t.Run("Retry 3", func(t *testing.T) {
 		s := setupShard().
 			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).

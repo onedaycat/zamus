@@ -137,7 +137,7 @@ DQLRetry:
 				}
 			}
 
-			msgList := eventstore.EventMsgList{
+			msgList := &eventstore.EventMsgList{
 				EventMsgs: msgs,
 			}
 			msgListByte, _ := msgList.Marshal()

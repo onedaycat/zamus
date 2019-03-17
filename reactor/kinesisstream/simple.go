@@ -131,24 +131,25 @@ DQLRetry:
 				goto DQLRetry
 			}
 
-			msgs := make(EventMsgs, len(records))
+			msgs := make(EventMsgs, 0, len(records))
 			if len(c.eventTypes) > 0 {
-				for i, record := range records {
+				for _, record := range records {
 					eventType = record.Kinesis.Data.EventMsg.EventType
 					if !c.eventTypes.Has(eventType) {
 						continue
 					}
-					msgs[i] = record.Kinesis.Data.EventMsg
+					msgs = append(msgs, record.Kinesis.Data.EventMsg)
 				}
 			} else {
-				for i, record := range records {
-					msgs[i] = record.Kinesis.Data.EventMsg
+				for _, record := range records {
+					msgs = append(msgs, record.Kinesis.Data.EventMsg)
 				}
 			}
 
-			msgList := eventstore.EventMsgList{
+			msgList := &eventstore.EventMsgList{
 				EventMsgs: msgs,
 			}
+
 			msgListByte, _ := msgList.Marshal()
 
 			return c.dql.Save(ctx, msgListByte)
