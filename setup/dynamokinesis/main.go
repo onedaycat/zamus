@@ -14,7 +14,6 @@ import (
 	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/errors/sentry"
 	appErr "github.com/onedaycat/zamus/errors"
-	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/reactor/dynamostream"
 	"github.com/onedaycat/zamus/warmer"
 	"github.com/rs/zerolog/log"
@@ -27,14 +26,16 @@ const (
 var json = jsoniter.ConfigFastest
 
 type Handler struct {
+	records    []*kinesis.PutRecordsRequestEntry
 	streamList []string
 	ks         *kinesis.Kinesis
 	wrm        *warmer.Warmer
+	count      int
 }
 
-func (h *Handler) publish(ctx context.Context, streamName string, records []*kinesis.PutRecordsRequestEntry) errors.Error {
+func (h *Handler) publish(ctx context.Context, streamName string) errors.Error {
 	out, err := h.ks.PutRecordsWithContext(ctx, &kinesis.PutRecordsInput{
-		Records:    records,
+		Records:    h.records[:h.count],
 		StreamName: &streamName,
 	})
 
@@ -51,40 +52,49 @@ func (h *Handler) publish(ctx context.Context, streamName string, records []*kin
 	return nil
 }
 
+func (h *Handler) Process(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) errors.Error {
+	records := stream.Records
+	h.count = 0
+
+	for i := 0; i < len(records); i++ {
+		if records[i].EventName != dynamostream.EventInsert || records[i].DynamoDB.NewImage == nil {
+			continue
+		}
+
+		data, _ := records[i].DynamoDB.NewImage.EventMsg.Marshal()
+		if len(h.records) <= h.count {
+			h.records = append(h.records, &kinesis.PutRecordsRequestEntry{
+				Data:         data,
+				PartitionKey: &records[i].DynamoDB.NewImage.EventMsg.AggregateID,
+			})
+		} else {
+			h.records[h.count].Data = data
+			h.records[h.count].PartitionKey = &records[i].DynamoDB.NewImage.EventMsg.AggregateID
+		}
+		h.count++
+	}
+
+	return nil
+}
+
 func (h *Handler) Handle(ctx context.Context, stream *dynamostream.DynamoDBStreamEvent) errors.Error {
 	if stream.Warmer {
 		h.wrm.Run(ctx, stream.Concurency)
 		return nil
 	}
 
-	records := stream.Records
-	n := len(records)
-	result := make([]*kinesis.PutRecordsRequestEntry, 0, n)
-
-	var msg *eventstore.EventMsg
-	for i := 0; i < n; i++ {
-		if records[i].EventName != dynamostream.EventInsert || records[i].DynamoDB.NewImage == nil {
-			continue
-		}
-
-		msg = records[i].DynamoDB.NewImage.EventMsg
-		// fmt.Println("###", msg.AggregateID, msg.Seq)
-
-		data, _ := msg.Marshal()
-		result = append(result, &kinesis.PutRecordsRequestEntry{
-			Data:         data,
-			PartitionKey: &msg.AggregateID,
-		})
+	if err := h.Process(ctx, stream); err != nil {
+		return err
 	}
 
-	if len(result) == 0 {
+	if h.count == 0 {
 		return nil
 	}
 
 	wg := errgroup.Group{}
 	for _, streamName := range h.streamList {
 		wg.Go(func() errors.Error {
-			if err := h.publish(ctx, streamName, result); err != nil {
+			if err := h.publish(ctx, streamName); err != nil {
 				return err
 			}
 
@@ -132,6 +142,7 @@ func main() {
 	}
 
 	dh := &Handler{
+		records:    make([]*kinesis.PutRecordsRequestEntry, 0, 200),
 		wrm:        warmer.New(sess),
 		streamList: strings.Split(streamNames, delim),
 		ks:         kinesis.New(sess),
