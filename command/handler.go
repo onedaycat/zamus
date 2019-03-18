@@ -41,6 +41,7 @@ type Handler struct {
 	errHandlers  []ErrorHandler
 	zcctx        *zamuscontext.ZamusContext
 	warmer       *warmer.Warmer
+	req          *CommandReq
 }
 
 func NewHandler(config *Config) *Handler {
@@ -53,6 +54,7 @@ func NewHandler(config *Config) *Handler {
 			Version:        config.Version,
 		},
 		commands: make(map[string]*commandinfo, 30),
+		req:      &CommandReq{},
 	}
 
 	if config.SentryDNS != "" {
@@ -243,12 +245,11 @@ func (h *Handler) Handle(ctx context.Context, cmd *CommandReq) (interface{}, err
 }
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	req := &CommandReq{}
-	if err := common.UnmarshalJSON(payload, req); err != nil {
+	if err := common.UnmarshalJSON(payload, h.req); err != nil {
 		return nil, err
 	}
 
-	result, err := h.Handle(ctx, req)
+	result, err := h.Handle(ctx, h.req)
 	if err != nil {
 		return nil, err
 	}

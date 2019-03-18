@@ -38,6 +38,7 @@ type Handler struct {
 	errHandlers  []ErrorHandler
 	zcctx        *zamuscontext.ZamusContext
 	warmer       *warmer.Warmer
+	req          *QueryReq
 }
 
 func NewHandler(config *Config) *Handler {
@@ -50,6 +51,7 @@ func NewHandler(config *Config) *Handler {
 			Version:        config.Version,
 		},
 		quries: make(map[string]*queryinfo, 30),
+		req:    &QueryReq{},
 	}
 
 	if config.EnableTrace {
@@ -274,12 +276,11 @@ func (h *Handler) Handle(ctx context.Context, req *QueryReq) (QueryResult, error
 }
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	req := &QueryReq{}
-	if err := req.UnmarshalRequest(payload); err != nil {
+	if err := h.req.UnmarshalRequest(payload); err != nil {
 		return nil, err
 	}
 
-	result, err := h.Handle(ctx, req)
+	result, err := h.Handle(ctx, h.req)
 	if err != nil {
 		return nil, err
 	}
