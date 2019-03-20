@@ -52,6 +52,20 @@ func (e *Request) MarshalRequest() ([]byte, errors.Error) {
 	return common.MarshalJSON(e)
 }
 
+type Requests []*Request
+
+func NewRequests(size int) Requests {
+	return make(Requests, size)
+}
+
+func (r Requests) Add(fn string, id *Identity, argsList ...interface{}) Requests {
+	for _, args := range argsList {
+		r = append(r, NewRequest(fn).WithArgs(args).WithIdentity(id))
+	}
+
+	return r
+}
+
 type BatchResults []*BatchResult
 
 type BatchResult struct {

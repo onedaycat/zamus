@@ -11,7 +11,7 @@ import (
 	"github.com/onedaycat/zamus/common/random"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/invoke"
-	"github.com/onedaycat/zamus/service/mocks"
+	"github.com/onedaycat/zamus/invoke/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
