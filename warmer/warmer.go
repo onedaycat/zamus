@@ -1,24 +1,18 @@
 package warmer
 
 import (
-	"bytes"
 	"context"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/onedaycat/zamus/common"
+	"github.com/onedaycat/zamus/invoke"
 )
-
-type Invoker interface {
-	InvokeAsyncWithContext(ctx context.Context, input *lambda.InvokeAsyncInput, opts ...request.Option) (*lambda.InvokeAsyncOutput, error)
-}
 
 type Warmer struct {
 	delay      time.Duration
-	ld         Invoker
+	ld         invoke.Invoker
 	wg         sync.WaitGroup
 	invokeType string
 }
@@ -26,7 +20,7 @@ type Warmer struct {
 func New(ld *lambda.Lambda) *Warmer {
 	return &Warmer{
 		delay:      75 * time.Millisecond,
-		ld:         ld,
+		ld:         invoke.NewInvoke(ld),
 		invokeType: "Event",
 	}
 }
@@ -42,24 +36,21 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 		return
 	}
 
-	payload, _ := common.MarshalJSON(WarmerRequest{
+	req := &invoke.Request{
 		Warmer:     true,
 		Concurency: 0,
-	})
+	}
 
 	w.wg.Add(concurency)
 
 	for i := 0; i < concurency; i++ {
-		go w.conInvoke(ctx, payload)
+		go w.conInvoke(ctx, req)
 	}
 
 	w.wg.Wait()
 }
 
-func (w *Warmer) conInvoke(ctx context.Context, payload []byte) {
+func (w *Warmer) conInvoke(ctx context.Context, req *invoke.Request) {
 	defer w.wg.Done()
-	w.ld.InvokeAsyncWithContext(ctx, &lambda.InvokeAsyncInput{
-		FunctionName: &lambdacontext.FunctionName,
-		InvokeArgs:   bytes.NewReader(payload),
-	})
+	w.ld.InvokeAsync(ctx, lambdacontext.FunctionName, req)
 }

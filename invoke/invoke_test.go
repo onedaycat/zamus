@@ -17,8 +17,6 @@ import (
 )
 
 func TestInvoke(t *testing.T) {
-	ld := &mocks.LambdaInvokeClient{}
-	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := map[string]interface{}{
 		"id": "1",
@@ -31,10 +29,12 @@ func TestInvoke(t *testing.T) {
 	errUnhandled := "Unhandled"
 
 	t.Run("Success", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
 		result := map[string]interface{}{}
-		builder := random.ServiceReq("m1").Args(args)
-		req := builder.Build()
-		reqByte := builder.BuildJSON()
+		req := invoke.NewRequest("m1").WithArgs(args).WithIdentity(&invoke.Identity{}).WithPermission("hello", "read")
+		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
@@ -53,10 +53,13 @@ func TestInvoke(t *testing.T) {
 	})
 
 	t.Run("Success But No Data", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
 		result := map[string]interface{}{}
-		builder := random.ServiceReq("m1").Args(args)
-		req := builder.Build()
-		reqByte := builder.BuildJSON()
+		// builder := random.InvokeReq("m1").Args(args)
+		req := invoke.NewRequest("m1").WithArgs(args).WithPermission("hello", "read")
+		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
@@ -75,7 +78,10 @@ func TestInvoke(t *testing.T) {
 	})
 
 	t.Run("Success But dont need result", func(t *testing.T) {
-		builder := random.ServiceReq("m1").Args(args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReq("m1").Args(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -95,8 +101,11 @@ func TestInvoke(t *testing.T) {
 	})
 
 	t.Run("Error From payload", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
 		result := map[string]interface{}{}
-		builder := random.ServiceReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Args(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -117,8 +126,11 @@ func TestInvoke(t *testing.T) {
 	})
 
 	t.Run("Invoke Error", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
 		result := map[string]interface{}{}
-		builder := random.ServiceReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Args(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -137,8 +149,6 @@ func TestInvoke(t *testing.T) {
 }
 
 func TestInvokeAsync(t *testing.T) {
-	ld := &mocks.LambdaInvokeClient{}
-	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := map[string]interface{}{
 		"id": "1",
@@ -147,7 +157,10 @@ func TestInvokeAsync(t *testing.T) {
 	fn := "fn1"
 
 	t.Run("Success", func(t *testing.T) {
-		builder := random.ServiceReq("m1").Args(args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReq("m1").Args(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -163,7 +176,10 @@ func TestInvokeAsync(t *testing.T) {
 	})
 
 	t.Run("Invoke Error", func(t *testing.T) {
-		builder := random.ServiceReq("m1").Args(args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReq("m1").Args(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -181,8 +197,6 @@ func TestInvokeAsync(t *testing.T) {
 }
 
 func TestBatchInvoke(t *testing.T) {
-	ld := &mocks.LambdaInvokeClient{}
-	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := []map[string]interface{}{
 		{"id": "1"},
@@ -207,7 +221,10 @@ func TestBatchInvoke(t *testing.T) {
 	fn := "fn1"
 
 	t.Run("Success", func(t *testing.T) {
-		builder := random.ServiceReqs().Add("m1", args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReqs().Add("m1", args)
 		reqs := builder.Build()
 		reqsByte := builder.BuildJSON()
 
@@ -228,7 +245,10 @@ func TestBatchInvoke(t *testing.T) {
 	})
 
 	t.Run("Success But No Data", func(t *testing.T) {
-		builder := random.ServiceReqs().Add("m1", args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReqs().Add("m1", args)
 		reqs := builder.Build()
 		reqsByte := builder.BuildJSON()
 
@@ -249,7 +269,10 @@ func TestBatchInvoke(t *testing.T) {
 	})
 
 	t.Run("Error From payload", func(t *testing.T) {
-		builder := random.ServiceReqs().Add("m1", args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReqs().Add("m1", args)
 		reqs := builder.Build()
 		reqsByte := builder.BuildJSON()
 
@@ -270,7 +293,10 @@ func TestBatchInvoke(t *testing.T) {
 	})
 
 	t.Run("Invoke Error", func(t *testing.T) {
-		builder := random.ServiceReqs().Add("m1", args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReqs().Add("m1", args)
 		reqs := builder.Build()
 		reqsByte := builder.BuildJSON()
 
@@ -289,8 +315,6 @@ func TestBatchInvoke(t *testing.T) {
 }
 
 func TestBatchInvokeAsync(t *testing.T) {
-	ld := &mocks.LambdaInvokeClient{}
-	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := []map[string]interface{}{
 		{"id": "1"},
@@ -301,7 +325,10 @@ func TestBatchInvokeAsync(t *testing.T) {
 	fn := "fn1"
 
 	t.Run("Success", func(t *testing.T) {
-		builder := random.ServiceReqs().Add("m1", args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReqs().Add("m1", args)
 		reqs := builder.Build()
 		reqsByte := builder.BuildJSON()
 
@@ -317,7 +344,10 @@ func TestBatchInvokeAsync(t *testing.T) {
 	})
 
 	t.Run("Invoke Error", func(t *testing.T) {
-		builder := random.ServiceReqs().Add("m1", args)
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		builder := random.InvokeReqs().Add("m1", args)
 		reqs := builder.Build()
 		reqsByte := builder.BuildJSON()
 
