@@ -1,4 +1,4 @@
-package service_test
+package invoke_test
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/common/random"
 	appErr "github.com/onedaycat/zamus/errors"
-	"github.com/onedaycat/zamus/service"
+	"github.com/onedaycat/zamus/invoke"
 	"github.com/onedaycat/zamus/service/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -18,7 +18,7 @@ import (
 
 func TestInvoke(t *testing.T) {
 	ld := &mocks.LambdaInvokeClient{}
-	in := service.NewInvoke(ld)
+	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := map[string]interface{}{
 		"id": "1",
@@ -38,7 +38,7 @@ func TestInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       mockResultByte,
@@ -60,7 +60,7 @@ func TestInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       nil,
@@ -81,7 +81,7 @@ func TestInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       mockResultByte,
@@ -102,7 +102,7 @@ func TestInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       []byte(`{"errorType":"LambdaError", "errorMessage": "{\"type\":\"BadRequest\",\"status\":400,\"code\":\"Hello\",\"message\":\"hello\"}"}`),
@@ -124,7 +124,7 @@ func TestInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqByte,
 		}).Return(nil, errors.DumbError)
 
@@ -138,7 +138,7 @@ func TestInvoke(t *testing.T) {
 
 func TestInvokeAsync(t *testing.T) {
 	ld := &mocks.LambdaInvokeClient{}
-	in := service.NewInvoke(ld)
+	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := map[string]interface{}{
 		"id": "1",
@@ -182,20 +182,20 @@ func TestInvokeAsync(t *testing.T) {
 
 func TestBatchInvoke(t *testing.T) {
 	ld := &mocks.LambdaInvokeClient{}
-	in := service.NewInvoke(ld)
+	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := []map[string]interface{}{
 		{"id": "1"},
 		{"id": "2"},
 		{"id": "3"},
 	}
-	mockResults := service.BatchResults{
+	mockResults := invoke.BatchResults{
 		{Data: map[string]interface{}{"id": "1"}},
 		{Data: map[string]interface{}{"id": "2"}},
 		{Data: map[string]interface{}{"id": "3"}},
 	}
 
-	mockResultsWithError := service.BatchResults{
+	mockResultsWithError := invoke.BatchResults{
 		{Data: map[string]interface{}{"id": "1"}},
 		{Error: appErr.ErrNotImplement},
 		{Data: map[string]interface{}{"id": "3"}},
@@ -213,7 +213,7 @@ func TestBatchInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqsByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       mockResultsByte,
@@ -234,7 +234,7 @@ func TestBatchInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqsByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       nil,
@@ -255,7 +255,7 @@ func TestBatchInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqsByte,
 		}).Return(&lambda.InvokeOutput{
 			Payload:       mockResultsWithErrorByte,
@@ -276,7 +276,7 @@ func TestBatchInvoke(t *testing.T) {
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
 			FunctionName: &fn,
-			Qualifier:    &service.LATEST,
+			Qualifier:    &invoke.LATEST,
 			Payload:      reqsByte,
 		}).Return(nil, errors.DumbError)
 
@@ -290,7 +290,7 @@ func TestBatchInvoke(t *testing.T) {
 
 func TestBatchInvokeAsync(t *testing.T) {
 	ld := &mocks.LambdaInvokeClient{}
-	in := service.NewInvoke(ld)
+	in := invoke.NewInvoke(ld)
 	ctx := context.Background()
 	args := []map[string]interface{}{
 		{"id": "1"},

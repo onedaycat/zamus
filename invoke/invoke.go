@@ -1,4 +1,4 @@
-package service
+package invoke
 
 import (
 	"bytes"
@@ -9,9 +9,20 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
 	appErr "github.com/onedaycat/zamus/errors"
+	"github.com/onedaycat/zamus/service"
 )
 
 var LATEST = "$LATEST"
+
+type Request = service.Request
+type BatchResults = service.BatchResults
+type Identity = service.Identity
+
+func NewRequest(fn string) *Request {
+	return &Request{
+		Function: fn,
+	}
+}
 
 //go:generate mockery -name=Invoker
 type Invoker interface {
