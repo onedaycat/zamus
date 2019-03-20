@@ -21,6 +21,12 @@ type Request struct {
 	index      int
 }
 
+func NewRequest(fn string) *Request {
+	return &Request{
+		Function: fn,
+	}
+}
+
 func (e *Request) WithIdentity(id *Identity) *Request {
 	e.Identity = id
 
