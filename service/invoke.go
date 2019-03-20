@@ -59,7 +59,7 @@ func (in *Invoke) Invoke(ctx context.Context, fn string, req *Request, result in
 		return resErr
 	}
 
-	if len(out.Payload) == 0 {
+	if len(out.Payload) == 0 || result == nil {
 		return nil
 	}
 

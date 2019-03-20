@@ -74,6 +74,26 @@ func TestInvoke(t *testing.T) {
 		ld.AssertExpectations(t)
 	})
 
+	t.Run("Success But dont need result", func(t *testing.T) {
+		builder := random.ServiceReq("m1").Args(args)
+		req := builder.Build()
+		reqByte := builder.BuildJSON()
+
+		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
+			FunctionName: &fn,
+			Qualifier:    &service.LATEST,
+			Payload:      reqByte,
+		}).Return(&lambda.InvokeOutput{
+			Payload:       mockResultByte,
+			FunctionError: nil,
+		}, nil)
+
+		err := in.Invoke(ctx, fn, req, nil)
+
+		require.NoError(t, err)
+		ld.AssertExpectations(t)
+	})
+
 	t.Run("Error From payload", func(t *testing.T) {
 		result := map[string]interface{}{}
 		builder := random.ServiceReq("m1").Args(args)

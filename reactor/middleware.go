@@ -21,14 +21,18 @@ func PrintPanic(ctx context.Context, msgs EventMsgs, err errors.Error) {
 }
 
 func Sentry(ctx context.Context, msgs EventMsgs, err errors.Error) {
-	switch err.GetStatus() {
-	case errors.InternalErrorStatus:
-		log.Error().
-			Interface("input", err.GetInput()).
-			Msg(err.Error())
-	default:
+	if !err.HasStackTrace() {
 		return
 	}
+
+	l := log.Error()
+	if input := err.GetInput(); input != nil {
+		l.Interface("input", input)
+	}
+	if cause := err.GetCause(); cause != nil {
+		l.Interface("cause", cause.Error())
+	}
+	l.Msg(err.Error())
 
 	packet := sentry.NewPacket(err)
 
