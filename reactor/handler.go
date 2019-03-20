@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
+	ldService "github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/common"
@@ -135,7 +136,8 @@ func (h *Handler) runWarmer(ctx context.Context, event *LambdaEvent) errors.Erro
 		if serr != nil {
 			panic(serr)
 		}
-		h.warmer = warmer.New(sess)
+
+		h.warmer = warmer.New(ldService.New(sess))
 	}
 	h.warmer.Run(ctx, event.Concurency)
 

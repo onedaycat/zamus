@@ -5,22 +5,36 @@ import (
 	"testing"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
-	"github.com/onedaycat/zamus/invoke/mocks"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
-func TestInvokeConcurency(t *testing.T) {
-	invoker := &mocks.Invoker{}
-	sess, err := session.NewSession()
-	if err != nil {
-		panic(err)
+type FakeInvoke struct {
+	err errors.Error
+	spy *common.SpyTest
+}
+
+func newFakeInvoke() *FakeInvoke {
+	return &FakeInvoke{
+		spy: common.Spy(),
+	}
+}
+
+func (f *FakeInvoke) InvokeAsyncWithContext(ctx context.Context, input *lambda.InvokeAsyncInput, opts ...request.Option) (*lambda.InvokeAsyncOutput, error) {
+	f.spy.Called("invoke")
+	if f.err != nil {
+		return nil, f.err
 	}
 
-	spy := common.Spy()
-	w := New(sess)
+	return nil, nil
+}
+
+func TestInvokeConcurency(t *testing.T) {
+	invoker := newFakeInvoke()
+	w := New(nil)
 	w.ld = invoker
 
 	ctx := context.Background()
@@ -28,24 +42,13 @@ func TestInvokeConcurency(t *testing.T) {
 		AwsRequestID: "req1",
 	})
 
-	invoker.On("Invoke", mock.Anything).Run(func(args mock.Arguments) {
-		spy.Called("invoke")
-	}).Return(nil, nil).Times(2)
-
 	w.Run(ctx, 2)
-	require.Equal(t, 2, spy.Count("invoke"))
-	invoker.AssertExpectations(t)
+	require.Equal(t, 2, invoker.spy.Count("invoke"))
 }
 
 func TestInvokeOne(t *testing.T) {
-	invoker := &mocks.Invoker{}
-	sess, err := session.NewSession()
-	if err != nil {
-		panic(err)
-	}
-
-	spy := common.Spy()
-	w := New(sess)
+	invoker := newFakeInvoke()
+	w := New(nil)
 	w.ld = invoker
 
 	ctx := context.Background()
@@ -54,19 +57,12 @@ func TestInvokeOne(t *testing.T) {
 	})
 
 	w.Run(ctx, 1)
-	require.Equal(t, 0, spy.Count("invoke"))
-	invoker.AssertExpectations(t)
+	require.Equal(t, 0, invoker.spy.Count("invoke"))
 }
 
 func TestNoConcurency(t *testing.T) {
-	invoker := &mocks.Invoker{}
-	sess, err := session.NewSession()
-	if err != nil {
-		panic(err)
-	}
-
-	spy := common.Spy()
-	w := New(sess)
+	invoker := newFakeInvoke()
+	w := New(nil)
 	w.ld = invoker
 
 	ctx := context.Background()
@@ -75,5 +71,5 @@ func TestNoConcurency(t *testing.T) {
 	})
 
 	w.Run(ctx, 0)
-	require.Equal(t, 0, spy.Count("invoke"))
+	require.Equal(t, 0, invoker.spy.Count("invoke"))
 }

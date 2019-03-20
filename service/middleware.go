@@ -1,4 +1,4 @@
-package command
+package service
 
 import (
 	"context"
@@ -10,18 +10,18 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func PrintPanic(ctx context.Context, cmd *CommandReq, err errors.Error) {
+func PrintPanic(ctx context.Context, req *Request, err errors.Error) {
 	if err.GetPanic() {
 		fmt.Printf("%+v", err)
 	}
 }
 
-func TraceError(ctx context.Context, req *CommandReq, err errors.Error) {
+func TraceError(ctx context.Context, req *Request, err errors.Error) {
 	tracer.AddError(ctx, err)
 }
 
-func Sentry(ctx context.Context, req *CommandReq, err errors.Error) {
-	switch errors.ErrStatus(err) {
+func Sentry(ctx context.Context, req *Request, err errors.Error) {
+	switch err.GetStatus() {
 	case errors.InternalErrorStatus:
 		log.Error().
 			Interface("input", err.GetInput()).
@@ -31,9 +31,9 @@ func Sentry(ctx context.Context, req *CommandReq, err errors.Error) {
 	}
 
 	packet := sentry.NewPacket(err)
-	if req.Identity != nil && req.Identity.GetID() != "" {
+	if req.Identity != nil && req.Identity.ID != "" {
 		packet.AddUser(&sentry.User{
-			ID: req.Identity.GetID(),
+			ID: req.Identity.ID,
 		})
 	}
 

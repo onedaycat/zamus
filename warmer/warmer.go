@@ -1,28 +1,32 @@
 package warmer
 
 import (
+	"bytes"
 	"context"
 	"sync"
 	"time"
 
 	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/onedaycat/zamus/common"
-	"github.com/onedaycat/zamus/invoke"
 )
+
+type Invoker interface {
+	InvokeAsyncWithContext(ctx context.Context, input *lambda.InvokeAsyncInput, opts ...request.Option) (*lambda.InvokeAsyncOutput, error)
+}
 
 type Warmer struct {
 	delay      time.Duration
-	ld         invoke.Invoker
+	ld         Invoker
 	wg         sync.WaitGroup
 	invokeType string
 }
 
-func New(sess *session.Session) *Warmer {
+func New(ld *lambda.Lambda) *Warmer {
 	return &Warmer{
 		delay:      75 * time.Millisecond,
-		ld:         lambda.New(sess),
+		ld:         ld,
 		invokeType: "Event",
 	}
 }
@@ -54,10 +58,8 @@ func (w *Warmer) Run(ctx context.Context, concurency int) {
 
 func (w *Warmer) conInvoke(ctx context.Context, payload []byte) {
 	defer w.wg.Done()
-	w.ld.Invoke(&lambda.InvokeInput{
-		FunctionName:   &lambdacontext.FunctionName,
-		Qualifier:      &lambdacontext.FunctionVersion,
-		InvocationType: &w.invokeType,
-		Payload:        payload,
+	w.ld.InvokeAsyncWithContext(ctx, &lambda.InvokeAsyncInput{
+		FunctionName: &lambdacontext.FunctionName,
+		InvokeArgs:   bytes.NewReader(payload),
 	})
 }

@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:291f04c7da63e4aa1dc888d92972ae849c478e4c6340b05e5edb4f689358c4b6"
+  digest = "1:a7673a719aa8563fcc15ba8b76b4e9cdd35704fd0a28ea1163dbcf6fa7730479"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,8 +69,8 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "2410a5b1bbbb4e64c57dd1030f204c8fbfb1c58a"
-  version = "v1.18.3"
+  revision = "f9b35e02297c8fcca7a55dd30ed8d4e9dc64f5a3"
+  version = "v1.18.5"
 
 [[projects]]
   branch = "master"
@@ -139,7 +139,7 @@
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "b85cd75de734650db18a99a943fe351d41387800"
+  revision = "d3c38a4eb4970272b87a425ae00ccc4548e2f9bb"
 
 [[projects]]
   branch = "master"
@@ -209,7 +209,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f10c4835cd5a1cbf00338d1f8a2336ff77947e9b155bacfd0b136462093fa3e3"
+  digest = "1:49e1fbd42ffa34a98b2662cf98bb5aac733ecd949f5da0bdd5bbfb121a0ae135"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -217,7 +217,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "fb555b91a696e085917647a4add96fa4f0698ea0"
+  revision = "8285a3beab91434ee73689f238e178bae7c5d4ac"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -253,11 +253,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2e76a73cb51f42d63a2a1a85b3dc5731fd4faf6821b434bd0ef2c099186031d6"
+  digest = "1:fceef0054469ed5de3243649d5d2fc92f485e13143e96a5503895802ec429c9f"
   name = "github.com/rs/xid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "15d26544def341f036c5f8dca987a4cbe575032c"
+  revision = "cc5ec5782ac92773c5cc967b35ac567c2ac73e53"
 
 [[projects]]
   branch = "master"
@@ -321,11 +321,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:f36c7b9a36158e62ffe5d8b02d1b5955500c13106cdaeebf5323d88863cae96f"
+  digest = "1:5637b3b43405643229e55140bb3049dfa7d73957ba9ecfccc31cdadbfbe0b1f9"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "a2f829d7f35f2ed1c3520c553a6226495455cae0"
+  revision = "6c81ef8f67ca3f42fc9cd71dfbd5f35b0c4b5771"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"

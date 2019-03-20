@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambdacontext"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	ldService "github.com/aws/aws-sdk-go/service/lambda"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
@@ -143,7 +144,7 @@ func main() {
 
 	dh := &Handler{
 		records:    make([]*kinesis.PutRecordsRequestEntry, 0, 200),
-		wrm:        warmer.New(sess),
+		wrm:        warmer.New(ldService.New(sess)),
 		streamList: strings.Split(streamNames, delim),
 		ks:         kinesis.New(sess),
 	}
