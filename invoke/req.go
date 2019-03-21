@@ -55,7 +55,7 @@ func (e *Request) MarshalRequest() ([]byte, errors.Error) {
 type Requests []*Request
 
 func NewRequests(size int) Requests {
-	return make(Requests, size)
+	return make(Requests, 0, size)
 }
 
 func (r Requests) Add(fn string, id *Identity, argsList ...interface{}) Requests {
