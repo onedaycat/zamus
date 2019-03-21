@@ -501,25 +501,26 @@ func TestPostHandler(t *testing.T) {
 
 func TestArgsHandler(t *testing.T) {
 	s := setupHandlerSuite()
-	args1 := map[string]interface{}{"id": "1"}
-	args2 := map[string]interface{}{"id": "2"}
-	args3 := map[string]interface{}{"id": "3"}
 
-	req1 := random.ServiceReq("f1").Args(args1).BuildJSON()
-	req2 := random.ServiceReq("f1").Args(args2).BuildJSON()
-	req3 := random.ServiceReq("f1").Args(args3).BuildJSON()
+	req1 := &service.Request{Function: "f1", Args: []byte(`{"email": "test@test.com"}`)}
+	req2 := &service.Request{Function: "f1"}
+	req3 := &service.Request{Function: "f1"}
+
+	reqByte1, _ := req1.MarshalRequest()
+	reqByte2, _ := req2.MarshalRequest()
+	reqByte3, _ := req3.MarshalRequest()
 
 	s.WithHandlerCheckReq(t, "f1")
 
-	res, err := s.h.Invoke(context.Background(), req1)
+	res, err := s.h.Invoke(context.Background(), reqByte1)
 	require.NoError(t, err)
-	require.Equal(t, req1, res)
+	require.Equal(t, reqByte1, res)
 
-	res, err = s.h.Invoke(context.Background(), req2)
+	res, err = s.h.Invoke(context.Background(), reqByte2)
 	require.NoError(t, err)
-	require.Equal(t, req2, res)
+	require.Equal(t, reqByte2, res)
 
-	res, err = s.h.Invoke(context.Background(), req3)
+	res, err = s.h.Invoke(context.Background(), reqByte3)
 	require.NoError(t, err)
-	require.Equal(t, req3, res)
+	require.Equal(t, reqByte3, res)
 }

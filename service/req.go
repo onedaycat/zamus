@@ -10,6 +10,7 @@ import (
 const (
 	firstCharArray  = 91
 	firstCharObject = 123
+	emptyStr        = ""
 )
 
 type Request struct {
@@ -53,6 +54,10 @@ func (e *Request) WithArgs(args interface{}) *Request {
 }
 
 func (e *Request) ParseArgs(v interface{}) errors.Error {
+	if len(e.Args) == 0 {
+		return nil
+	}
+
 	if err := common.UnmarshalJSON(e.Args, v); err != nil {
 		return err
 	}
@@ -128,6 +133,14 @@ func (q *mainReq) UnmarshalRequest(b []byte) error {
 	firstChar := b[0]
 
 	if firstChar == firstCharArray {
+		for i := range q.reqs {
+			q.reqs[i].Function = emptyStr
+			q.reqs[i].Args = nil
+			q.reqs[i].Identity = nil
+			q.reqs[i].Warmer = false
+			q.reqs[i].Concurency = 0
+		}
+
 		if err = common.UnmarshalJSON(b, &q.reqs); err != nil {
 			return err
 		}
@@ -146,6 +159,12 @@ func (q *mainReq) UnmarshalRequest(b []byte) error {
 
 		return nil
 	} else if firstChar == firstCharObject {
+		q.req.Function = emptyStr
+		q.req.Args = nil
+		q.req.Identity = nil
+		q.req.Warmer = false
+		q.req.Concurency = 0
+
 		if err = common.UnmarshalJSON(b, q.req); err != nil {
 			return err
 		}
