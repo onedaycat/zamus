@@ -274,20 +274,15 @@ func (h *ServiceHandler) Handle(ctx context.Context, req *Request) (interface{},
 	return h.runHandler(info, zmctx, req)
 }
 
-func (h *ServiceHandler) Run(ctx context.Context, req *Request, result interface{}) errors.Error {
+func (h *ServiceHandler) Run(ctx context.Context, req *Request, result interface{}) error {
 	reqByte, err := common.MarshalJSON(req)
 	if err != nil {
 		panic(err)
 	}
 
 	resByte, xerr := h.Invoke(ctx, reqByte)
-	var resErr errors.Error
-	var ok bool
 	if xerr != nil {
-		resErr, ok = errors.FromError(xerr)
-		if !ok {
-			resErr = appErr.ErrUnknown.WithMessage(xerr.Error())
-		}
+		return xerr
 	}
 
 	if resByte != nil {
@@ -296,7 +291,7 @@ func (h *ServiceHandler) Run(ctx context.Context, req *Request, result interface
 		}
 	}
 
-	return resErr
+	return xerr
 }
 
 func (h *ServiceHandler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
@@ -309,12 +304,17 @@ func (h *ServiceHandler) Invoke(ctx context.Context, payload []byte) ([]byte, er
 	}
 
 	result, err := h.Handle(ctx, h.req.req)
+	if err != nil {
+		return nil, appErr.ToLambdaError(err)
+	}
+
 	var resultByte []byte
 	if result != nil {
 		resultByte, _ = common.MarshalJSON(result)
+		return resultByte, nil
 	}
 
-	return resultByte, err
+	return nil, nil
 }
 
 func (h *ServiceHandler) StartLambda() {

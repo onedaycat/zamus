@@ -98,9 +98,13 @@ func ErrorByCode(err errors.Error) errors.Error {
 var json = jsoniter.ConfigFastest
 
 func ToLambdaError(err errors.Error) error {
+	if err == nil {
+		return nil
+	}
+
 	data, _ := json.Marshal(err)
 
-	return errors.Simple(string(data))
+	return &LambdaError{msg: string(data)}
 }
 
 func ParseLambdaError(payload []byte) (errors.Error, errors.Error) {
@@ -128,9 +132,9 @@ type lambdaErrorResponse struct {
 }
 
 type LambdaError struct {
-	err errors.Error
+	msg string
 }
 
 func (e *LambdaError) Error() string {
-	return e.err.Error()
+	return e.msg
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/dql"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/reactor/kinesisstream"
 	"github.com/onedaycat/zamus/tracer"
@@ -115,7 +116,7 @@ func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	req := &LambdaEvent{}
 	if err := common.UnmarshalJSON(payload, req); err != nil {
-		return nil, err
+		return nil, appErr.ToLambdaError(err)
 	}
 
 	if h.disableReponseError {
@@ -123,7 +124,7 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 		return nil, nil
 	}
 
-	return nil, h.Handle(ctx, req)
+	return nil, appErr.ToLambdaError(h.Handle(ctx, req))
 }
 
 func (h *Handler) StartLambda() {

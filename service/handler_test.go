@@ -217,7 +217,7 @@ func TestHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrInternalError, err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrInternalError).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 2, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("err"))
@@ -228,7 +228,7 @@ func TestHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrPanic).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 3, s.spy.Count("f1"))
 		require.Equal(t, 2, s.spy.Count("err"))
@@ -239,7 +239,7 @@ func TestHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrPanic, err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrPanic).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 4, s.spy.Count("f1"))
 		require.Equal(t, 3, s.spy.Count("err"))
@@ -262,7 +262,7 @@ func TestHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrFunctionNotFound("f2"), err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrFunctionNotFound("f2")).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 4, s.spy.Count("f1"))
 		require.Equal(t, 3, s.spy.Count("err"))
@@ -322,7 +322,7 @@ func TestInPreHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrInternalError, err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrInternalError).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 0, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -337,7 +337,7 @@ func TestInPreHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrPanic.Code, err.GetCode())
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrPanic).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 0, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -390,7 +390,7 @@ func TestPreHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrInternalError, err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrInternalError).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 0, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -407,7 +407,7 @@ func TestPreHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrPanic.Code, err.GetCode())
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrPanic).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 0, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -460,7 +460,7 @@ func TestPostHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrInternalError, err)
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrInternalError).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 1, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("post1"))
@@ -477,7 +477,7 @@ func TestPostHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
-		require.Equal(t, appErr.ErrPanic.Code, err.GetCode())
+		require.Equal(t, appErr.ToLambdaError(appErr.ErrPanic).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 1, s.spy.Count("f1"))
 		require.Equal(t, 1, s.spy.Count("post1"))

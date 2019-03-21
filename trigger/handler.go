@@ -116,13 +116,13 @@ DQLRetry:
 	return result, nil
 }
 
-func (h *Handler) Invoke(ctx context.Context, payload []byte) (resultByte []byte, err error) {
+func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 	result, err := h.Handle(ctx, Payload(payload))
 	if err != nil {
-		return nil, err
+		return nil, appErr.ToLambdaError(err)
 	}
 
-	resultByte, _ = common.MarshalJSON(result)
+	resultByte, _ := common.MarshalJSON(result)
 
 	return resultByte, nil
 }
