@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -13,9 +12,11 @@ import (
 )
 
 var ciSave bool
+var ciBitbucket bool
 
 func init() {
 	CICmd.Flags().BoolVarP(&ciSave, "save", "s", false, "Save current commit after run (DEFAULT: false)")
+	CICmd.Flags().BoolVarP(&ciBitbucket, "bitbucket", "b", false, "Use BITBUCKET_COMMIT for the lastest commit (DEFAULT: false)")
 }
 
 var CICmd = &cobra.Command{
@@ -23,13 +24,6 @@ var CICmd = &cobra.Command{
 	Short:     "Watch dor changed for ci",
 	Long:      "Watch dor changed for ci\nif last commit from filepath is not found, ci will run all steps",
 	ValidArgs: []string{"last commit", "current commit"},
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) < 1 {
-			return errors.New("arguments is required <current_commit>")
-		}
-
-		return nil
-	},
 	Run: func(cmd *cobra.Command, args []string) {
 		lastCommit, err := ioutil.ReadFile(config.C.CI.Fileapath)
 		fmt.Println("Load last commit from:", config.C.CI.Fileapath)
@@ -43,12 +37,36 @@ var CICmd = &cobra.Command{
 				return
 			} else {
 				fmt.Println("Last commit not found!")
-				fmt.Println("Run all scripts!")
+				notExist = true
 			}
 		}
 
 		if !notExist {
 			fmt.Println("Last commit loaded:", string(lastCommit))
+		}
+
+		var curCommit string
+		if ciBitbucket {
+			bitCom := os.Getenv("BITBUCKET_COMMIT")
+			if bitCom != "" {
+				fmt.Println("Bitbucket commit found:", bitCom)
+				curCommit = bitCom
+			} else {
+				fmt.Println("Current commit from bitbucket not found use last commit from args instead")
+			}
+		}
+
+		if curCommit == "" {
+			if len(args) < 1 {
+				fmt.Println("Error:", "arguments is required <current_commit>")
+				os.Exit(1)
+			} else {
+				curCommit = args[0]
+			}
+		}
+
+		if notExist {
+			fmt.Println("Run all scripts!")
 		}
 
 		trigger := config.C.CI.Trigger
@@ -57,7 +75,7 @@ var CICmd = &cobra.Command{
 
 			if !notExist {
 				gitArgs := make([]string, 0, 5+len(trigger[i].Folders))
-				gitArgs = append(gitArgs, "diff", "--name-only", string(lastCommit), args[0], "--")
+				gitArgs = append(gitArgs, "diff", "--name-only", string(lastCommit), curCommit, "--")
 				gitArgs = append(gitArgs, trigger[i].Folders...)
 				result, _ := sh.Output("git", gitArgs...)
 				if len(result) > 0 {
@@ -77,16 +95,8 @@ var CICmd = &cobra.Command{
 		}
 
 		if ciSave {
-			ioutil.WriteFile(config.C.CI.Fileapath, []byte(args[0]), 0644)
-			fmt.Println("\nSave commit:", args[0])
+			ioutil.WriteFile(config.C.CI.Fileapath, []byte(curCommit), 0644)
+			fmt.Println("\nSave commit:", curCommit)
 		}
-
-		// fmt.Println("@@", err)
-		// fmt.Println(len(result))
 	},
 }
-
-// --full-index
-// --binary
-// -a
-// --exit-code
