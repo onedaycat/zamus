@@ -13,14 +13,9 @@ type Migration struct {
 }
 
 type CI struct {
-	Fileapath string       `yaml:"filepath"`
-	Trigger   []*CITrigger `yaml:"trigger"`
-}
-
-type CITrigger struct {
-	Name    string   `yaml:"name"`
-	Folders []string `yaml:"folders"`
-	Script  []string `yaml:"script"`
+	Fileapath string              `yaml:"filepath"`
+	Folders   [][]string          `yaml:"folders"`
+	Steps     map[string][]string `yaml:"steps"`
 }
 
 func init() {

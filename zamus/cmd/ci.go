@@ -20,10 +20,9 @@ func init() {
 }
 
 var CICmd = &cobra.Command{
-	Use:       "ci",
-	Short:     "Watch dor changed for ci",
-	Long:      "Watch dor changed for ci\nif last commit from filepath is not found, ci will run all steps",
-	ValidArgs: []string{"last commit", "current commit"},
+	Use:   "ci",
+	Short: "Watch dor changed for ci",
+	Long:  "Watch dor changed for ci\nif last commit from filepath is not found, ci will run all steps\nargs[0]=<step_name>, [args[1]=<current_commit>",
 	Run: func(cmd *cobra.Command, args []string) {
 		lastCommit, err := ioutil.ReadFile(config.C.CI.Fileapath)
 		fmt.Println("Load last commit from:", config.C.CI.Fileapath)
@@ -56,40 +55,58 @@ var CICmd = &cobra.Command{
 			}
 		}
 
+		if len(args) < 1 {
+			fmt.Println("Error:", "step name args is required")
+			os.Exit(1)
+		}
+
 		if curCommit == "" {
-			if len(args) < 1 {
-				fmt.Println("Error:", "arguments is required <current_commit>")
+			if len(args) < 2 {
+				fmt.Println("Error:", "require 2 arguments, <current_commit> is missing")
 				os.Exit(1)
 			} else {
 				curCommit = args[0]
 			}
 		}
 
+		if curCommit == string(lastCommit) {
+			fmt.Println("Last and current commit are equal")
+			fmt.Println("Nothing changed!!!")
+			os.Exit(0)
+		}
+
+		step, ok := config.C.CI.Steps[args[0]]
+		if !ok {
+			fmt.Println("Step", args[0], "is not found")
+			os.Exit(0)
+		} else {
+			fmt.Println("Start", args[0], "step!")
+		}
+
 		if notExist {
 			fmt.Println("Run all scripts!")
 		}
 
-		trigger := config.C.CI.Trigger
-		for i := range trigger {
-			fmt.Println("\nCI Run:", trigger[i].Name)
+		for _, folders := range config.C.CI.Folders {
+			fmt.Println("\nRun", args[0], "step on", folders)
 
 			if !notExist {
-				gitArgs := make([]string, 0, 5+len(trigger[i].Folders))
+				gitArgs := make([]string, 0, 5+len(folders))
 				gitArgs = append(gitArgs, "diff", "--name-only", string(lastCommit), curCommit, "--")
-				gitArgs = append(gitArgs, trigger[i].Folders...)
+				gitArgs = append(gitArgs, folders...)
 				result, _ := sh.Output("git", gitArgs...)
 				if len(result) > 0 {
-					fmt.Println("Found changed!!!", trigger[i].Folders)
+					fmt.Println("Found changed!!!")
 					runSteps = true
 				} else {
 					runSteps = false
-					fmt.Println("Nothing changed on", trigger[i].Folders)
+					fmt.Println("Nothing changed!!!")
 				}
 			}
 
 			if runSteps {
-				for _, sc := range trigger[i].Script {
-					mg.Exec(sc)
+				for _, script := range step {
+					mg.Exec(script)
 				}
 			}
 		}
