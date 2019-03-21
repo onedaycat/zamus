@@ -80,8 +80,31 @@ func (r Requests) Add(fn string, id *Identity, argsList ...interface{}) Requests
 
 type BatchResults []*BatchResult
 
+type MapBatchResults interface {
+	GetID(index int) string
+	Get(index int) interface{}
+	GetAll() []interface{}
+	Missed() errors.Error
+}
+
 func (r BatchResults) MarshalResponses() ([]byte, errors.Error) {
 	return common.MarshalJSON(r)
+}
+
+func (r BatchResults) Map(data MapBatchResults, ids []string) {
+	for i := range data.GetAll() {
+		for j := range ids {
+			if data.GetID(i) == ids[j] {
+				r[j].Data = data.Get(i)
+			}
+		}
+	}
+
+	for i := range r {
+		if r[i].Data == nil {
+			r[i].Error = data.Missed().(*errors.AppError)
+		}
+	}
 }
 
 type BatchResult struct {
