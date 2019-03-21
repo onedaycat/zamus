@@ -5,17 +5,12 @@ migration:
   dir: "migration/prod"
 
 ci:
-  filepath: last_commit
-  trigger:
-    - name: app1
-      folders:
-        - service
-        - replay
-      script:
-        - go test ./...
-
-    - name: app2
-      folders:
-        - dql
-      script:
-        - go test ./...
+  filepath: lastcommit
+  folders:
+    - [service, replay]
+    - [dql]
+  steps:
+    test:
+      - go test ./...
+    deploy:
+      - go version

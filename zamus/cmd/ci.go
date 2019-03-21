@@ -115,5 +115,7 @@ var CICmd = &cobra.Command{
 			ioutil.WriteFile(config.C.CI.Fileapath, []byte(curCommit), 0644)
 			fmt.Println("\nSave commit:", curCommit)
 		}
+
+		fmt.Println("\nDone!!!")
 	},
 }
