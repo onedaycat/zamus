@@ -70,8 +70,6 @@ func ErrorByCode(err errors.Error) errors.Error {
 		return ErrInternalError
 	case ErrInvalidRequestCode:
 		return ErrInvalidRequest
-	case ErrValidateErrorCode:
-		return ErrValidateError
 	case ErrPermissionDeniedCode:
 		return ErrPermissionDenied
 	case ErrTimeoutCode:

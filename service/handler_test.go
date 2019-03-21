@@ -60,6 +60,19 @@ func setupHandlerSuite() *HandlerSuite {
 	return s
 }
 
+func (s *HandlerSuite) WithHandlerCheckReq(t *testing.T, name string) *HandlerSuite {
+	s.h.RegisterHandler(name, func(ctx context.Context, req *service.Request) (interface{}, errors.Error) {
+		s.spy.Called(name)
+		getargs := make(map[string]interface{})
+		err := req.ParseArgs(&getargs)
+		require.NoError(t, err)
+
+		return req, nil
+	})
+
+	return s
+}
+
 func (s *HandlerSuite) WithHandler(name string, mode int, result interface{}, preName ...string) *HandlerSuite {
 	var prehandlers []service.Handler
 	if len(preName) > 0 {
@@ -484,4 +497,29 @@ func TestPostHandler(t *testing.T) {
 		require.Equal(t, 1, s.spy.Count("post2"))
 		require.Equal(t, 1, s.spy.Count("err"))
 	})
+}
+
+func TestArgsHandler(t *testing.T) {
+	s := setupHandlerSuite()
+	args1 := map[string]interface{}{"id": "1"}
+	args2 := map[string]interface{}{"id": "2"}
+	args3 := map[string]interface{}{"id": "3"}
+
+	req1 := random.ServiceReq("f1").Args(args1).BuildJSON()
+	req2 := random.ServiceReq("f1").Args(args2).BuildJSON()
+	req3 := random.ServiceReq("f1").Args(args3).BuildJSON()
+
+	s.WithHandlerCheckReq(t, "f1")
+
+	res, err := s.h.Invoke(context.Background(), req1)
+	require.NoError(t, err)
+	require.Equal(t, req1, res)
+
+	res, err = s.h.Invoke(context.Background(), req2)
+	require.NoError(t, err)
+	require.Equal(t, req2, res)
+
+	res, err = s.h.Invoke(context.Background(), req3)
+	require.NoError(t, err)
+	require.Equal(t, req3, res)
 }
