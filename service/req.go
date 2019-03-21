@@ -83,7 +83,7 @@ type BatchResults []*BatchResult
 type MapBatchResults interface {
 	GetID(index int) string
 	Get(index int) interface{}
-	GetAll() []interface{}
+	Len() int
 	Missed() errors.Error
 }
 
@@ -92,7 +92,7 @@ func (r BatchResults) MarshalResponses() ([]byte, errors.Error) {
 }
 
 func (r BatchResults) Map(data MapBatchResults, ids []string) {
-	for i := range data.GetAll() {
+	for i := 0; i < data.Len(); i++ {
 		for j := range ids {
 			if data.GetID(i) == ids[j] {
 				r[j].Data = data.Get(i)
