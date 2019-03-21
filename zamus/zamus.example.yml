@@ -3,3 +3,19 @@ migration:
   datasource: root@/dbname?parseTime=true
   # ZAMUS_MIGRATION_DIR
   dir: "migration/prod"
+
+ci:
+  filepath: last_commit
+  trigger:
+    - name: app1
+      folders:
+        - service
+        - replay
+      script:
+        - go test ./...
+
+    - name: app2
+      folders:
+        - dql
+      script:
+        - go test ./...

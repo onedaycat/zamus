@@ -21,6 +21,7 @@ func main() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./zamus.yml)")
 	rootCmd.AddCommand(cmd.MigrateUpCmd)
 	rootCmd.AddCommand(cmd.MigrateDownCmd)
+	rootCmd.AddCommand(cmd.CICmd)
 	rootCmd.Execute()
 }
 
