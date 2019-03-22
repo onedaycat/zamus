@@ -3,13 +3,7 @@ package config
 var C Config
 
 type Config struct {
-	Migration *Migration `yaml:"migration"`
-	Deploy    *Deploy    `yaml:"deploy"`
-}
-
-type Migration struct {
-	Datasource string `yaml:"datasource"`
-	Dir        string `yaml:"dir"`
+	Deploy *Deploy `yaml:"deploy"`
 }
 
 type Deploy struct {

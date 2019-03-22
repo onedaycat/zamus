@@ -16,7 +16,7 @@ func main() {
 	cobra.OnInitialize(initConfig)
 	var rootCmd = &cobra.Command{
 		Use:     "zamus",
-		Version: "v1.0.5",
+		Version: "v0.43.0",
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./zamus.yml)")
 	rootCmd.AddCommand(cmd.MigrateUpCmd)

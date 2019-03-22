@@ -21,9 +21,9 @@ func init() {
 }
 
 var DeployCmd = &cobra.Command{
-	Use:   "deploy <branch> <step> [<current_commit>]",
-	Short: "Deploy only folder chnaged",
-	Long:  `Deploy only folder chnaged\nif last commit from filepath is not found, deploy will run all steps`,
+	Use:   "deploy <branch> <step> <current_commit>",
+	Short: "Deploy only folder changed",
+	Long:  `Deploy only folder changed`,
 	Args:  cobra.MinimumNArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		notExist := false
@@ -71,6 +71,8 @@ var DeployCmd = &cobra.Command{
 			fmt.Println("Skip deploy!!!")
 			os.Exit(0)
 		}
+
+		fmt.Println("Current commit:", args[2])
 
 	StartScript:
 		if notExist {

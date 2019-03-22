@@ -1,9 +1,3 @@
-migration:
-  # ZAMUS_MIGRATION_DATASOURCE
-  datasource: root@/dbname?parseTime=true
-  # ZAMUS_MIGRATION_DIR
-  dir: "migration/prod"
-
 deploy:
   filepath: lastcommit
   watch:

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/onedaycat/zamus/zamus/config"
 	"github.com/onedaycat/zamus/zamus/migration"
 	"github.com/spf13/cobra"
 )
@@ -19,13 +18,13 @@ func init() {
 }
 
 var MigrateUpCmd = &cobra.Command{
-	Use:   "migrate-up",
+	Use:   "migrate-up <source> <migration_folder>",
 	Short: "Migrate sql tear-up",
 	Long:  `Migrate sql with tear-up`,
+	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		m := config.C.Migration
-		datasource := m.Datasource
-		dir := m.Dir
+		datasource := args[0]
+		dir := args[1]
 		fmt.Printf("Start migrating max(%d)\n", upMax)
 		db, err := sql.Open("mysql", datasource)
 		if err != nil {
@@ -44,13 +43,12 @@ var MigrateUpCmd = &cobra.Command{
 }
 
 var MigrateDownCmd = &cobra.Command{
-	Use:   "migrate-down",
+	Use:   "migrate-down <source> <migration_folder>",
 	Short: "Migrate sql tear-down",
 	Long:  `Migrate sql with tear-down`,
 	Run: func(cmd *cobra.Command, args []string) {
-		m := config.C.Migration
-		datasource := m.Datasource
-		dir := m.Dir
+		datasource := args[0]
+		dir := args[1]
 		fmt.Printf("Start migrating max(%d)\n", downMax)
 		db, err := sql.Open("mysql", datasource)
 		if err != nil {
