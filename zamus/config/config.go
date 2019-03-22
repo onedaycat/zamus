@@ -4,7 +4,7 @@ var C Config
 
 type Config struct {
 	Migration *Migration `yaml:"migration"`
-	CI        *CI        `yaml:"ci"`
+	Deploy    *Deploy    `yaml:"deploy"`
 }
 
 type Migration struct {
@@ -12,7 +12,7 @@ type Migration struct {
 	Dir        string `yaml:"dir"`
 }
 
-type CI struct {
+type Deploy struct {
 	Fileapath string              `yaml:"filepath"`
 	Folders   [][]string          `yaml:"folders"`
 	Steps     map[string][]string `yaml:"steps"`

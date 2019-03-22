@@ -4,13 +4,13 @@ migration:
   # ZAMUS_MIGRATION_DIR
   dir: "migration/prod"
 
-ci:
+deploy:
   filepath: lastcommit
   folders:
-    - [service, replay]
+    - [zamus/config, service]
     - [dql]
   steps:
-    test:
+    dev:
       - go test ./...
-    deploy:
+    prod:
       - go version
