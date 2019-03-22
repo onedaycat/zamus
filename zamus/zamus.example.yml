@@ -6,11 +6,16 @@ migration:
 
 deploy:
   filepath: lastcommit
-  folders:
-    - [zamus/config, service]
-    - [dql]
-  steps:
-    dev:
-      - go test ./...
-    prod:
-      - go version
+  watch:
+    - folders: [zamus/config, service]
+      steps:
+        dev:
+          - go test ./...
+        prod:
+          - go version
+    - folders: [dql]
+      steps:
+        dev:
+          - go test ./...
+        prod:
+          - go version

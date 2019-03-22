@@ -24,7 +24,7 @@ var DeployCmd = &cobra.Command{
 	Use:   "deploy <branch> <step> [<current_commit>]",
 	Short: "Deploy only folder chnaged",
 	Long:  `Deploy only folder chnaged\nif last commit from filepath is not found, deploy will run all steps`,
-	Args:  cobra.MinimumNArgs(2),
+	Args:  cobra.MinimumNArgs(3),
 	Run: func(cmd *cobra.Command, args []string) {
 		notExist := false
 		runSteps := true
@@ -33,7 +33,8 @@ var DeployCmd = &cobra.Command{
 		var lastCommit string
 		var commitjson []byte
 		var err error
-		var ok bool
+
+		curCommit = args[2]
 
 		if deployAll {
 			notExist = true
@@ -65,15 +66,6 @@ var DeployCmd = &cobra.Command{
 			}
 		}
 
-		if curCommit == "" {
-			if len(args) < 3 {
-				fmt.Println("Error:", "No specific <current_commit>")
-				os.Exit(1)
-			} else {
-				curCommit = args[2]
-			}
-		}
-
 		if curCommit == lastCommit {
 			fmt.Println("Last and current commit are equal")
 			fmt.Println("Skip deploy!!!")
@@ -81,25 +73,17 @@ var DeployCmd = &cobra.Command{
 		}
 
 	StartScript:
-		step, ok := config.C.Deploy.Steps[args[1]]
-		if !ok {
-			fmt.Println("Step", args[1], "is not found")
-			os.Exit(1)
-		} else {
-			fmt.Println("Start", args[1], "step!")
-		}
-
 		if notExist {
 			fmt.Println("Run all scripts!")
 		}
 
-		for _, folders := range config.C.Deploy.Folders {
-			fmt.Println("\nRun", args[1], "step on", folders)
+		for _, watch := range config.C.Deploy.Watch {
+			fmt.Println("\nRun", args[1], "step on", watch.Folders)
 
 			if !notExist {
-				gitArgs := make([]string, 0, 5+len(folders))
+				gitArgs := make([]string, 0, 5+len(watch.Folders))
 				gitArgs = append(gitArgs, "diff", "--name-only", lastCommit, curCommit, "--")
-				gitArgs = append(gitArgs, folders...)
+				gitArgs = append(gitArgs, watch.Folders...)
 				result, _ := sh.Output("git", gitArgs...)
 				if len(result) > 0 {
 					fmt.Println("Found changed!!!")
@@ -111,8 +95,15 @@ var DeployCmd = &cobra.Command{
 			}
 
 			if runSteps {
-				for _, script := range step {
-					mg.Exec(script)
+				step, ok := watch.Steps[args[1]]
+				if !ok {
+					fmt.Println("Step", args[1], "is not found")
+					continue
+				} else {
+					fmt.Println("Start", args[1], "step!")
+					for _, script := range step {
+						mg.Exec(script)
+					}
 				}
 			}
 		}

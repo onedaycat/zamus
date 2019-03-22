@@ -13,9 +13,13 @@ type Migration struct {
 }
 
 type Deploy struct {
-	Fileapath string              `yaml:"filepath"`
-	Folders   [][]string          `yaml:"folders"`
-	Steps     map[string][]string `yaml:"steps"`
+	Fileapath string         `yaml:"filepath"`
+	Watch     []*DeployWatch `yaml:"watch"`
+}
+
+type DeployWatch struct {
+	Folders []string            `yaml:"folders"`
+	Steps   map[string][]string `yaml:"steps"`
 }
 
 func init() {
