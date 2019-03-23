@@ -14,8 +14,6 @@ import (
 
 const emptyStr = ""
 
-var DefaultEventStore EventStore
-
 type EventStore interface {
 	GetEvents(ctx context.Context, aggID string, seq int64) ([]*EventMsg, errors.Error)
 	GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) errors.Error
@@ -26,12 +24,6 @@ type EventStore interface {
 
 type eventStore struct {
 	storage Storage
-}
-
-func InitEventStore(storage Storage) {
-	DefaultEventStore = &eventStore{
-		storage: storage,
-	}
 }
 
 func NewEventStore(storage Storage) EventStore {

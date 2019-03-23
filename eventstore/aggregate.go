@@ -24,7 +24,6 @@ type AggregateRoot interface {
 	ClearEvents()
 	IsNew() bool
 	Publish(eventType string, eventData interface{})
-	EventStore() EventStore
 }
 
 type AggregateBase struct {
@@ -138,6 +137,3 @@ func (a *AggregateBase) HasEvent(eventType string) bool {
 	return false
 }
 
-func (a *AggregateBase) EventStore() EventStore {
-	return DefaultEventStore
-}
