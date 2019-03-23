@@ -139,5 +139,5 @@ func (a *AggregateBase) HasEvent(eventType string) bool {
 }
 
 func (a *AggregateBase) EventStore() EventStore {
-	return defaultES
+	return DefaultEventStore
 }

@@ -14,7 +14,7 @@ import (
 
 const emptyStr = ""
 
-var defaultES EventStore
+var DefaultEventStore EventStore
 
 type EventStore interface {
 	GetEvents(ctx context.Context, aggID string, seq int64) ([]*EventMsg, errors.Error)
@@ -29,7 +29,7 @@ type eventStore struct {
 }
 
 func InitEventStore(storage Storage) {
-	defaultES = &eventStore{
+	DefaultEventStore = &eventStore{
 		storage: storage,
 	}
 }
