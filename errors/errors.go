@@ -40,6 +40,7 @@ const (
 	ErrUnableMarshalCode    = "ErrUnableMarshal"
 	ErrUnableEncodeCode     = "ErrUnableEncode"
 	ErrUnableDecodeCode     = "ErrUnableDecode"
+	ErrUnableApplyEventCode = "ErrUnableApplyEvent"
 )
 
 var (
@@ -56,6 +57,7 @@ var (
 	ErrUnableMarshal    = errors.InternalError(ErrUnableMarshalCode, "Unable to marshal")
 	ErrUnableEncode     = errors.InternalError(ErrUnableEncodeCode, "Unable to encode")
 	ErrUnableDecode     = errors.InternalError(ErrUnableDecodeCode, "Unable to decode")
+	ErrUnableApplyEvent = errors.InternalError(ErrUnableApplyEventCode, "Unable to apply event")
 )
 
 func ErrFunctionNotFound(fn string) errors.Error {

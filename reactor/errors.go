@@ -15,4 +15,5 @@ var (
 	ErrUnableMarshal    = errors.ErrUnableMarshal
 	ErrUnableEncode     = errors.ErrUnableEncode
 	ErrUnableDecode     = errors.ErrUnableDecode
+	ErrUnableApplyEvent = errors.ErrUnableApplyEvent
 )
