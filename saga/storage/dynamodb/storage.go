@@ -35,9 +35,9 @@ func New(sess *session.Session, sagaTable string) *DynamoDBSagaStore {
 	}
 }
 
-func (d *DynamoDBSagaStore) Truncate() {
-	output, err := d.db.Scan(&dynamodb.ScanInput{
-		TableName: &d.table,
+func (s *DynamoDBSagaStore) Truncate() {
+	output, err := s.db.Scan(&dynamodb.ScanInput{
+		TableName: &s.table,
 	})
 	if err != nil {
 		panic(err)
@@ -55,9 +55,9 @@ func (d *DynamoDBSagaStore) Truncate() {
 			},
 		}
 	}
-	_, err = d.db.BatchWriteItem(&dynamodb.BatchWriteItemInput{
+	_, err = s.db.BatchWriteItem(&dynamodb.BatchWriteItemInput{
 		RequestItems: map[string][]*dynamodb.WriteRequest{
-			d.table: keyStores,
+			s.table: keyStores,
 		},
 	})
 	if err != nil {
@@ -65,10 +65,10 @@ func (d *DynamoDBSagaStore) Truncate() {
 	}
 }
 
-func (d *DynamoDBSagaStore) CreateSchema(enableStream bool) error {
-	_, err := d.db.CreateTable(&dynamodb.CreateTableInput{
+func (s *DynamoDBSagaStore) CreateSchema(enableStream bool) error {
+	_, err := s.db.CreateTable(&dynamodb.CreateTableInput{
 		BillingMode: ptr.String("PAY_PER_REQUEST"),
-		TableName:   &d.table,
+		TableName:   &s.table,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
 				AttributeName: ptr.String("id"),
