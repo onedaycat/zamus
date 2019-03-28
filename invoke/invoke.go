@@ -19,6 +19,7 @@ type Invoker interface {
 	InvokeAsync(ctx context.Context, fn string, req *Request) errors.Error
 	BatchInvoke(ctx context.Context, fn string, reqs []*Request) (BatchResults, errors.Error)
 	BatchInvokeAsync(ctx context.Context, fn string, reqs []*Request) errors.Error
+	InvokeSaga(ctx context.Context, fn string, req *SagaRequest) errors.Error
 }
 
 //go:generate mockery -name=LambdaInvokeClient
@@ -145,6 +146,37 @@ func (in *Invoke) BatchInvokeAsync(ctx context.Context, fn string, reqs []*Reque
 	})
 	if xerr != nil {
 		return appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(reqs).WithCause(xerr)
+	}
+
+	return nil
+}
+
+func (in *Invoke) InvokeSaga(ctx context.Context, fn string, req *SagaRequest) errors.Error {
+	reqByte, err := req.MarshalRequest()
+	if err != nil {
+		return err
+	}
+
+	out, xerr := in.ld.InvokeWithContext(ctx, &lambda.InvokeInput{
+		FunctionName: &fn,
+		Qualifier:    &LATEST,
+		Payload:      reqByte,
+	})
+	if xerr != nil {
+		return appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
+	}
+
+	if out.FunctionError != nil {
+		resErr, err := appErr.ParseLambdaError(out.Payload)
+		if err != nil {
+			return err
+		}
+
+		return resErr
+	}
+
+	if len(out.Payload) == 0 {
+		return nil
 	}
 
 	return nil

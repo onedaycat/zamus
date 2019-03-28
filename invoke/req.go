@@ -1,9 +1,40 @@
 package invoke
 
 import (
+	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
 )
+
+type SagaRequest struct {
+	Input  jsoniter.RawMessage `json:"input"`
+	Resume string              `json:"resume"`
+}
+
+func NewSagaRequest() *SagaRequest {
+	return &SagaRequest{}
+}
+
+func (e *SagaRequest) WithInput(input interface{}) *SagaRequest {
+	inputByte, err := common.MarshalJSON(input)
+	if err != nil {
+		panic(err)
+	}
+
+	e.Input = inputByte
+
+	return e
+}
+
+func (e *SagaRequest) WithResume(id string) *SagaRequest {
+	e.Resume = id
+
+	return e
+}
+
+func (e *SagaRequest) MarshalRequest() ([]byte, errors.Error) {
+	return common.MarshalJSON(e)
+}
 
 type Request struct {
 	Function   string      `json:"function"`

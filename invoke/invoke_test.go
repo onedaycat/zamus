@@ -362,3 +362,77 @@ func TestBatchInvokeAsync(t *testing.T) {
 		ld.AssertExpectations(t)
 	})
 }
+
+func TestSagaInvoke(t *testing.T) {
+	ctx := context.Background()
+	input := map[string]interface{}{
+		"id": "1",
+	}
+	fn := "fn1"
+	mockResult := "state1"
+	mockResultByte, _ := common.MarshalJSON(mockResult)
+	errUnhandled := "Unhandled"
+
+	t.Run("Success", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		req := invoke.NewSagaRequest().WithInput(input)
+		reqByte, _ := req.MarshalRequest()
+
+		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
+			FunctionName: &fn,
+			Qualifier:    &invoke.LATEST,
+			Payload:      reqByte,
+		}).Return(&lambda.InvokeOutput{
+			Payload:       mockResultByte,
+			FunctionError: nil,
+		}, nil)
+
+		err := in.InvokeSaga(ctx, fn, req)
+
+		require.NoError(t, err)
+		ld.AssertExpectations(t)
+	})
+
+	t.Run("Error From payload", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		req := invoke.NewSagaRequest().WithInput(input)
+		reqByte, _ := req.MarshalRequest()
+
+		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
+			FunctionName: &fn,
+			Qualifier:    &invoke.LATEST,
+			Payload:      reqByte,
+		}).Return(&lambda.InvokeOutput{
+			Payload:       []byte(`{"errorType":"LambdaError", "errorMessage": "{\"type\":\"BadRequest\",\"status\":400,\"code\":\"Hello\",\"message\":\"hello\"}"}`),
+			FunctionError: &errUnhandled,
+		}, nil)
+
+		err := in.InvokeSaga(ctx, fn, req)
+
+		require.Equal(t, errors.BadRequest("Hello", "hello"), err)
+		ld.AssertExpectations(t)
+	})
+
+	t.Run("Invoke Error", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		req := invoke.NewSagaRequest().WithInput(input)
+		reqByte, _ := req.MarshalRequest()
+
+		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
+			FunctionName: &fn,
+			Qualifier:    &invoke.LATEST,
+			Payload:      reqByte,
+		}).Return(nil, errors.DumbError)
+
+		err := in.InvokeSaga(ctx, fn, req)
+
+		require.Equal(t, appErr.ErrUnbleInvokeFunction, err)
+		ld.AssertExpectations(t)
+	})
+}

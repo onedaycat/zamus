@@ -84,3 +84,19 @@ func (_m *Invoker) InvokeAsync(ctx context.Context, fn string, req *invoke.Reque
 
 	return r0
 }
+
+// InvokeSaga provides a mock function with given fields: ctx, fn, req
+func (_m *Invoker) InvokeSaga(ctx context.Context, fn string, req *invoke.SagaRequest) errors.Error {
+	ret := _m.Called(ctx, fn, req)
+
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, string, *invoke.SagaRequest) errors.Error); ok {
+		r0 = rf(ctx, fn, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
+	}
+
+	return r0
+}
