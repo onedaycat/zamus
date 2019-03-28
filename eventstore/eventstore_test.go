@@ -296,3 +296,75 @@ func TestConcurency(t *testing.T) {
 	}
 
 }
+
+func TestPubishEvents(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		db := getDB()
+		ctx := context.Background()
+
+		db.Truncate()
+		es := eventstore.NewEventStore(db)
+
+		eid.FreezeID("id1")
+
+		st := domain.StockItemCreated{
+			ID:        "id1",
+			ProductID: "p1",
+			Qty:       1,
+		}
+
+		event := &eventstore.EventPublish{
+			EventType: domain.StockItemCreatedEvent,
+			Event:     st,
+		}
+
+		err := es.PublishEvents(ctx, event)
+		require.NoError(t, err)
+
+		getEvents, err := es.GetEvents(ctx, "id1", 0)
+		require.NoError(t, err)
+		require.Len(t, getEvents, 1)
+	})
+
+	t.Run("SuccessWithAggAndSeq", func(t *testing.T) {
+		db := getDB()
+		ctx := context.Background()
+
+		db.Truncate()
+		es := eventstore.NewEventStore(db)
+
+		eid.UnFreezeID()
+		now := time.Now().UTC()
+
+		events := []*eventstore.EventPublish{
+			{
+				AggregateID: "id1",
+				Seq:         now.Add(time.Second * 1).Unix(),
+				EventType:   domain.StockItemCreatedEvent,
+				Event: &domain.StockItemCreated{
+					ID:        "id1",
+					ProductID: "p1",
+					Qty:       1,
+				},
+			},
+			{
+				AggregateID: "id1",
+				Seq:         now.Add(time.Second * 2).Unix(),
+				EventType:   domain.StockItemRemovedEvent,
+				Event: &domain.StockItemRemoved{
+					ProductID: "p1",
+					RemovedAt: 1,
+				},
+			},
+		}
+
+		err := es.PublishEvents(ctx, events...)
+		require.NoError(t, err)
+
+		getEvents, err := es.GetEvents(ctx, "id1", 0)
+		require.NoError(t, err)
+		require.Len(t, getEvents, 2)
+		require.Equal(t, domain.StockItemCreatedEvent, getEvents[0].EventType)
+		require.Equal(t, domain.StockItemRemovedEvent, getEvents[1].EventType)
+	})
+}

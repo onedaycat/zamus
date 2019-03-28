@@ -7,6 +7,17 @@ import (
 	"github.com/onedaycat/zamus/common"
 )
 
+type EventPublish struct {
+	EventType string
+	// EventVersion string
+	Event    interface{}
+	Metadata Metadata
+	// optional, auto id if empty
+	AggregateID string
+	// optional, auto seq if 0
+	Seq int64
+}
+
 func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
 	return common.UnmarshalJSONSnappy(e.Event, v)
 }

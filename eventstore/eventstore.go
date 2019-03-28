@@ -20,6 +20,7 @@ type EventStore interface {
 	GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) errors.Error
 	Save(ctx context.Context, agg AggregateRoot) errors.Error
 	SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata Metadata) errors.Error
+	PublishEvents(ctx context.Context, events ...*EventPublish) errors.Error
 }
 
 type eventStore struct {
@@ -183,4 +184,40 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 
 func (es *eventStore) Save(ctx context.Context, agg AggregateRoot) errors.Error {
 	return es.SaveWithMetadata(ctx, agg, nil)
+}
+
+func (es *eventStore) PublishEvents(ctx context.Context, events ...*EventPublish) errors.Error {
+	msgs := make([]*EventMsg, len(events))
+	now := clock.Now().Unix()
+
+	for i := 0; i < len(events); i++ {
+		aggid := events[i].AggregateID
+		if aggid == emptyStr {
+			aggid = eid.GenerateID()
+		}
+		seq := events[i].Seq
+		if seq == 0 {
+			seq = now
+		}
+
+		eid := eid.CreateEventID(aggid, seq)
+
+		eventDataSnap, err := common.MarshalJSONSnappy(events[i].Event)
+		if err != nil {
+			return err
+		}
+
+		msgs[i] = &EventMsg{
+			EventID:   eid,
+			EventType: events[i].EventType,
+			// EventVersion: events[i].EventVersion,
+			AggregateID: aggid,
+			Event:       eventDataSnap,
+			Time:        now,
+			Seq:         seq,
+			Metadata:    events[i].Metadata,
+		}
+	}
+
+	return es.storage.Save(ctx, msgs, nil)
 }

@@ -69,6 +69,29 @@ func (_m *EventStore) GetEvents(ctx context.Context, aggID string, seq int64) ([
 	return r0, r1
 }
 
+// PublishEvents provides a mock function with given fields: ctx, events
+func (_m *EventStore) PublishEvents(ctx context.Context, events ...*eventstore.EventPublish) errors.Error {
+	_va := make([]interface{}, len(events))
+	for _i := range events {
+		_va[_i] = events[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, ...*eventstore.EventPublish) errors.Error); ok {
+		r0 = rf(ctx, events...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
+	}
+
+	return r0
+}
+
 // Save provides a mock function with given fields: ctx, agg
 func (_m *EventStore) Save(ctx context.Context, agg eventstore.AggregateRoot) errors.Error {
 	ret := _m.Called(ctx, agg)
