@@ -16,9 +16,9 @@ func Build() {
 
 func Deploy() {
 	Build()
-	mg.Exec("serverless deploy -v")
+	mg.ExecX("serverless deploy -v").Run()
 }
 
 func Remove() {
-	mg.Exec("serverless remove -v")
+	mg.ExecX("serverless remove -v").Run()
 }
