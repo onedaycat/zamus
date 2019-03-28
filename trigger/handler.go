@@ -29,14 +29,13 @@ func (p Payload) Unmarshal(v interface{}) errors.Error {
 }
 
 type Config struct {
-	AppStage      string
-	Service       string
-	Version       string
-	SentryRelease string
-	SentryDNS     string
-	EnableTrace   bool
-	DQLMaxRetry   int
-	DQLStorage    dql.Storage
+	AppStage    string
+	Service     string
+	Version     string
+	SentryDNS   string
+	EnableTrace bool
+	DQLMaxRetry int
+	DQLStorage  dql.Storage
 }
 
 type Handler struct {
@@ -71,9 +70,9 @@ func NewHandler(handler TriggerHandler, config *Config) *Handler {
 		sentry.SetDSN(config.SentryDNS)
 		sentry.SetOptions(
 			sentry.WithEnv(config.AppStage),
-			sentry.WithRelease(config.SentryRelease),
 			sentry.WithServerName(lambdacontext.FunctionName),
 			sentry.WithServiceName(config.Service),
+			sentry.WithRelease(config.Service+"@"+config.Version),
 			sentry.WithVersion(config.Version),
 			sentry.WithTags(sentry.Tags{
 				{"lambdaVersion", lambdacontext.FunctionVersion},

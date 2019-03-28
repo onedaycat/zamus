@@ -12,6 +12,7 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/errgroup"
 	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/common/ptr"
 	"github.com/onedaycat/zamus/common/random"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
@@ -25,8 +26,8 @@ func getDB() *DynamoDBEventStore {
 	if _db == nil {
 		sess, err := session.NewSession(&aws.Config{
 			Credentials: credentials.NewEnvCredentials(),
-			Region:      aws.String("ap-southeast-1"),
-			Endpoint:    aws.String("http://localhost:9000"),
+			Region:      ptr.String("ap-southeast-1"),
+			Endpoint:    ptr.String("http://localhost:9000"),
 		})
 		if err != nil {
 			panic(err)

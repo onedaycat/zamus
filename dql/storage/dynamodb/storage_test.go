@@ -6,6 +6,8 @@ import (
 	"context"
 	"testing"
 
+	"github.com/onedaycat/zamus/common/ptr"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -22,7 +24,7 @@ func getDB() *dqlDynamoDB {
 	if _db == nil {
 		sess, err := session.NewSession(&aws.Config{
 			Credentials: credentials.NewEnvCredentials(),
-			Region:      aws.String("ap-southeast-1"),
+			Region:      ptr.String("ap-southeast-1"),
 		})
 		if err != nil {
 			panic(err)

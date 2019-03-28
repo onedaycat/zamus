@@ -9,12 +9,12 @@ provider:
   region: ${file(./setting.yml):region}
   stage: ${file(./setting.yml):stage}
   iamRoleStatements:
-    - Effect: "Allow"
-      Resource: "*"
+    - Effect: 'Allow'
+      Resource: '*'
       Action:
-        - "dynamodb:*"
-        - "kinesis:*"
-        - "lambda:*"
+        - 'dynamodb:*'
+        - 'kinesis:*'
+        - 'lambda:*'
 
 functions:
   dynamodb-kinesis:
@@ -28,7 +28,7 @@ functions:
     events:
       - stream:
           type: dynamodb
-          arn: { "Fn::GetAtt": ["EventstoreEvent", "StreamArn"] }
+          arn: { 'Fn::GetAtt': ['EventstoreEvent', 'StreamArn'] }
           batchSize: ${file(./setting.yml):dynamokinesis.batchSize}
           startingPosition: ${file(./setting.yml):dynamokinesis.startingPosition}
           enabled: true
@@ -40,10 +40,8 @@ functions:
             warmer: true
             concurrency: 1
     package:
-      exclude:
-        - ./**
       include:
-        - ./dynamokinesis/bin/**
+        - ./dynamokinesis/bin/app
   firehose-transform:
     handler: firehosetransform/bin/app
     environment:
@@ -52,23 +50,21 @@ functions:
     memorySize: ${file(./setting.yml):firehosetransform.memorySize}
     timeout: ${file(./setting.yml):firehosetransform.timeout}
     package:
-      exclude:
-        - ./**
       include:
-        - ./firehosetransform/bin/**
+        - ./firehosetransform/bin/app
 
 resources:
   Resources:
     DynamodbDashKinesisLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
-        RetentionInDays: "30"
+        RetentionInDays: '30'
     FirehoseDashTransformLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
-        RetentionInDays: "30"
+        RetentionInDays: '30'
     EventstoreEvent:
-      Type: "AWS::DynamoDB::Table"
+      Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
       Properties:
         StreamSpecification:
@@ -77,7 +73,7 @@ resources:
           - AttributeName: a
             AttributeType: S
           - AttributeName: s
-            AttributeType: "N"
+            AttributeType: 'N'
         KeySchema:
           - AttributeName: a
             KeyType: HASH
@@ -86,14 +82,14 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-eventstore-${self:provider.stage}
     EventstoreSnapshot:
-      Type: "AWS::DynamoDB::Table"
+      Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
           - AttributeName: a
             AttributeType: S
           - AttributeName: v
-            AttributeType: "N"
+            AttributeType: 'N'
         KeySchema:
           - AttributeName: a
             KeyType: HASH
@@ -102,7 +98,7 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-snapshot-${self:provider.stage}
     DQLstore:
-      Type: "AWS::DynamoDB::Table"
+      Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
@@ -117,6 +113,18 @@ resources:
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-dql-${self:provider.stage}
+    SagaStore:
+      Type: 'AWS::DynamoDB::Table'
+      # DeletionPolicy: Retain
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:service}-saga-${self:provider.stage}
     S3Event:
       Type: AWS::S3::Bucket
       DeletionPolicy: Retain
@@ -146,7 +154,7 @@ resources:
                     - kinesis:DescribeStream
                     - kinesis:GetShardIterator
                     - kinesis:GetRecords
-                  Resource: "*"
+                  Resource: '*'
                 - Effect: Allow
                   Action:
                     - s3:AbortMultipartUpload
@@ -169,11 +177,11 @@ resources:
                 - Effect: Allow
                   Action:
                     - logs:PutLogEvents
-                  Resource: "*"
+                  Resource: '*'
                 - Effect: Allow
                   Action:
                     - glue:GetTableVersions
-                  Resource: "*"
+                  Resource: '*'
     KinesisOne:
       Type: AWS::Kinesis::Stream
       # DeletionPolicy: Retain
@@ -198,12 +206,12 @@ resources:
         ExtendedS3DestinationConfiguration:
           BucketARN:
             Fn::Join:
-              - ""
-              - - "arn:aws:s3:::"
+              - ''
+              - - 'arn:aws:s3:::'
                 - Ref: S3Event
           RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
           # firehose/dt=!{timestamp:yyyy-MM-dd}/
-          Prefix: "firehose/"
+          Prefix: 'firehose/'
           # ErrorOutputPrefix: "errors/!{firehose:error-output-type}/dt=!{timestamp:yyyy-MM-dd}/"
           CompressionFormat: UNCOMPRESSED
           BufferingHints:
@@ -253,9 +261,9 @@ resources:
             - { Name: dt, Type: string }
           StorageDescriptor:
             Compressed: false
-            Location: "s3://${self:service}-${self:provider.stage}/firehose/"
-            InputFormat: "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
-            OutputFormat: "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
+            Location: 's3://${self:service}-${self:provider.stage}/firehose/'
+            InputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
+            OutputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
             Columns:
               - { Name: i, Type: string }
               - { Name: b, Type: string }
@@ -264,8 +272,8 @@ resources:
               - { Name: e, Type: string }
               - { Name: t, Type: bigint }
               - { Name: s, Type: bigint }
-              - { Name: m, Type: "map<string,string>" }
+              - { Name: m, Type: 'map<string,string>' }
             SerdeInfo:
-              SerializationLibrary: "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
+              SerializationLibrary: 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
               Parameters:
-                serialization.format: "1"
+                serialization.format: '1'

@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:a7673a719aa8563fcc15ba8b76b4e9cdd35704fd0a28ea1163dbcf6fa7730479"
+  digest = "1:577878df8917b1a46a7ec73710447d97c7296d133ba8ce617e4d655b17ab96d3"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,12 +69,12 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "f9b35e02297c8fcca7a55dd30ed8d4e9dc64f5a3"
-  version = "v1.18.5"
+  revision = "9000241da407010f1e20c6dcbf00d0cbc9255ff9"
+  version = "v1.19.4"
 
 [[projects]]
   branch = "master"
-  digest = "1:05aa8a1c5137504002de093e06d72d6384a24e5223326fe544c879242dae73d5"
+  digest = "1:e8e61486d03680c6600c1bcb6b3ffc636a28ae9cddf79c62fb028220e52031dc"
   name = "github.com/aws/aws-xray-sdk-go"
   packages = [
     "daemoncfg",
@@ -91,7 +91,7 @@
     "xraylog",
   ]
   pruneopts = "UT"
-  revision = "7b1b7844235c182d02a6b03949df68a00ec81090"
+  revision = "9b8771288cfbc9030b6a45524f32a95a9789dcb9"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -237,11 +237,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:51aa5f134638d70d9eb36562fcd07ba9bbd02708ca53a31e4582622406cb9ee5"
+  digest = "1:5d8f0a6a96243293b4cc4679651ecd1d6f3443d956efa5e8a10ad301eb09d47e"
   name = "github.com/plimble/mage"
   packages = ["mg"]
   pruneopts = "UT"
-  revision = "35fdfba4c7c39046e17ce5697c9ed73dae092498"
+  revision = "f4bb144cd59b641e182fce8b1db5beb1b7008b6a"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -274,22 +274,22 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fe478ff1dfc3878c0e2f4ca9b765d5c47df6539b7797a02472153357f48a4797"
+  digest = "1:83eb06141fc25c7fd89f8b39717962ac930a7480796aab3d46c7e88507a69173"
   name = "github.com/rubenv/sql-migrate"
   packages = [
     ".",
     "sqlparse",
   ]
   pruneopts = "UT"
-  revision = "1007f53448d75fe14190968f5de4d95ed63ebb83"
+  revision = "54bad0a9b051368ffec9cd2b869789c2b8eaea35"
 
 [[projects]]
   branch = "master"
-  digest = "1:9fb64875be1386e75492979fbec6a89ebf1639fefd08ca85f37868944acf4ab6"
+  digest = "1:22799aea8fe96dd5693abdd1eaa14b1b29e3eafbdc7733fa155b3cb556c8a7ae"
   name = "github.com/spf13/cobra"
   packages = ["."]
   pruneopts = "UT"
-  revision = "ba1052d4cbce7aac421a96de820558f75199ccbc"
+  revision = "67fc4837d267bc9bfd6e47f77783fcc3dffc68de"
 
 [[projects]]
   digest = "1:c1b1102241e7f645bc8e0c22ae352e8f0dc6484b6cb4d132fa9f24174e0119e2"
@@ -325,15 +325,15 @@
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "6c81ef8f67ca3f42fc9cd71dfbd5f35b0c4b5771"
+  revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
   name = "google.golang.org/appengine"
   packages = ["cloudsql"]
   pruneopts = "UT"
-  revision = "e9657d882bb81064595ca3b56cbe2546bbabf7b1"
-  version = "v1.4.0"
+  revision = "54a98f90d1c46b7731eb8fb305d2a321c30ef610"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:1b36b0cb56126316f637ad55cfd5ed84c945fe45bd90e944666b4107a80a1da9"
@@ -375,6 +375,7 @@
     "github.com/golang/protobuf/proto",
     "github.com/golang/snappy",
     "github.com/json-iterator/go",
+    "github.com/magefile/mage/sh",
     "github.com/onedaycat/errors",
     "github.com/onedaycat/errors/errgroup",
     "github.com/onedaycat/errors/sentry",

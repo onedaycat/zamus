@@ -51,6 +51,17 @@ func (d *dql) Save(ctx context.Context, data []byte) errors.Error {
 	return nil
 }
 
+func (s *dql) Reset() {
+	s.Remain = s.MaxRetry
+	s.Errors = s.Errors[:0]
+}
+
+func (s *dql) ResetWithRetry(maxRetry int) {
+	s.MaxRetry = maxRetry
+	s.Remain = s.MaxRetry
+	s.Errors = s.Errors[:0]
+}
+
 func (d *dql) Retry() bool {
 	d.Remain--
 	if d.Remain <= 0 {

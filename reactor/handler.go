@@ -29,7 +29,6 @@ type Config struct {
 	AppStage            string
 	Service             string
 	Version             string
-	SentryRelease       string
 	SentryDNS           string
 	DisableReponseError bool
 	EnableTrace         bool
@@ -70,9 +69,9 @@ func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *
 		sentry.SetDSN(config.SentryDNS)
 		sentry.SetOptions(
 			sentry.WithEnv(config.AppStage),
-			sentry.WithRelease(config.SentryRelease),
 			sentry.WithServerName(lambdacontext.FunctionName),
 			sentry.WithServiceName(config.Service),
+			sentry.WithRelease(config.Service+"@"+config.Version),
 			sentry.WithVersion(config.Version),
 			sentry.WithTags(sentry.Tags{
 				{"lambdaVersion", lambdacontext.FunctionVersion},

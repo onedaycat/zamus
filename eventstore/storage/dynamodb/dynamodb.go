@@ -4,12 +4,12 @@ import (
 	"context"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common/ptr"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/eventstore"
 )
@@ -24,13 +24,13 @@ const (
 )
 
 var (
-	saveCond            = aws.String("attribute_not_exists(s)")
-	saveSnapCond        = aws.String("attribute_not_exists(s) or s < :s")
-	getCond             = aws.String("a=:a")
-	snapshotCond        = aws.String("a=:a")
-	snapshotCondWithVer = aws.String("a=:a and v = :v")
-	getCondWithTime     = aws.String("a=:a and s > :s")
-	falseStrongRead     = aws.Bool(false)
+	saveCond            = ptr.String("attribute_not_exists(s)")
+	saveSnapCond        = ptr.String("attribute_not_exists(s) or s < :s")
+	getCond             = ptr.String("a=:a")
+	snapshotCond        = ptr.String("a=:a")
+	snapshotCondWithVer = ptr.String("a=:a and v = :v")
+	getCondWithTime     = ptr.String("a=:a and s > :s")
+	falseStrongRead     = ptr.Bool(false)
 )
 
 type DynamoDBEventStore struct {
@@ -110,30 +110,30 @@ func (d *DynamoDBEventStore) Truncate() {
 
 func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	_, err := d.db.CreateTable(&dynamodb.CreateTableInput{
-		BillingMode: aws.String("PAY_PER_REQUEST"),
+		BillingMode: ptr.String("PAY_PER_REQUEST"),
 		StreamSpecification: &dynamodb.StreamSpecification{
-			StreamEnabled:  aws.Bool(enableStream),
-			StreamViewType: aws.String("NEW_IMAGE"),
+			StreamEnabled:  ptr.Bool(enableStream),
+			StreamViewType: ptr.String("NEW_IMAGE"),
 		},
 		TableName: &d.eventstoreTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("a"),
-				AttributeType: aws.String("S"),
+				AttributeName: ptr.String("a"),
+				AttributeType: ptr.String("S"),
 			},
 			{
-				AttributeName: aws.String("s"),
-				AttributeType: aws.String("N"),
+				AttributeName: ptr.String("s"),
+				AttributeType: ptr.String("N"),
 			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("a"),
-				KeyType:       aws.String("HASH"),
+				AttributeName: ptr.String("a"),
+				KeyType:       ptr.String("HASH"),
 			},
 			{
-				AttributeName: aws.String("s"),
-				KeyType:       aws.String("RANGE"),
+				AttributeName: ptr.String("s"),
+				KeyType:       ptr.String("RANGE"),
 			},
 		},
 	})
@@ -146,26 +146,26 @@ func (d *DynamoDBEventStore) CreateSchema(enableStream bool) error {
 	}
 
 	_, err = d.db.CreateTable(&dynamodb.CreateTableInput{
-		BillingMode: aws.String("PAY_PER_REQUEST"),
+		BillingMode: ptr.String("PAY_PER_REQUEST"),
 		TableName:   &d.snapshotTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("a"),
-				AttributeType: aws.String("S"),
+				AttributeName: ptr.String("a"),
+				AttributeType: ptr.String("S"),
 			},
 			{
-				AttributeName: aws.String("v"),
-				AttributeType: aws.String("N"),
+				AttributeName: ptr.String("v"),
+				AttributeType: ptr.String("N"),
 			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("a"),
-				KeyType:       aws.String("HASH"),
+				AttributeName: ptr.String("a"),
+				KeyType:       ptr.String("HASH"),
 			},
 			{
-				AttributeName: aws.String("v"),
-				KeyType:       aws.String("RANGE"),
+				AttributeName: ptr.String("v"),
+				KeyType:       ptr.String("RANGE"),
 			},
 		},
 	})
@@ -187,7 +187,7 @@ func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq in
 	}
 
 	if seq > 0 {
-		exValue[seqKV] = &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(seq, 10))}
+		exValue[seqKV] = &dynamodb.AttributeValue{N: ptr.String(strconv.FormatInt(seq, 10))}
 		keyCond = getCondWithTime
 	}
 
@@ -233,7 +233,7 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, vers
 		ConsistentRead: falseStrongRead,
 		Key: map[string]*dynamodb.AttributeValue{
 			hashKeyK:      &dynamodb.AttributeValue{S: &aggID},
-			snapRangeKeyK: &dynamodb.AttributeValue{N: aws.String(strconv.Itoa(version))},
+			snapRangeKeyK: &dynamodb.AttributeValue{N: ptr.String(strconv.Itoa(version))},
 		},
 	})
 	if err != nil {
@@ -274,7 +274,7 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, vers
 // 				TableName: &d.snapshotTable,
 // 				// ConditionExpression: saveSnapCond,
 // 				// ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-// 				// 	seqKV: &dynamodb.AttributeValue{N: aws.String(strconv.FormatInt(snapshot.TimeSeq, 10))},
+// 				// 	seqKV: &dynamodb.AttributeValue{N: ptr.String(strconv.FormatInt(snapshot.TimeSeq, 10))},
 // 				// },
 // 				Item: snapshotReq,
 // 			},

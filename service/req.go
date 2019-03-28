@@ -69,6 +69,15 @@ func (e *Request) MarshalRequest() ([]byte, errors.Error) {
 	return common.MarshalJSON(e)
 }
 
+func (e *Request) Clear() {
+	e.Function = emptyStr
+	e.Args = nil
+	e.Identity = nil
+	e.Warmer = false
+	e.Concurency = 0
+	e.index = 0
+}
+
 type Requests []*Request
 
 func NewRequests(size int) Requests {
@@ -134,11 +143,7 @@ func (q *mainReq) UnmarshalRequest(b []byte) error {
 
 	if firstChar == firstCharArray {
 		for i := range q.reqs {
-			q.reqs[i].Function = emptyStr
-			q.reqs[i].Args = nil
-			q.reqs[i].Identity = nil
-			q.reqs[i].Warmer = false
-			q.reqs[i].Concurency = 0
+			q.reqs[i].Clear()
 		}
 
 		if err = common.UnmarshalJSON(b, &q.reqs); err != nil {
@@ -159,11 +164,7 @@ func (q *mainReq) UnmarshalRequest(b []byte) error {
 
 		return nil
 	} else if firstChar == firstCharObject {
-		q.req.Function = emptyStr
-		q.req.Args = nil
-		q.req.Identity = nil
-		q.req.Warmer = false
-		q.req.Concurency = 0
+		q.req.Clear()
 
 		if err = common.UnmarshalJSON(b, q.req); err != nil {
 			return err

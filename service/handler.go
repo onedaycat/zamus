@@ -23,12 +23,11 @@ type Handler func(ctx context.Context, req *Request) (interface{}, errors.Error)
 type MergeBatchHandler func(ctx context.Context, req *Request, results BatchResults) errors.Error
 
 type Config struct {
-	AppStage      string
-	Service       string
-	Version       string
-	SentryRelease string
-	SentryDNS     string
-	EnableTrace   bool
+	AppStage    string
+	Service     string
+	Version     string
+	SentryDNS   string
+	EnableTrace bool
 }
 
 type ServiceHandler struct {
@@ -71,9 +70,9 @@ func NewHandler(config *Config) *ServiceHandler {
 		sentry.SetDSN(config.SentryDNS)
 		sentry.SetOptions(
 			sentry.WithEnv(config.AppStage),
-			sentry.WithRelease(config.SentryRelease),
 			sentry.WithServerName(lambdacontext.FunctionName),
 			sentry.WithServiceName(config.Service),
+			sentry.WithRelease(config.Service+"@"+config.Version),
 			sentry.WithVersion(config.Version),
 			sentry.WithTags(sentry.Tags{
 				{"lambdaVersion", lambdacontext.FunctionVersion},

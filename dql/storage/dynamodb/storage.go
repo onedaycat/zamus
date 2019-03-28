@@ -3,12 +3,12 @@ package dynamodb
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/common/ptr"
 	"github.com/onedaycat/zamus/dql"
 	appErr "github.com/onedaycat/zamus/errors"
 )
@@ -21,11 +21,11 @@ const (
 )
 
 var (
-	saveCond        = aws.String("attribute_not_exists(id)")
-	saveSnapCond    = aws.String("attribute_not_exists(s) or s < :s")
-	getCond         = aws.String("a=:a")
-	getCondWithTime = aws.String("a=:a and s > :s")
-	falseStrongRead = aws.Bool(false)
+	saveCond        = ptr.String("attribute_not_exists(id)")
+	saveSnapCond    = ptr.String("attribute_not_exists(s) or s < :s")
+	getCond         = ptr.String("a=:a")
+	getCondWithTime = ptr.String("a=:a and s > :s")
+	falseStrongRead = ptr.Bool(false)
 )
 
 type dqlDynamoDB struct {
@@ -74,30 +74,30 @@ func (d *dqlDynamoDB) Truncate() {
 
 func (d *dqlDynamoDB) CreateSchema(enableStream bool) error {
 	_, err := d.db.CreateTable(&dynamodb.CreateTableInput{
-		BillingMode: aws.String("PAY_PER_REQUEST"),
+		BillingMode: ptr.String("PAY_PER_REQUEST"),
 		StreamSpecification: &dynamodb.StreamSpecification{
-			StreamEnabled:  aws.Bool(enableStream),
-			StreamViewType: aws.String("NEW_IMAGE"),
+			StreamEnabled:  ptr.Bool(enableStream),
+			StreamViewType: ptr.String("NEW_IMAGE"),
 		},
 		TableName: &d.dqlTable,
 		AttributeDefinitions: []*dynamodb.AttributeDefinition{
 			{
-				AttributeName: aws.String("service"),
-				AttributeType: aws.String("S"),
+				AttributeName: ptr.String("service"),
+				AttributeType: ptr.String("S"),
 			},
 			{
-				AttributeName: aws.String("id"),
-				AttributeType: aws.String("S"),
+				AttributeName: ptr.String("id"),
+				AttributeType: ptr.String("S"),
 			},
 		},
 		KeySchema: []*dynamodb.KeySchemaElement{
 			{
-				AttributeName: aws.String("service"),
-				KeyType:       aws.String("HASH"),
+				AttributeName: ptr.String("service"),
+				KeyType:       ptr.String("HASH"),
 			},
 			{
-				AttributeName: aws.String("id"),
-				KeyType:       aws.String("RANGE"),
+				AttributeName: ptr.String("id"),
+				KeyType:       ptr.String("RANGE"),
 			},
 		},
 	})
