@@ -28,6 +28,7 @@ var (
 	ErrNextOnCompensateNotAllowed = errors.InternalError("ErrNextOnCompensateNotAllowed", "Not allow next on compensate")
 	ErrUnableGetState             = errors.InternalError("ErrUnableGetState", "Unable get saga state")
 	ErrUnableSaveState            = errors.InternalError("ErrUnableSaveState", "Unable save saga state")
+	ErrUnablePublishEvent         = errors.InternalError("ErrUnablePublishEvent", "Unable publish event")
 )
 
 const (
