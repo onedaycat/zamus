@@ -333,3 +333,9 @@ func (s *Saga) CurrentStep() *Step {
 func (s *Saga) CurrentState() *State {
 	return s.state
 }
+
+func (s *Saga) FastRetry() {
+	for i := range s.state.defs.Definitions {
+		s.state.defs.Definitions[i].IntervalSeconds = 0
+	}
+}
