@@ -66,28 +66,28 @@ func (h *testHandler) StateDefinitions() *StateDefinitions {
 		Name: "Test",
 		Definitions: []*StateDefinition{
 			{
-				Name:            "s1",
-				Retry:           2,
-				IntervalSeconds: 1,
-				BackoffRate:     2,
-				Handler:         h.S1Handler,
-				Compensate:      h.S1Compensate,
+				Name:              "s1",
+				Retry:             2,
+				IntervalSeconds:   1,
+				BackoffRate:       2,
+				StepHandler:       h.S1Handler,
+				CompensateHandler: h.S1Compensate,
 			},
 			{
-				Name:            "s2",
-				Retry:           2,
-				IntervalSeconds: 1,
-				BackoffRate:     2,
-				Handler:         h.S2Handler,
-				Compensate:      h.S2Compensate,
+				Name:              "s2",
+				Retry:             2,
+				IntervalSeconds:   1,
+				BackoffRate:       2,
+				StepHandler:       h.S2Handler,
+				CompensateHandler: h.S2Compensate,
 			},
 			{
-				Name:            "s3",
-				Retry:           2,
-				IntervalSeconds: 1,
-				BackoffRate:     2,
-				Handler:         h.S3Handler,
-				Compensate:      h.S3Compensate,
+				Name:              "s3",
+				Retry:             2,
+				IntervalSeconds:   1,
+				BackoffRate:       2,
+				StepHandler:       h.S3Handler,
+				CompensateHandler: h.S3Compensate,
 			},
 		},
 	}
@@ -117,7 +117,7 @@ func (h *testHandler) ParseData(dataPayload Payload) (interface{}, errors.Error)
 	return data, nil
 }
 
-func (h *testHandler) S1Handler(ctx context.Context, data interface{}, action HandlerAction) {
+func (h *testHandler) S1Handler(ctx context.Context, data interface{}, action StepAction) {
 	h.spy.Called("s1")
 	tdata := data.(*testdata)
 	tdata.ID++
@@ -153,7 +153,7 @@ func (h *testHandler) S1Compensate(ctx context.Context, data interface{}, action
 	}
 }
 
-func (h *testHandler) S2Handler(ctx context.Context, data interface{}, action HandlerAction) {
+func (h *testHandler) S2Handler(ctx context.Context, data interface{}, action StepAction) {
 	h.spy.Called("s2")
 	tdata := data.(*testdata)
 	tdata.ID++
@@ -202,7 +202,7 @@ func (h *testHandler) S2Compensate(ctx context.Context, data interface{}, action
 	}
 }
 
-func (h *testHandler) S3Handler(ctx context.Context, data interface{}, action HandlerAction) {
+func (h *testHandler) S3Handler(ctx context.Context, data interface{}, action StepAction) {
 	h.spy.Called("s3")
 	tdata := data.(*testdata)
 	tdata.ID++

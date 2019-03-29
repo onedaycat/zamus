@@ -1,6 +1,7 @@
 package saga
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -165,6 +166,7 @@ func Test_CompensateFail(t *testing.T) {
 
 	expStateJSON, _ := common.MarshalJSON(expState)
 	stateJSON, _ := common.MarshalJSON(s.saga.state)
+	fmt.Println(string(stateJSON))
 
 	require.Equal(t, string(expStateJSON), string(stateJSON))
 

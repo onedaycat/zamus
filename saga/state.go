@@ -45,12 +45,12 @@ func (s *StateDefinitions) GetState(name string) *StateDefinition {
 }
 
 type StateDefinition struct {
-	Name            string
-	Retry           int
-	IntervalSeconds int
-	BackoffRate     int
-	Handler         Handler
-	Compensate      CompensateHandler
+	Name              string
+	Retry             int
+	IntervalSeconds   int
+	BackoffRate       int
+	StepHandler       StepHandler
+	CompensateHandler CompensateHandler
 }
 
 type State struct {

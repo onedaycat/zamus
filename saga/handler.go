@@ -33,7 +33,7 @@ type SagaHandle interface {
 	ParseData(dataPayload Payload) (interface{}, errors.Error)
 }
 
-type Handler func(ctx context.Context, data interface{}, action HandlerAction)
+type StepHandler func(ctx context.Context, data interface{}, action StepAction)
 type CompensateHandler func(ctx context.Context, data interface{}, action CompensateAction)
 type ErrorHandler = func(ctx context.Context, state *State, err errors.Error)
 type Payload jsoniter.RawMessage
@@ -198,7 +198,7 @@ func (s *Saga) doHandler(ctx context.Context) {
 	var err errors.Error
 	defer s.recovery(ctx, &err)
 
-	s.state.step.def.Handler(ctx, s.state.data, s.state.step)
+	s.state.step.def.StepHandler(ctx, s.state.data, s.state.step)
 
 	if s.state.step.Status == WAIT {
 		s.state.step.Fail(appErr.ErrNoStateAction)
@@ -248,7 +248,7 @@ func (s *Saga) doCompensate(ctx context.Context) {
 	var err errors.Error
 	defer s.recovery(ctx, &err)
 
-	s.state.step.def.Compensate(ctx, s.state.data, s.state.step)
+	s.state.step.def.CompensateHandler(ctx, s.state.data, s.state.step)
 
 	if s.state.step.Status == WAIT {
 		s.state.step.Fail(appErr.ErrNoStateAction)

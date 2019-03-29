@@ -6,7 +6,7 @@ import (
 	"github.com/onedaycat/errors"
 )
 
-type HandlerAction interface {
+type StepAction interface {
 	Next(stateName string, data interface{})
 	Compensate(err errors.Error, data interface{})
 	Error(err errors.Error)
