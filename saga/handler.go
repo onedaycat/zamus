@@ -21,8 +21,15 @@ const (
 )
 
 type SagaHandle interface {
+	// StateDefinitions is a definition of handlers
+	// If do not define these, Saga won't work.
 	StateDefinitions() *StateDefinitions
+	// Start will be run when the request payload has input field.
+	// and return the start state name which defined from StateDefinitions() with parsed data to be yours format.
+	// If error, it will response to the requester
 	Start(ctx context.Context, input Payload) (string, interface{}, errors.Error)
+	// ParseData will be run when the request payload has resume field.
+	// Saga load data from the storage and must to parse back to yours data format
 	ParseData(dataPayload Payload) (interface{}, errors.Error)
 }
 
