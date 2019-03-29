@@ -52,6 +52,32 @@ func TestInvoke(t *testing.T) {
 		ld.AssertExpectations(t)
 	})
 
+	t.Run("Success with result string", func(t *testing.T) {
+		ld := &mocks.LambdaInvokeClient{}
+		in := invoke.NewInvoke(ld)
+
+		var result string
+		req := invoke.NewRequest("m1").WithArgs(args).WithIdentity(&invoke.Identity{}).WithPermission("hello", "read")
+		reqByte, _ := req.MarshalRequest()
+		mockResultStringByte := []byte(`"123"`)
+		expResultString := "123"
+
+		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
+			FunctionName: &fn,
+			Qualifier:    &invoke.LATEST,
+			Payload:      reqByte,
+		}).Return(&lambda.InvokeOutput{
+			Payload:       mockResultStringByte,
+			FunctionError: nil,
+		}, nil)
+
+		err := in.Invoke(ctx, fn, req, &result)
+
+		require.NoError(t, err)
+		require.Equal(t, result, expResultString)
+		ld.AssertExpectations(t)
+	})
+
 	t.Run("Success But No Data", func(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
