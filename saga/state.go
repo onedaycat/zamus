@@ -4,6 +4,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common/clock"
+	"github.com/onedaycat/zamus/common/eid"
 	appErr "github.com/onedaycat/zamus/errors"
 )
 
@@ -13,16 +14,19 @@ type Action int
 const (
 	WAIT Status = iota
 	SUCCESS
-	COMPENSATE
 	ERROR
 	FAILED
+	COMPENSATED
 )
 
 const (
 	NONE Action = iota
 	NEXT
+	BACK
 	RETRY
 	END
+	COMPENSATE
+	PARTIAL_COMPENSATE
 )
 
 type StateDefinitions struct {
@@ -46,7 +50,7 @@ type StateDefinition struct {
 	IntervalSeconds int
 	BackoffRate     int
 	Handler         Handler
-	Compensate      Handler
+	Compensate      CompensateHandler
 }
 
 type State struct {
@@ -61,7 +65,6 @@ type State struct {
 	StartTime  int64               `json:"startTime"`
 	LastTime   int64               `json:"lastTime"`
 	Compensate bool                `json:"compensate"`
-	handler    Handler
 	data       interface{}
 	step       *Step
 	defs       *StateDefinitions
@@ -75,40 +78,47 @@ func newState() *State {
 	}
 }
 
+func (s *State) setupStart(input jsoniter.RawMessage) {
+	s.ID = eid.GenerateID()
+	s.StartTime = clock.Now().Unix()
+	s.Input = input
+}
+
 func (s *State) setupFromResume(defs *StateDefinitions, data interface{}) {
 	s.defs = defs
 	s.step = s.Steps[len(s.Steps)-1]
-	s.index = len(s.Steps) - 1
+	s.index = -1
+
+	foundComp := false
+	for i := range s.Steps {
+		if !foundComp && s.Steps[i].Action == COMPENSATE {
+			foundComp = true
+			s.index++
+		} else if !foundComp && s.Steps[i].Action == PARTIAL_COMPENSATE {
+			foundComp = true
+			s.index += 2
+		} else {
+			if foundComp {
+				s.index--
+			} else {
+				s.index++
+			}
+		}
+	}
+
 	s.data = data
 	s.step.def = s.defs.GetState(s.step.Name)
 	s.step.data = data
-	if s.Compensate {
-		s.handler = s.step.def.Compensate
-	} else {
-		s.handler = s.step.def.Handler
-	}
 	s.step.Action = NONE
 	s.step.Status = WAIT
 	s.Action = NONE
 	s.Status = WAIT
 }
 
-func (s *State) newStep(stateName string, data interface{}) errors.Error {
+func (s *State) startStep(stateName string, data interface{}) errors.Error {
 	def := s.defs.GetState(stateName)
 	if def == nil {
-		return appErr.ErrStateNotFound(stateName).WithCaller().WithInput(stateName)
-		// step := &Step{
-		// 	Name: stateName,
-		// 	data: data,
-		// }
-		// step.Fail(appErr.ErrStateNotFound(stateName))
-		// s.Steps = append(s.Steps, step)
-		// s.step = step
-		// s.handler = nil
-		// s.index++
-		// s.updateStep()
-
-		// return s.Error
+		return appErr.ErrNextStateNotFound(stateName).WithCaller().WithInput(stateName)
 	}
 
 	step := &Step{
@@ -122,22 +132,42 @@ func (s *State) newStep(stateName string, data interface{}) errors.Error {
 	s.Action = NONE
 	s.step = step
 	s.data = data
-	s.handler = def.Handler
 	s.index++
 
 	return nil
 }
 
-func (s *State) nextStep() errors.Error {
-	return s.newStep(s.step.NextState, s.step.data)
+func (s *State) nextStep() {
+	statename := s.step.nextState
+	def := s.defs.GetState(statename)
+	if def == nil {
+		err := appErr.ErrNextStateNotFound(statename).WithCaller().WithInput(statename)
+		s.step.Fail(err)
+		s.updateStep()
+		return
+	}
+
+	step := &Step{
+		Name: def.Name,
+		def:  def,
+		data: s.data,
+	}
+
+	s.Steps = append(s.Steps, step)
+	s.Status = WAIT
+	s.Action = NONE
+	s.step = step
+	s.index++
 }
 
-func (s *State) backStep() bool {
+func (s *State) backStep() {
 	s.index--
 	if s.index < 0 {
 		s.step.Action = END
 		s.Action = END
-		return false
+		s.Status = COMPENSATED
+		s.step.Status = COMPENSATED
+		return
 	}
 
 	oldStep := s.Steps[s.index]
@@ -154,9 +184,6 @@ func (s *State) backStep() bool {
 	s.Status = WAIT
 	s.Action = NONE
 	s.step = step
-	s.handler = def.Compensate
-
-	return true
 }
 
 func (s *State) updateStep() {
@@ -165,23 +192,19 @@ func (s *State) updateStep() {
 	s.data = s.step.data
 	s.Error = s.step.StepError
 	s.LastTime = clock.Now().Unix()
-
-	if s.step.Status == COMPENSATE {
-		s.Compensate = true
-	}
 }
 
 func (s *State) Clear() {
 	s.ID = emptyStr
 	s.Status = WAIT
 	s.Action = NONE
+	s.Input = nil
 	s.Data = nil
 	s.Error = nil
 	s.Steps = s.Steps[:0]
 	s.StartTime = 0
 	s.LastTime = 0
 	s.Compensate = false
-	s.handler = nil
 	s.data = nil
 	s.step = nil
 	s.index = -1

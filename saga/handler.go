@@ -11,8 +11,6 @@ import (
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
 	"github.com/onedaycat/zamus/common"
-	"github.com/onedaycat/zamus/common/clock"
-	"github.com/onedaycat/zamus/common/eid"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/tracer"
 	"github.com/onedaycat/zamus/zamuscontext"
@@ -28,7 +26,8 @@ type SagaHandle interface {
 	ParseData(dataPayload Payload) (interface{}, errors.Error)
 }
 
-type Handler func(ctx context.Context, data interface{}, stepAction StepAction)
+type Handler func(ctx context.Context, data interface{}, action HandlerAction)
+type CompensateHandler func(ctx context.Context, data interface{}, action CompensateAction)
 type ErrorHandler = func(ctx context.Context, state *State, err errors.Error)
 type Payload jsoniter.RawMessage
 
@@ -99,6 +98,7 @@ func (s *Saga) ErrorHandlers(handlers ...ErrorHandler) {
 func (s *Saga) Handle(ctx context.Context, req *Request) errors.Error {
 	zmctx := zamuscontext.NewContext(ctx, s.zcctx)
 	s.state.Clear()
+	s.req = req
 
 	if req.Input != nil {
 		if err := s.doStart(zmctx); err != nil {
@@ -109,19 +109,19 @@ func (s *Saga) Handle(ctx context.Context, req *Request) errors.Error {
 			return err
 		}
 	} else {
-		return nil
+		return appErr.ErrInvalidRequest.WithCaller().WithInput(req)
 	}
 
 	if len(s.state.defs.Definitions) == 0 || len(s.state.Steps) == 0 {
 		return nil
 	}
 
-	for {
-		if s.state.Action == END {
-			break
+	for s.state.Action != END {
+		if s.state.Compensate {
+			s.doCompensate(zmctx)
+		} else {
+			s.doHandler(zmctx)
 		}
-
-		s.doHandler(zmctx)
 	}
 
 	s.state.Data, _ = common.MarshalJSON(s.state.data)
@@ -148,6 +148,7 @@ func (s *Saga) doResume(ctx context.Context) (err errors.Error) {
 	var data interface{}
 	data, err = s.handle.ParseData(Payload(s.state.Data))
 	if err != nil {
+		s.state.Error = nil
 		for _, errhandler := range s.errorhandlers {
 			errhandler(ctx, s.state, err)
 		}
@@ -164,10 +165,8 @@ func (s *Saga) doStart(ctx context.Context) (err errors.Error) {
 	defer s.recovery(ctx, &err)
 	var stateName string
 	var data interface{}
-	s.state.ID = eid.GenerateID()
-	s.state.StartTime = clock.Now().Unix()
-	s.state.Input = s.req.Input
-	stateName, data, err = s.handle.Start(ctx, Payload(s.state.Input))
+
+	stateName, data, err = s.handle.Start(ctx, Payload(s.req.Input))
 	if err != nil {
 		for _, errhandler := range s.errorhandlers {
 			errhandler(ctx, s.state, err)
@@ -175,7 +174,8 @@ func (s *Saga) doStart(ctx context.Context) (err errors.Error) {
 		return err
 	}
 
-	err = s.state.newStep(stateName, data)
+	s.state.setupStart(s.req.Input)
+	err = s.state.startStep(stateName, data)
 	if err != nil {
 		for _, errhandler := range s.errorhandlers {
 			errhandler(ctx, s.state, err)
@@ -191,67 +191,85 @@ func (s *Saga) doHandler(ctx context.Context) {
 	var err errors.Error
 	defer s.recovery(ctx, &err)
 
-	s.state.handler(ctx, s.state.data, s.state.step)
+	s.state.step.def.Handler(ctx, s.state.data, s.state.step)
 
 	if s.state.step.Status == WAIT {
-		s.state.step.End(s.state.step.data)
+		s.state.step.Fail(appErr.ErrNoStateAction)
 	}
-
 	s.state.updateStep()
 
 	switch s.state.Status {
 	case SUCCESS:
-		switch s.state.Action {
-		case NEXT:
-			if s.state.Compensate {
-				err = appErr.ErrNextOnCompensateNotAllowed.WithCaller().WithInput(s.state)
-				s.state.step.Fail(err)
-				s.state.updateStep()
-				for _, errhandler := range s.errorhandlers {
-					errhandler(ctx, s.state, err)
-				}
-
-				s.save(ctx)
-				return
-			}
-
-			if err = s.state.nextStep(); err != nil {
-				s.state.step.Fail(err)
-				s.state.updateStep()
-				for _, errhandler := range s.errorhandlers {
-					errhandler(ctx, s.state, err)
-				}
-
-				s.save(ctx)
-				return
-			}
-		case END:
-			return
+		if s.state.Action == END {
+			break
 		}
+		s.state.nextStep()
+	case ERROR:
+		switch s.state.Action {
+		case RETRY:
+			if s.state.step.retry() {
+				time.Sleep(s.state.step.sleepDuration())
+				break
+			}
+			if s.state.step.errPartial {
+				s.state.index++
+				s.state.step.PartialCompensate(s.state.Error, s.state.data)
+				s.state.updateStep()
+			} else {
+				s.state.step.Compensate(s.state.Error, s.state.data)
+				s.state.updateStep()
+			}
+			s.state.Compensate = true
+			s.state.backStep()
+		case PARTIAL_COMPENSATE:
+			s.state.index++
+			s.state.Compensate = true
+			s.state.backStep()
+		case COMPENSATE:
+			s.state.Compensate = true
+			s.state.backStep()
+		}
+	}
+
+	if s.state.Status == FAILED {
+		s.runErrorHandler(ctx, s.state.Error)
+		s.save(ctx)
+	}
+}
+
+func (s *Saga) doCompensate(ctx context.Context) {
+	var err errors.Error
+	defer s.recovery(ctx, &err)
+
+	s.state.step.def.Compensate(ctx, s.state.data, s.state.step)
+
+	if s.state.step.Status == WAIT {
+		s.state.step.Fail(appErr.ErrNoStateAction)
+	}
+	s.state.updateStep()
+
+	switch s.state.Status {
+	case SUCCESS:
+		s.state.backStep()
 	case ERROR:
 		if s.state.step.retry() {
 			time.Sleep(s.state.step.sleepDuration())
-			return
+			break
 		}
-		for _, errhandler := range s.errorhandlers {
-			errhandler(ctx, s.state, appErr.ErrRetryExceed.WithCaller().WithInput(s.state))
-		}
-		fallthrough
-	case COMPENSATE:
-		s.state.backStep()
-	case FAILED:
-		for _, errhandler := range s.errorhandlers {
-			errhandler(ctx, s.state, s.state.Error)
-		}
+
+		s.state.step.Fail(s.state.Error)
+		s.state.updateStep()
+	}
+
+	if s.state.Status == FAILED {
+		s.runErrorHandler(ctx, s.state.Error)
 		s.save(ctx)
 	}
 }
 
 func (s *Saga) save(ctx context.Context) {
 	if err := s.storage.Save(ctx, s.state); err != nil {
-		for _, errhandler := range s.errorhandlers {
-			errhandler(ctx, s.state, err)
-		}
+		s.runErrorHandler(ctx, err)
 	}
 }
 
@@ -281,20 +299,22 @@ func (s *Saga) recovery(ctx context.Context, err *errors.Error) {
 		switch cause := r.(type) {
 		case error:
 			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(s.state)
-			for _, errhandler := range s.errorhandlers {
-				errhandler(ctx, s.state, *err)
-			}
+			s.runErrorHandler(ctx, *err)
 			s.state.step.Fail(*err)
 			s.state.updateStep()
 			s.save(ctx)
 		default:
 			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(s.state)
-			for _, errhandler := range s.errorhandlers {
-				errhandler(ctx, s.state, *err)
-			}
+			s.runErrorHandler(ctx, *err)
 			s.state.step.Fail(*err)
 			s.state.updateStep()
 			s.save(ctx)
 		}
+	}
+}
+
+func (s *Saga) runErrorHandler(ctx context.Context, err errors.Error) {
+	for _, errhandler := range s.errorhandlers {
+		errhandler(ctx, s.state, err)
 	}
 }

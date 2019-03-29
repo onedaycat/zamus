@@ -25,7 +25,7 @@ func (s *stubStorage) Get(ctx context.Context, id string) (*State, errors.Error)
 
 	state, ok := s.data[id]
 	if !ok {
-		return nil, appErr.ErrUnableGetState
+		return nil, appErr.ErrStateNotFound
 	}
 
 	return state, nil
@@ -107,49 +107,53 @@ func (h *testHandler) Start(ctx context.Context, input Payload) (string, interfa
 
 func (h *testHandler) ParseData(dataPayload Payload) (interface{}, errors.Error) {
 	h.spy.Called("resume")
+	if h.parseError {
+		return nil, errors.DumbError
+	}
+
 	data := &testdata{}
 	dataPayload.Unmarshal(data)
 
 	return data, nil
 }
 
-func (h *testHandler) S1Handler(ctx context.Context, data interface{}, stepAction StepAction) {
+func (h *testHandler) S1Handler(ctx context.Context, data interface{}, action HandlerAction) {
 	h.spy.Called("s1")
 	tdata := data.(*testdata)
 	tdata.ID++
 	switch h.s1handlerMode {
 	case "next":
-		stepAction.Next("s2", tdata)
+		action.Next("s2", tdata)
 	case "error":
-		stepAction.Error(errors.DumbError)
+		action.Error(errors.DumbError)
 	case "fail":
-		stepAction.Fail(errors.DumbError)
+		action.Fail(errors.DumbError)
 	case "compensate":
-		stepAction.Compensate(tdata, errors.DumbError)
+		action.Compensate(errors.DumbError, tdata)
+	case "partial_compensate":
+		action.PartialCompensate(errors.DumbError, tdata)
+	case "partial_error":
+		action.PartialError(errors.DumbError)
 	case "end":
-		stepAction.End(tdata)
+		action.End(tdata)
 	}
 }
 
-func (h *testHandler) S1Compensate(ctx context.Context, data interface{}, stepAction StepAction) {
+func (h *testHandler) S1Compensate(ctx context.Context, data interface{}, action CompensateAction) {
 	h.spy.Called("s1comp")
 	tdata := data.(*testdata)
 	tdata.ID++
 	switch h.s1CompMode {
-	case "next":
-		stepAction.Next("s2", tdata)
 	case "error":
-		stepAction.Error(errors.DumbError)
+		action.Error(errors.DumbError)
 	case "fail":
-		stepAction.Fail(errors.DumbError)
-	case "compensate":
-		stepAction.Compensate(tdata)
-	case "end":
-		stepAction.End(tdata)
+		action.Fail(errors.DumbError)
+	case "back":
+		action.Back(tdata)
 	}
 }
 
-func (h *testHandler) S2Handler(ctx context.Context, data interface{}, stepAction StepAction) {
+func (h *testHandler) S2Handler(ctx context.Context, data interface{}, action HandlerAction) {
 	h.spy.Called("s2")
 	tdata := data.(*testdata)
 	tdata.ID++
@@ -165,72 +169,72 @@ func (h *testHandler) S2Handler(ctx context.Context, data interface{}, stepActio
 	switch h.s2handlerMode {
 	case "next":
 		if h.s2NextNotFound {
-			stepAction.Next("s00", tdata)
+			action.Next("s00", tdata)
 		} else {
-			stepAction.Next("s3", tdata)
+			action.Next("s3", tdata)
 		}
 	case "error":
-		stepAction.Error(errors.DumbError)
+		action.Error(errors.DumbError)
 	case "fail":
-		stepAction.Fail(errors.DumbError)
+		action.Fail(errors.DumbError)
 	case "compensate":
-		stepAction.Compensate(tdata, errors.DumbError)
+		action.Compensate(errors.DumbError, tdata)
+	case "partial_compensate":
+		action.PartialCompensate(errors.DumbError, tdata)
+	case "partial_error":
+		action.PartialError(errors.DumbError)
 	case "end":
-		stepAction.End(tdata)
+		action.End(tdata)
 	}
 }
 
-func (h *testHandler) S2Compensate(ctx context.Context, data interface{}, stepAction StepAction) {
+func (h *testHandler) S2Compensate(ctx context.Context, data interface{}, action CompensateAction) {
 	h.spy.Called("s2comp")
 	tdata := data.(*testdata)
 	tdata.ID++
 	switch h.s2CompMode {
-	case "next":
-		stepAction.Next("s3", tdata)
 	case "error":
-		stepAction.Error(errors.DumbError)
+		action.Error(errors.DumbError)
 	case "fail":
-		stepAction.Fail(errors.DumbError)
-	case "compensate":
-		stepAction.Compensate(tdata)
-	case "end":
-		stepAction.End(tdata)
+		action.Fail(errors.DumbError)
+	case "back":
+		action.Back(tdata)
 	}
 }
 
-func (h *testHandler) S3Handler(ctx context.Context, data interface{}, stepAction StepAction) {
+func (h *testHandler) S3Handler(ctx context.Context, data interface{}, action HandlerAction) {
 	h.spy.Called("s3")
 	tdata := data.(*testdata)
 	tdata.ID++
 	switch h.s3handlerMode {
 	case "next":
-		stepAction.Next("s4", tdata)
+		action.Next("s4", tdata)
 	case "error":
-		stepAction.Error(errors.DumbError)
+		action.Error(errors.DumbError)
 	case "fail":
-		stepAction.Fail(errors.DumbError)
+		action.Fail(errors.DumbError)
 	case "compensate":
-		stepAction.Compensate(tdata, errors.DumbError)
+		action.Compensate(errors.DumbError, tdata)
+	case "partial_compensate":
+		action.PartialCompensate(errors.DumbError, tdata)
+	case "partial_error":
+		action.PartialError(errors.DumbError)
 	case "end":
-		stepAction.End(tdata)
+		action.End(tdata)
 	}
 }
 
-func (h *testHandler) S3Compensate(ctx context.Context, data interface{}, stepAction StepAction) {
+func (h *testHandler) S3Compensate(ctx context.Context, data interface{}, action CompensateAction) {
 	h.spy.Called("s3comp")
 	tdata := data.(*testdata)
 	tdata.ID++
 	switch h.s3CompMode {
-	case "next":
-		stepAction.Next("s4", tdata)
 	case "error":
-		stepAction.Error(errors.DumbError)
+		action.Error(errors.DumbError)
 	case "fail":
-		stepAction.Fail(errors.DumbError)
-	case "compensate":
-		stepAction.Compensate(tdata)
-	case "end":
-		stepAction.End(tdata)
+		action.Fail(errors.DumbError)
+	case "back":
+		action.Back(tdata)
 	}
 }
 
@@ -255,10 +259,7 @@ func setupHandlerSuite() *handlerSuite {
 	}
 
 	h.defs = h.handle.StateDefinitions()
-	h.saga = New(h.handle, h.storage, &Config{
-		SentryDNS:   "test",
-		EnableTrace: true,
-	})
+	h.saga = New(h.handle, h.storage, &Config{})
 	h.ctx = context.Background()
 	h.saga.ErrorHandlers(PrintPanic)
 
@@ -317,5 +318,15 @@ func (h *handlerSuite) WithS2Panic() *handlerSuite {
 
 func (h *handlerSuite) WithS2PanicString() *handlerSuite {
 	h.handle.s2PanicString = true
+	return h
+}
+
+func (h *handlerSuite) WithGetResumeError() *handlerSuite {
+	h.storage.getError = true
+	return h
+}
+
+func (h *handlerSuite) WithGetResumeParseError() *handlerSuite {
+	h.handle.parseError = true
 	return h
 }

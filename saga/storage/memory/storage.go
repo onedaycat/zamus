@@ -25,7 +25,7 @@ func (s *MemoryStorage) Clear() {
 func (s *MemoryStorage) Get(ctx context.Context, id string) (*saga.State, errors.Error) {
 	state, ok := s.data[id]
 	if !ok {
-		return nil, appErr.ErrStateNotFound(id).WithCaller().WithInput(id)
+		return nil, appErr.ErrStateNotFound.WithCaller().WithInput(id)
 	}
 
 	return state, nil

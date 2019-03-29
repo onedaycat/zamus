@@ -51,8 +51,8 @@ func TestSaveAndGet(t *testing.T) {
 
 	state.ID = "state1"
 	state.Name = "Test"
-	state.Status = saga.COMPENSATE
-	state.Action = saga.END
+	state.Status = saga.SUCCESS
+	state.Action = saga.COMPENSATE
 	state.Input = []byte(`{"id":1}`)
 	state.StartTime = now.Unix()
 	state.LastTime = now.Unix()
@@ -63,7 +63,6 @@ func TestSaveAndGet(t *testing.T) {
 			Name:      "s1",
 			Status:    saga.SUCCESS,
 			Action:    saga.NEXT,
-			NextState: "s2",
 			Retried:   0,
 			StepError: nil,
 		},
@@ -71,31 +70,27 @@ func TestSaveAndGet(t *testing.T) {
 			Name:      "s2",
 			Status:    saga.SUCCESS,
 			Action:    saga.NEXT,
-			NextState: "s3",
 			Retried:   0,
 			StepError: nil,
 		},
 		{
 			Name:      "s3",
-			Status:    saga.COMPENSATE,
-			Action:    saga.NEXT,
-			NextState: "",
+			Status:    saga.ERROR,
+			Action:    saga.COMPENSATE,
 			Retried:   0,
 			StepError: errors.DumbError,
 		},
 		{
 			Name:      "s2",
-			Status:    saga.COMPENSATE,
-			Action:    saga.NEXT,
-			NextState: "",
+			Status:    saga.SUCCESS,
+			Action:    saga.BACK,
 			Retried:   0,
 			StepError: nil,
 		},
 		{
 			Name:      "s1",
-			Status:    saga.COMPENSATE,
-			Action:    saga.END,
-			NextState: "",
+			Status:    saga.SUCCESS,
+			Action:    saga.BACK,
 			Retried:   0,
 			StepError: nil,
 		},
@@ -110,6 +105,6 @@ func TestSaveAndGet(t *testing.T) {
 
 	// NotFound
 	getState, err = db.Get(context.Background(), "xxxx")
-	require.Equal(t, appErr.ErrStateNotFound("xxxx").Error(), err.Error())
+	require.Equal(t, appErr.ErrStateNotFound.Error(), err.Error())
 	require.Nil(t, getState)
 }

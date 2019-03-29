@@ -107,7 +107,7 @@ func (s *DynamoDBSagaStore) Get(ctx context.Context, id string) (*saga.State, er
 	}
 
 	if res.Item == nil {
-		return nil, appErr.ErrStateNotFound(id).WithCaller().WithInput(id)
+		return nil, appErr.ErrStateNotFound.WithCaller().WithInput(id)
 	}
 
 	s.state.Clear()

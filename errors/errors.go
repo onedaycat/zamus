@@ -16,19 +16,19 @@ var (
 	ErrUnablePublishKinesis = errors.InternalError("ErrUnablePublishKinesis", "Unable to publish kinesis stream")
 	ErrUnknown              = errors.InternalError("ErrUnknown", "Unknown error")
 
-	ErrVersionInconsistency       = errors.BadRequest("ErrVersionInconsistency", "Version is inconsistency")
-	ErrEncodingNotSupported       = errors.InternalError("ErrEncodingNotSupported", "Unable unmarshal payload, unsupport encoding")
-	ErrInvalidVersionNotAllowed   = errors.InternalError("ErrInvalidVersionNotAllowed", "Event sequence should not be 0")
-	ErrNoAggregateID              = errors.InternalError("ErrNoAggregateID", "No aggregate id in aggregate root")
-	ErrUnbleGetEventStore         = errors.InternalError("ErrUnbleGetEventStore", "Unable to get")
-	ErrUnbleSaveEventStore        = errors.InternalError("ErrUnbleSaveEventStore", "Unable to save")
-	ErrUnbleSaveDQLMessages       = errors.InternalError("ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
-	ErrUnbleInvokeFunction        = errors.InternalError("ErrUnbleInvokeFunction", "Unable to invoke function")
-	ErrRetryExceed                = errors.InternalError("ErrRetryExceed", "Handler retry exceed")
-	ErrNextOnCompensateNotAllowed = errors.InternalError("ErrNextOnCompensateNotAllowed", "Not allow next on compensate")
-	ErrUnableGetState             = errors.InternalError("ErrUnableGetState", "Unable get saga state")
-	ErrUnableSaveState            = errors.InternalError("ErrUnableSaveState", "Unable save saga state")
-	ErrUnablePublishEvent         = errors.InternalError("ErrUnablePublishEvent", "Unable publish event")
+	ErrVersionInconsistency     = errors.BadRequest("ErrVersionInconsistency", "Version is inconsistency")
+	ErrEncodingNotSupported     = errors.InternalError("ErrEncodingNotSupported", "Unable unmarshal payload, unsupport encoding")
+	ErrInvalidVersionNotAllowed = errors.InternalError("ErrInvalidVersionNotAllowed", "Event sequence should not be 0")
+	ErrNoAggregateID            = errors.InternalError("ErrNoAggregateID", "No aggregate id in aggregate root")
+	ErrUnbleGetEventStore       = errors.InternalError("ErrUnbleGetEventStore", "Unable to get")
+	ErrUnbleSaveEventStore      = errors.InternalError("ErrUnbleSaveEventStore", "Unable to save")
+	ErrUnbleSaveDQLMessages     = errors.InternalError("ErrUnbleSaveDQLMessages", "Unable to save DQL messages")
+	ErrUnbleInvokeFunction      = errors.InternalError("ErrUnbleInvokeFunction", "Unable to invoke function")
+	ErrUnableGetState           = errors.InternalError("ErrUnableGetState", "Unable get saga state")
+	ErrUnableSaveState          = errors.InternalError("ErrUnableSaveState", "Unable save saga state")
+	ErrNoStateAction            = errors.InternalError("ErrNoStateAction", "No state action")
+	ErrStateNotFound            = errors.InternalError("ErrStateNotFound", "State action")
+	ErrUnablePublishEvent       = errors.InternalError("ErrUnablePublishEvent", "Unable publish event")
 )
 
 const (
@@ -69,8 +69,8 @@ func ErrFunctionNotFound(fn string) errors.Error {
 	return errors.BadRequestf("ErrFunctionNotFound", "%s function not found", fn)
 }
 
-func ErrStateNotFound(state string) errors.Error {
-	return errors.InternalErrorf("ErrStateNotFound", "%s state not found", state)
+func ErrNextStateNotFound(state string) errors.Error {
+	return errors.InternalErrorf("ErrNextStateNotFound", "Cannot go next state, %s state is not found", state)
 }
 
 func ErrorByCode(err errors.Error) errors.Error {
