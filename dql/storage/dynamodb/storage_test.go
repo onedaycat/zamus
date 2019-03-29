@@ -44,7 +44,7 @@ func TestJSONSave(t *testing.T) {
 	db := getDB()
 
 	msgsByte := random.EventMsgs().RandomEventMsgs(10).BuildJSON()
-	appErr := errors.ErrUnbleSaveDQLMessages.
+	appErr := errors.ErrUnableSaveDQLMessages.
 		WithCaller().
 		WithCause(errors.ErrUnknown).
 		WithInput(map[string]interface{}{"input": 1})
@@ -60,7 +60,7 @@ func TestMultiSave(t *testing.T) {
 	db := getDB()
 
 	msgs := random.EventMsgs().RandomEventMsgs(10).Build()
-	appErr := errors.ErrUnbleSaveDQLMessages.
+	appErr := errors.ErrUnableSaveDQLMessages.
 		WithCaller().
 		WithCause(errors.ErrUnknown).
 		WithInput(map[string]interface{}{"input": 1})

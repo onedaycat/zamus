@@ -210,7 +210,7 @@ func (d *DynamoDBEventStore) GetEvents(ctx context.Context, aggID string, seq in
 	})
 
 	if err != nil {
-		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
+		return nil, appErr.ErrUnableGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
 			"aggID": aggID,
 			"seq":   seq,
 		})
@@ -237,7 +237,7 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, vers
 		},
 	})
 	if err != nil {
-		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
+		return nil, appErr.ErrUnableGetEventStore.WithCause(err).WithCaller().WithInput(aggID)
 	}
 
 	if len(output.Item) == 0 {
@@ -246,7 +246,7 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, vers
 
 	snapshot := &eventstore.Snapshot{}
 	if err = dynamodbattribute.UnmarshalMap(output.Item, snapshot); err != nil {
-		return nil, appErr.ErrUnbleGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
+		return nil, appErr.ErrUnableGetEventStore.WithCause(err).WithCaller().WithInput(errors.Input{
 			"aggID":   aggID,
 			"version": version,
 		})
@@ -329,7 +329,7 @@ func (d *DynamoDBEventStore) saveEvents(ctx context.Context, msgs []*eventstore.
 	for i := 0; i < len(msgs); i++ {
 		payloadReq, err = dynamodbattribute.MarshalMap(msgs[i])
 		if err != nil {
-			return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+			return appErr.ErrUnableSaveEventStore.WithCause(err).WithCaller()
 		}
 
 		_, err = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
@@ -344,7 +344,7 @@ func (d *DynamoDBEventStore) saveEvents(ctx context.Context, msgs []*eventstore.
 				return appErr.ErrVersionInconsistency.WithCaller()
 			}
 
-			return appErr.ErrUnbleSaveEventStore.WithCause(err).WithCaller()
+			return appErr.ErrUnableSaveEventStore.WithCause(err).WithCaller()
 		}
 	}
 
@@ -360,7 +360,7 @@ func (d *DynamoDBEventStore) saveSnapshot(ctx context.Context, snapshot *eventst
 	var xerr error
 	snapshotReq, xerr = dynamodbattribute.MarshalMap(snapshot)
 	if xerr != nil {
-		return appErr.ErrUnbleSaveEventStore.WithCause(xerr).WithCaller()
+		return appErr.ErrUnableSaveEventStore.WithCause(xerr).WithCaller()
 	}
 
 	_, xerr = d.db.PutItemWithContext(ctx, &dynamodb.PutItemInput{
@@ -374,7 +374,7 @@ func (d *DynamoDBEventStore) saveSnapshot(ctx context.Context, snapshot *eventst
 			return appErr.ErrVersionInconsistency.WithCaller()
 		}
 
-		return appErr.ErrUnbleSaveEventStore.WithCause(xerr).WithCaller()
+		return appErr.ErrUnableSaveEventStore.WithCause(xerr).WithCaller()
 	}
 
 	return nil

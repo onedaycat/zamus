@@ -48,7 +48,7 @@ func (in *Invoke) Invoke(ctx context.Context, fn string, req *Request, result in
 		Payload:      reqByte,
 	})
 	if xerr != nil {
-		return appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
+		return appErr.ErrUnableInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
 	}
 
 	if out.FunctionError != nil {
@@ -78,7 +78,7 @@ func (in *Invoke) InvokeAsync(ctx context.Context, fn string, req *Request) erro
 		InvokeArgs:   bytes.NewReader(reqByte),
 	})
 	if xerr != nil {
-		return appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
+		return appErr.ErrUnableInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
 	}
 
 	return nil
@@ -100,7 +100,7 @@ func (in *Invoke) BatchInvoke(ctx context.Context, fn string, reqs []*Request) (
 		Payload:      reqsByte,
 	})
 	if xerr != nil {
-		return nil, appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(reqs).WithCause(xerr)
+		return nil, appErr.ErrUnableInvokeFunction.WithCaller().WithInput(reqs).WithCause(xerr)
 	}
 
 	if out.FunctionError != nil {
@@ -145,7 +145,7 @@ func (in *Invoke) BatchInvokeAsync(ctx context.Context, fn string, reqs []*Reque
 		InvokeArgs:   bytes.NewReader(reqsByte),
 	})
 	if xerr != nil {
-		return appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(reqs).WithCause(xerr)
+		return appErr.ErrUnableInvokeFunction.WithCaller().WithInput(reqs).WithCause(xerr)
 	}
 
 	return nil
@@ -163,7 +163,7 @@ func (in *Invoke) InvokeSaga(ctx context.Context, fn string, req *SagaRequest) e
 		Payload:      reqByte,
 	})
 	if xerr != nil {
-		return appErr.ErrUnbleInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
+		return appErr.ErrUnableInvokeFunction.WithCaller().WithInput(req).WithCause(xerr)
 	}
 
 	if out.FunctionError != nil {

@@ -168,7 +168,7 @@ func TestInvoke(t *testing.T) {
 
 		err := in.Invoke(ctx, fn, req, &result)
 
-		require.Equal(t, appErr.ErrUnbleInvokeFunction, err)
+		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		require.Len(t, result, 0)
 		ld.AssertExpectations(t)
 	})
@@ -216,7 +216,7 @@ func TestInvokeAsync(t *testing.T) {
 
 		err := in.InvokeAsync(ctx, fn, req)
 
-		require.Equal(t, appErr.ErrUnbleInvokeFunction, err)
+		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		ld.AssertExpectations(t)
 	})
 
@@ -334,7 +334,7 @@ func TestBatchInvoke(t *testing.T) {
 
 		results, err := in.BatchInvoke(ctx, fn, reqs)
 
-		require.Equal(t, appErr.ErrUnbleInvokeFunction, err)
+		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		require.Len(t, results, 0)
 		ld.AssertExpectations(t)
 	})
@@ -384,7 +384,7 @@ func TestBatchInvokeAsync(t *testing.T) {
 
 		err := in.BatchInvokeAsync(ctx, fn, reqs)
 
-		require.Equal(t, appErr.ErrUnbleInvokeFunction, err)
+		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		ld.AssertExpectations(t)
 	})
 }
@@ -458,7 +458,7 @@ func TestSagaInvoke(t *testing.T) {
 
 		err := in.InvokeSaga(ctx, fn, req)
 
-		require.Equal(t, appErr.ErrUnbleInvokeFunction, err)
+		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		ld.AssertExpectations(t)
 	})
 }

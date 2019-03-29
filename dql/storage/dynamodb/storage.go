@@ -122,7 +122,7 @@ func (d *dqlDynamoDB) Save(ctx context.Context, dqlMsg *dql.DQLMsg) errors.Error
 	})
 
 	if err != nil {
-		return appErr.ErrUnbleSaveDQLMessages.WithCaller().WithCause(err)
+		return appErr.ErrUnableSaveDQLMessages.WithCaller().WithCause(err)
 	}
 
 	return nil
