@@ -325,3 +325,11 @@ func (s *Saga) runErrorHandler(ctx context.Context, err errors.Error) {
 		errhandler(ctx, s.state, err)
 	}
 }
+
+func (s *Saga) CurrentStep() *Step {
+	return s.state.step
+}
+
+func (s *Saga) CurrentState() *State {
+	return s.state
+}
