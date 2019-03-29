@@ -22,6 +22,12 @@ func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
 	return common.UnmarshalJSONSnappy(e.Event, v)
 }
 
+func (e *EventMsg) MustUnmarshalEvent(v interface{}) {
+	if err := common.UnmarshalJSONSnappy(e.Event, v); err != nil {
+		panic(err)
+	}
+}
+
 func (e *EventMsg) AddExpired(d time.Duration) {
 	e.Expired = time.Unix(e.Time, 0).Add(d).Unix()
 }
