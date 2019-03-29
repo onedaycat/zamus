@@ -209,3 +209,7 @@ func (s *State) Clear() {
 	s.step = nil
 	s.index = -1
 }
+
+func (s *State) CurrentData() interface{} {
+	return s.data
+}

@@ -98,6 +98,10 @@ func (s *Step) retry() bool {
 	return false
 }
 
+func (s *Step) GetData() interface{} {
+	return s.data
+}
+
 func (s *Step) sleepDuration() time.Duration {
 	if s.Retried == 1 {
 		return time.Second * time.Duration(s.def.IntervalSeconds)
