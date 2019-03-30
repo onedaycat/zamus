@@ -25,6 +25,7 @@ func getDB() *dqlDynamoDB {
 		sess, err := session.NewSession(&aws.Config{
 			Credentials: credentials.NewEnvCredentials(),
 			Region:      ptr.String("ap-southeast-1"),
+			Endpoint:    ptr.String("http://localhost:9000"),
 		})
 		if err != nil {
 			panic(err)

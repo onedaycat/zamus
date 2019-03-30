@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:c9a5900701dd143c2a1a50fec37a24fb66289cfca9e4cc749ded8062374ab77a"
+  digest = "1:f7f76275e925a8f180804f8deabe8f5b00378cef2a39c9253398651325da041c"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,8 +69,8 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "9e05738701c04cb3d4ccdb493ad4f3c4c3994757"
-  version = "v1.19.5"
+  revision = "d56356f29f4878db5a31b68eb8bb8c5383f6ff48"
+  version = "v1.19.6"
 
 [[projects]]
   branch = "master"
@@ -127,11 +127,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e7d2b08efdf41cda983b5c42458b50f78543b40de51be50f1c0e6338d48ad6a8"
+  digest = "1:9cb195385d5243afb8c80ef6e859eb0647a8ba9cdeb86b95e15e72820126eea9"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "1fbca2aabb09915d4f1006d01b271ad7778eec4f"
+  revision = "c0f6b444ad8f92ecd68f86b27635c1fccdede4c4"
 
 [[projects]]
   branch = "master"
@@ -321,11 +321,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:5637b3b43405643229e55140bb3049dfa7d73957ba9ecfccc31cdadbfbe0b1f9"
+  digest = "1:c9a4e761695039425d21448d3289ff280c3a98f0c8145fa7417d9889556006b7"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "f49334f85ddcf0f08d7fb6dd7363e9e6d6b777eb"
+  revision = "9eb1bfa1ce65ae8a6ff3114b0aaf9a41a6cf3560"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
