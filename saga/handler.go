@@ -218,6 +218,7 @@ func (s *Saga) doHandler(ctx context.Context) {
 				time.Sleep(s.state.step.sleepDuration())
 				break
 			}
+			s.runErrorHandler(ctx, err)
 			if s.state.step.errPartial {
 				s.state.index++
 				s.state.step.PartialCompensate(s.state.Error, s.state.data)
@@ -263,7 +264,7 @@ func (s *Saga) doCompensate(ctx context.Context) {
 			time.Sleep(s.state.step.sleepDuration())
 			break
 		}
-
+		s.runErrorHandler(ctx, err)
 		s.state.step.Fail(s.state.Error)
 		s.state.updateStep()
 	}
