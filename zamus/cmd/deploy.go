@@ -104,7 +104,7 @@ var DeployCmd = &cobra.Command{
 				} else {
 					fmt.Println("Start", args[1], "step!")
 					for _, script := range step {
-						mg.Exec(script)
+						mg.ExecX(script).Run()
 					}
 				}
 			}
