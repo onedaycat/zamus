@@ -63,7 +63,8 @@ type testHandler struct {
 
 func (h *testHandler) StateDefinitions() *StateDefinitions {
 	return &StateDefinitions{
-		Name: "Test",
+		Name:                "Test",
+		ReturnFailedOnError: false,
 		Definitions: []*StateDefinition{
 			{
 				Name:              "s1",
@@ -260,6 +261,7 @@ func setupHandlerSuite() *handlerSuite {
 
 	h.defs = h.handle.StateDefinitions()
 	h.saga = New(h.handle, h.storage, &Config{})
+	h.saga.FastRetry()
 	h.ctx = context.Background()
 	h.saga.ErrorHandlers(PrintPanic)
 
@@ -328,5 +330,10 @@ func (h *handlerSuite) WithGetResumeError() *handlerSuite {
 
 func (h *handlerSuite) WithGetResumeParseError() *handlerSuite {
 	h.handle.parseError = true
+	return h
+}
+
+func (h *handlerSuite) WithReutnFailedOnError() *handlerSuite {
+	h.saga.state.defs.ReturnFailedOnError = true
 	return h
 }

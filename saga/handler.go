@@ -218,15 +218,15 @@ func (s *Saga) doHandler(ctx context.Context) {
 				time.Sleep(s.state.step.sleepDuration())
 				break
 			}
-			s.runErrorHandler(ctx, err)
 			if s.state.step.errPartial {
 				s.state.index++
-				s.state.step.PartialCompensate(s.state.Error, s.state.data)
+				s.state.step.PartialCompensate(s.state.step.StepError, s.state.data)
 				s.state.updateStep()
 			} else {
-				s.state.step.Compensate(s.state.Error, s.state.data)
+				s.state.step.Compensate(s.state.step.StepError, s.state.data)
 				s.state.updateStep()
 			}
+			s.runErrorHandler(ctx, s.state.step.StepError)
 			s.state.Compensate = true
 			s.state.backStep()
 		case PARTIAL_COMPENSATE:
@@ -264,9 +264,9 @@ func (s *Saga) doCompensate(ctx context.Context) {
 			time.Sleep(s.state.step.sleepDuration())
 			break
 		}
-		s.runErrorHandler(ctx, err)
-		s.state.step.Fail(s.state.Error)
+		s.state.step.Fail(s.state.step.StepError)
 		s.state.updateStep()
+		s.runErrorHandler(ctx, s.state.Error)
 	}
 
 	if s.state.Status == FAILED {
@@ -290,6 +290,9 @@ func (s *Saga) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 
 	if err := s.Handle(ctx, s.req); err != nil {
 		if s.state.Error != nil {
+			if s.state.defs.ReturnFailedOnError {
+				return nil, appErr.ToLambdaError(s.state.Error)
+			}
 			return []byte(s.state.ID), nil
 		}
 		return nil, appErr.ToLambdaError(err)

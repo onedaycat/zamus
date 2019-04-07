@@ -30,8 +30,9 @@ const (
 )
 
 type StateDefinitions struct {
-	Name        string
-	Definitions []*StateDefinition
+	Name                string
+	ReturnFailedOnError bool
+	Definitions         []*StateDefinition
 }
 
 func (s *StateDefinitions) GetState(name string) *StateDefinition {

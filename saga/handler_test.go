@@ -261,6 +261,77 @@ func Test_HandlerFail(t *testing.T) {
 	require.Equal(t, errors.DumbError, state.Error)
 }
 
+func Test_HandlerFailWithReturnResponse(t *testing.T) {
+	s := setupHandlerSuite().
+		WithS1Handler("next").
+		WithS2Handler("next").
+		WithS3Handler("fail").
+		WithReutnFailedOnError()
+
+	eid.FreezeID("state1")
+	now := time.Now().UTC()
+	clock.Freeze(now)
+
+	expState := &State{
+		ID:         "state1",
+		Name:       "Test",
+		Status:     FAILED,
+		Action:     END,
+		Input:      []byte(`{"id":1}`),
+		StartTime:  now.Unix(),
+		LastTime:   now.Unix(),
+		Compensate: false,
+		Data:       []byte(`{"id":4}`),
+		Error:      errors.DumbError,
+		Steps: []*Step{
+			{
+				Name:      "s1",
+				Status:    SUCCESS,
+				Action:    NEXT,
+				Retried:   0,
+				StepError: nil,
+			},
+			{
+				Name:      "s2",
+				Status:    SUCCESS,
+				Action:    NEXT,
+				Retried:   0,
+				StepError: nil,
+			},
+			{
+				Name:      "s3",
+				Status:    FAILED,
+				Action:    END,
+				Retried:   0,
+				StepError: errors.DumbError,
+			},
+		},
+	}
+
+	res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+	require.Equal(t, appErr.ToLambdaError(errors.DumbError), err)
+	require.Nil(t, res)
+	require.Equal(t, 1, s.handle.spy.Count("start"))
+	require.Equal(t, 1, s.handle.spy.Count("s1"))
+	require.Equal(t, 1, s.handle.spy.Count("s2"))
+	require.Equal(t, 1, s.handle.spy.Count("s3"))
+	require.Equal(t, 0, s.handle.spy.Count("s1comp"))
+	require.Equal(t, 0, s.handle.spy.Count("s2comp"))
+	require.Equal(t, 0, s.handle.spy.Count("s3comp"))
+
+	expStateJSON, _ := common.MarshalJSON(expState)
+	stateJSON, _ := common.MarshalJSON(s.saga.state)
+
+	require.Equal(t, string(expStateJSON), string(stateJSON))
+
+	state, err := s.storage.Get(s.ctx, s.saga.state.ID)
+	require.NoError(t, err)
+	require.Equal(t, `{"id":4}`, string(state.Data))
+	require.Equal(t, FAILED, state.Status)
+	require.Equal(t, END, state.Action)
+	require.Equal(t, errors.DumbError, state.Error)
+}
+
 func Test_StartStepNotFound(t *testing.T) {
 	s := setupHandlerSuite().
 		WithStartStep("s00")
