@@ -6,6 +6,8 @@ import (
 	"github.com/onedaycat/zamus/common"
 )
 
+const defaultReqID = "zamus"
+
 type SagaRequest struct {
 	Input  jsoniter.RawMessage `json:"input"`
 	Resume string              `json:"resume"`
@@ -48,6 +50,9 @@ type Request struct {
 func NewRequest(fn string) *Request {
 	return &Request{
 		Function: fn,
+		Identity: &Identity{
+			ID: defaultReqID,
+		},
 	}
 }
 
