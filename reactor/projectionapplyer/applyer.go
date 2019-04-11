@@ -40,11 +40,12 @@ type MultiDeleteModelRepo func(ctx context.Context, modelKeys ...*ModelKey) erro
 type NewProjectionModel func() ProjectionModel
 
 type ProjectionApplyer struct {
-	models      map[string]ProjectionModel
-	newModel    NewProjectionModel
-	getModel    GetModelRepo
-	saveModel   MultiSaveModelRepo
-	deleteModel MultiDeleteModelRepo
+	models          map[string]ProjectionModel
+	deleteModelKeys []*ModelKey
+	newModel        NewProjectionModel
+	getModel        GetModelRepo
+	saveModel       MultiSaveModelRepo
+	deleteModel     MultiDeleteModelRepo
 }
 
 func NewProjectionApplyer(newModel NewProjectionModel, getModel GetModelRepo, saveModel MultiSaveModelRepo, deleteModel MultiDeleteModelRepo) *ProjectionApplyer {
@@ -99,17 +100,25 @@ func (p *ProjectionApplyer) Save(ctx context.Context) errors.Error {
 		}
 	}
 
-	if len(p.models) == 0 {
-		return nil
+	if len(p.deleteModelKeys) > 0 {
+		if err := p.deleteModel(ctx, p.deleteModelKeys...); err != nil {
+			return err
+		}
 	}
 
-	return p.saveModel(ctx, p.models)
+	if len(p.models) > 0 {
+		if err := p.saveModel(ctx, p.models); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (p *ProjectionApplyer) Delete(ctx context.Context, modelKeys ...*ModelKey) errors.Error {
+func (p *ProjectionApplyer) Delete(ctx context.Context, modelKeys ...*ModelKey) {
 	for _, modelKey := range modelKeys {
 		delete(p.models, modelKey.ID)
 	}
 
-	return p.deleteModel(ctx, modelKeys...)
+	p.deleteModelKeys = append(p.deleteModelKeys, modelKeys...)
 }
