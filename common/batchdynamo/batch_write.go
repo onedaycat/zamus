@@ -17,8 +17,9 @@ func LargeBatchWrite(ctx context.Context, db *dynamodb.DynamoDB, tableName strin
 		curSize = i + size
 		if curSize > maxSize {
 			batchReqs = reqs[i:maxSize]
+		} else {
+			batchReqs = reqs[i:curSize]
 		}
-		batchReqs = reqs[i:curSize]
 
 		input := &dynamodb.BatchWriteItemInput{
 			RequestItems: map[string][]*dynamodb.WriteRequest{
