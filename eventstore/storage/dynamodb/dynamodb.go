@@ -255,65 +255,6 @@ func (d *DynamoDBEventStore) GetSnapshot(ctx context.Context, aggID string, vers
 	return snapshot, nil
 }
 
-// func (d *DynamoDBEventStore) SaveV1(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
-// 	var err error
-
-// 	var putES []*dynamodb.TransactWriteItem
-// 	var payloadReq map[string]*dynamodb.AttributeValue
-
-// 	if snapshot != nil {
-// 		var snapshotReq map[string]*dynamodb.AttributeValue
-// 		snapshotReq, err = dynamodbattribute.MarshalMap(snapshot)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		putES = make([]*dynamodb.TransactWriteItem, 0, len(msgs)+1)
-// 		putES = append(putES, &dynamodb.TransactWriteItem{
-// 			Put: &dynamodb.Put{
-// 				TableName: &d.snapshotTable,
-// 				// ConditionExpression: saveSnapCond,
-// 				// ExpressionAttributeValues: map[string]*dynamodb.AttributeValue{
-// 				// 	seqKV: &dynamodb.AttributeValue{N: ptr.String(strconv.FormatInt(snapshot.TimeSeq, 10))},
-// 				// },
-// 				Item: snapshotReq,
-// 			},
-// 		})
-// 	} else {
-// 		putES = make([]*dynamodb.TransactWriteItem, 0, len(msgs))
-// 	}
-
-// 	for i := 0; i < len(msgs); i++ {
-// 		payloadReq, err = dynamodbattribute.MarshalMap(msgs[i])
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		putES = append(putES, &dynamodb.TransactWriteItem{
-// 			Put: &dynamodb.Put{
-// 				TableName:           &d.eventstoreTable,
-// 				ConditionExpression: saveCond,
-// 				Item:                payloadReq,
-// 			},
-// 		})
-// 	}
-
-// 	_, err = d.db.TransactWriteItemsWithContext(ctx, &dynamodb.TransactWriteItemsInput{
-// 		TransactItems: putES,
-// 	})
-
-// 	if err != nil {
-// 		aerr := err.(awserr.Error)
-// 		if aerr.Code() == dynamodb.ErrCodeTransactionCanceledException {
-// 			return errors.ErrVersionInconsistency.WithCaller()
-// 		}
-
-// 		return errors.Warp(err).WithCaller()
-// 	}
-
-// 	return nil
-// }
-
 func (d *DynamoDBEventStore) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
 	if err := d.saveEvents(ctx, msgs); err != nil {
 		return err
