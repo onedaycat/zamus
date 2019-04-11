@@ -35,39 +35,43 @@ func NewModelKey(hashKey string, rangeKey ...string) *ModelKey {
 }
 
 type GetModelRepo func(ctx context.Context, modelKey *ModelKey) (ProjectionModel, errors.Error)
-type MultiSaveModelRepo func(ctx context.Context, models map[string]ProjectionModel) errors.Error
-type MultiDeleteModelRepo func(ctx context.Context, modelKeys ...*ModelKey) errors.Error
+type MultiSaveModelRepo func(ctx context.Context, models []ProjectionModel) errors.Error
+type MultiDeleteModelRepo func(ctx context.Context, modelKeys []*ModelKey) errors.Error
 type NewProjectionModel func() ProjectionModel
 
 type ProjectionApplyer struct {
-	models          map[string]ProjectionModel
-	deleteModelKeys []*ModelKey
-	newModel        NewProjectionModel
-	getModel        GetModelRepo
-	saveModel       MultiSaveModelRepo
-	deleteModel     MultiDeleteModelRepo
+	models              []ProjectionModel
+	deleteModelKeys     []*ModelKey
+	modelIndex          map[string]int
+	deleteModelKeyIndex map[string]int
+	newModel            NewProjectionModel
+	getModel            GetModelRepo
+	saveModel           MultiSaveModelRepo
+	deleteModel         MultiDeleteModelRepo
 }
 
 func NewProjectionApplyer(newModel NewProjectionModel, getModel GetModelRepo, saveModel MultiSaveModelRepo, deleteModel MultiDeleteModelRepo) *ProjectionApplyer {
-	return &ProjectionApplyer{
+	p := &ProjectionApplyer{
 		newModel:    newModel,
 		getModel:    getModel,
 		saveModel:   saveModel,
 		deleteModel: deleteModel,
 	}
+	p.Clear()
+
+	return p
 }
 
 func (p *ProjectionApplyer) Clear() {
-	p.models = make(map[string]ProjectionModel, 100)
+	p.modelIndex = make(map[string]int, 100)
+	p.models = make([]ProjectionModel, 0, 100)
+	p.deleteModelKeys = make([]*ModelKey, 0, 100)
+	p.deleteModelKeyIndex = make(map[string]int, 100)
 }
 
 func (p *ProjectionApplyer) GetModel(ctx context.Context, modelKey *ModelKey) (ProjectionModel, errors.Error) {
-	if p.models == nil {
-		p.models = make(map[string]ProjectionModel, 100)
-	}
-
-	if mdl, ok := p.models[modelKey.ID]; ok {
-		return mdl, nil
+	if i, ok := p.modelIndex[modelKey.ID]; ok {
+		return p.models[i], nil
 	}
 
 	mdl, err := p.getModel(ctx, modelKey)
@@ -79,7 +83,8 @@ func (p *ProjectionApplyer) GetModel(ctx context.Context, modelKey *ModelKey) (P
 		mdl = p.newModel()
 	}
 
-	p.models[modelKey.ID] = mdl
+	p.models = append(p.models, mdl)
+	p.modelIndex[modelKey.ID] = len(p.models) - 1
 
 	return mdl, nil
 }
@@ -94,14 +99,21 @@ func (p *ProjectionApplyer) ApplyModel(ctx context.Context, modelKey *ModelKey, 
 }
 
 func (p *ProjectionApplyer) Save(ctx context.Context) errors.Error {
-	for key, mdl := range p.models {
+	defer p.Clear()
+	var mdl ProjectionModel
+	for _, i := range p.modelIndex {
+		mdl = p.models[i]
 		if !mdl.IsUpdate() || mdl.IsNew() {
-			delete(p.models, key)
+			if len(p.models) == 1 {
+				p.models = nil
+			} else {
+				p.models = append(p.models[:i], p.models[i+1:]...)
+			}
 		}
 	}
 
 	if len(p.deleteModelKeys) > 0 {
-		if err := p.deleteModel(ctx, p.deleteModelKeys...); err != nil {
+		if err := p.deleteModel(ctx, p.deleteModelKeys); err != nil {
 			return err
 		}
 	}
@@ -117,7 +129,22 @@ func (p *ProjectionApplyer) Save(ctx context.Context) errors.Error {
 
 func (p *ProjectionApplyer) Delete(ctx context.Context, modelKeys ...*ModelKey) {
 	for _, modelKey := range modelKeys {
-		delete(p.models, modelKey.ID)
+		i, ok := p.modelIndex[modelKey.ID]
+		if ok {
+			if len(p.models) == 1 {
+				p.models = nil
+			} else {
+				p.models = append(p.models[:i], p.models[i+1:]...)
+			}
+
+			delete(p.modelIndex, modelKey.ID)
+		}
+
+		_, ok = p.deleteModelKeyIndex[modelKey.ID]
+		if !ok {
+			p.deleteModelKeys = append(p.deleteModelKeys, modelKey)
+			p.deleteModelKeyIndex[modelKey.ID] = len(p.deleteModelKeys) - 1
+		}
 	}
 
 	p.deleteModelKeys = append(p.deleteModelKeys, modelKeys...)
