@@ -39,7 +39,16 @@ type MultiSaveModelRepo func(ctx context.Context, models []ProjectionModel) erro
 type MultiDeleteModelRepo func(ctx context.Context, modelKeys []*ModelKey) errors.Error
 type NewProjectionModel func() ProjectionModel
 
-type ProjectionApplyer struct {
+//go:generate mockery -name=ProjectionApplyer
+type ProjectionApplyer interface {
+	GetModel(ctx context.Context, modelKey *ModelKey) (ProjectionModel, errors.Error)
+	ApplyModel(ctx context.Context, modelKey *ModelKey, evt interface{}, msg *reactor.EventMsg) errors.Error
+	Save(ctx context.Context) errors.Error
+	Delete(ctx context.Context, modelKeys ...*ModelKey)
+	Clear()
+}
+
+type projectionApplyer struct {
 	models              []ProjectionModel
 	deleteModelKeys     []*ModelKey
 	modelIndex          map[string]int
@@ -50,8 +59,8 @@ type ProjectionApplyer struct {
 	deleteModel         MultiDeleteModelRepo
 }
 
-func NewProjectionApplyer(newModel NewProjectionModel, getModel GetModelRepo, saveModel MultiSaveModelRepo, deleteModel MultiDeleteModelRepo) *ProjectionApplyer {
-	p := &ProjectionApplyer{
+func NewProjectionApplyer(newModel NewProjectionModel, getModel GetModelRepo, saveModel MultiSaveModelRepo, deleteModel MultiDeleteModelRepo) *projectionApplyer {
+	p := &projectionApplyer{
 		newModel:    newModel,
 		getModel:    getModel,
 		saveModel:   saveModel,
@@ -62,14 +71,14 @@ func NewProjectionApplyer(newModel NewProjectionModel, getModel GetModelRepo, sa
 	return p
 }
 
-func (p *ProjectionApplyer) Clear() {
+func (p *projectionApplyer) Clear() {
 	p.modelIndex = make(map[string]int, 100)
 	p.models = make([]ProjectionModel, 0, 100)
 	p.deleteModelKeys = make([]*ModelKey, 0, 100)
 	p.deleteModelKeyIndex = make(map[string]int, 100)
 }
 
-func (p *ProjectionApplyer) GetModel(ctx context.Context, modelKey *ModelKey) (ProjectionModel, errors.Error) {
+func (p *projectionApplyer) GetModel(ctx context.Context, modelKey *ModelKey) (ProjectionModel, errors.Error) {
 	if i, ok := p.modelIndex[modelKey.ID]; ok {
 		return p.models[i], nil
 	}
@@ -89,7 +98,7 @@ func (p *ProjectionApplyer) GetModel(ctx context.Context, modelKey *ModelKey) (P
 	return mdl, nil
 }
 
-func (p *ProjectionApplyer) ApplyModel(ctx context.Context, modelKey *ModelKey, evt interface{}, msg *reactor.EventMsg) errors.Error {
+func (p *projectionApplyer) ApplyModel(ctx context.Context, modelKey *ModelKey, evt interface{}, msg *reactor.EventMsg) errors.Error {
 	mdl, err := p.GetModel(ctx, modelKey)
 	if err != nil {
 		return err
@@ -98,7 +107,7 @@ func (p *ProjectionApplyer) ApplyModel(ctx context.Context, modelKey *ModelKey, 
 	return mdl.Apply(evt, msg)
 }
 
-func (p *ProjectionApplyer) Save(ctx context.Context) errors.Error {
+func (p *projectionApplyer) Save(ctx context.Context) errors.Error {
 	defer p.Clear()
 	var mdl ProjectionModel
 	for _, i := range p.modelIndex {
@@ -127,7 +136,7 @@ func (p *ProjectionApplyer) Save(ctx context.Context) errors.Error {
 	return nil
 }
 
-func (p *ProjectionApplyer) Delete(ctx context.Context, modelKeys ...*ModelKey) {
+func (p *projectionApplyer) Delete(ctx context.Context, modelKeys ...*ModelKey) {
 	for _, modelKey := range modelKeys {
 		i, ok := p.modelIndex[modelKey.ID]
 		if ok {
