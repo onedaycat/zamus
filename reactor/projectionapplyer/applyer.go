@@ -146,6 +146,4 @@ func (p *ProjectionApplyer) Delete(ctx context.Context, modelKeys ...*ModelKey) 
 			p.deleteModelKeyIndex[modelKey.ID] = len(p.deleteModelKeys) - 1
 		}
 	}
-
-	p.deleteModelKeys = append(p.deleteModelKeys, modelKeys...)
 }
