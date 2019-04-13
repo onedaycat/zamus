@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:f7f76275e925a8f180804f8deabe8f5b00378cef2a39c9253398651325da041c"
+  digest = "1:b55047bf597bbca5b70de16eb404f217d40363ceef5dbf7463f3574c2a1ffae8"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,12 +69,12 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "d56356f29f4878db5a31b68eb8bb8c5383f6ff48"
-  version = "v1.19.6"
+  revision = "56c1def75689cceec1fa6f14c2eedb4b798827f9"
+  version = "v1.19.11"
 
 [[projects]]
   branch = "master"
-  digest = "1:e8e61486d03680c6600c1bcb6b3ffc636a28ae9cddf79c62fb028220e52031dc"
+  digest = "1:4e0cc6cef246306fd8522f5246c747554fd469a004870653c926cd6afd1abe8a"
   name = "github.com/aws/aws-xray-sdk-go"
   packages = [
     "daemoncfg",
@@ -91,7 +91,7 @@
     "xraylog",
   ]
   pruneopts = "UT"
-  revision = "9b8771288cfbc9030b6a45524f32a95a9789dcb9"
+  revision = "5ffa743a8b8db87a9d4449c2f63fe95a4a53a8c5"
 
 [[projects]]
   digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
@@ -119,19 +119,19 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:11db62c51002559c0c790c826a4e399509a6d45050432ea14e6e904cb3a84be6"
+  digest = "1:d61d6991d29911d0e0510d1cce8ad4f19768d8575a6ea38912b149e2bcacc7b8"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "04157b81cbfb30cf2092836041063857d8ce9b96"
+  revision = "5c2ecc32517a6e2acf39ae7f34ad3bcc2f784bd6"
 
 [[projects]]
   branch = "master"
-  digest = "1:9cb195385d5243afb8c80ef6e859eb0647a8ba9cdeb86b95e15e72820126eea9"
+  digest = "1:3cd198f410870eeee5cef66e1d84b93a6c5b39b809c4f7fd4136a6d09e1a69cc"
   name = "github.com/go-sql-driver/mysql"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c0f6b444ad8f92ecd68f86b27635c1fccdede4c4"
+  revision = "578c4c8066964679ef44f45de2b6c7e811cc665e"
 
 [[projects]]
   branch = "master"
@@ -139,7 +139,7 @@
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "d3c38a4eb4970272b87a425ae00ccc4548e2f9bb"
+  revision = "e91709a02e0e8ff8b86b7aa913fdc9ae9498e825"
 
 [[projects]]
   branch = "master"
@@ -209,7 +209,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6aaddc0a7e79c040fa2c2ee6d2cf2a8ba93f0eb290fbf64db5d54fb6d3d09c5f"
+  digest = "1:007c9b6682c9180cc8a50f2877969e65707d1b471609183e9bbd5abe4ab04aa4"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -217,7 +217,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "f3f41acb018ae834d729d595c4cb559c226f72b2"
+  revision = "6bb4b9633b09edbf13f7e54d93d5b3242a4213f7"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -253,11 +253,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:fceef0054469ed5de3243649d5d2fc92f485e13143e96a5503895802ec429c9f"
+  digest = "1:bf174be350a324ac1cb89f2e03356c839577b995aade188f626f349026f99765"
   name = "github.com/rs/xid"
   packages = ["."]
   pruneopts = "UT"
-  revision = "cc5ec5782ac92773c5cc967b35ac567c2ac73e53"
+  revision = "78d421732aa0c47126aa7fee4a4111707e17d355"
 
 [[projects]]
   branch = "master"
@@ -325,15 +325,15 @@
   name = "golang.org/x/sync"
   packages = ["errgroup"]
   pruneopts = "UT"
-  revision = "e225da77a7e68af35c70ccbf71af2b83e6acac3c"
+  revision = "56d357773e8497dfd526f0727e187720d1093757"
 
 [[projects]]
   branch = "master"
-  digest = "1:c9a4e761695039425d21448d3289ff280c3a98f0c8145fa7417d9889556006b7"
+  digest = "1:3e01c69b34e7c3fa4b7a118ca95a6beaecea00f7f4fb701545d83eacd3badb3c"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "9eb1bfa1ce65ae8a6ff3114b0aaf9a41a6cf3560"
+  revision = "97732733099d6a942a73b889770774366de963ed"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
