@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/onedaycat/errors"
+
 	"github.com/onedaycat/zamus/eventstore"
 	"github.com/onedaycat/zamus/reactor"
 )

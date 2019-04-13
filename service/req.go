@@ -14,8 +14,8 @@ const (
 )
 
 type Request struct {
-	Function   string              `json:"function"`
-	Args       jsoniter.RawMessage `json:"arguments,omitempty"`
+	Method     string              `json:"method"`
+	Input      jsoniter.RawMessage `json:"arguments,omitempty"`
 	Identity   *Identity           `json:"identity,omitempty"`
 	Warmer     bool                `json:"warmer,omitempty"`
 	Concurency int                 `json:"concurency,omitempty"`
@@ -24,7 +24,7 @@ type Request struct {
 
 func NewRequest(fn string) *Request {
 	return &Request{
-		Function: fn,
+		Method: fn,
 	}
 }
 
@@ -43,22 +43,22 @@ func (e *Request) WithPermission(key, val string) *Request {
 	return e
 }
 
-func (e *Request) WithArgs(args interface{}) *Request {
+func (e *Request) WithInput(input interface{}) *Request {
 	var err error
-	e.Args, err = common.MarshalJSON(args)
+	e.Input, err = common.MarshalJSON(input)
 	if err != nil {
-		panic(appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(args))
+		panic(appErr.ErrUnableUnmarshal.WithCause(err).WithCaller().WithInput(input))
 	}
 
 	return e
 }
 
-func (e *Request) ParseArgs(v interface{}) errors.Error {
-	if len(e.Args) == 0 {
+func (e *Request) ParseInput(v interface{}) errors.Error {
+	if len(e.Input) == 0 {
 		return nil
 	}
 
-	if err := common.UnmarshalJSON(e.Args, v); err != nil {
+	if err := common.UnmarshalJSON(e.Input, v); err != nil {
 		return err
 	}
 
@@ -70,8 +70,8 @@ func (e *Request) MarshalRequest() ([]byte, errors.Error) {
 }
 
 func (e *Request) Clear() {
-	e.Function = emptyStr
-	e.Args = nil
+	e.Method = emptyStr
+	e.Input = nil
 	e.Identity = nil
 	e.Warmer = false
 	e.Concurency = 0
@@ -84,9 +84,9 @@ func NewRequests(size int) Requests {
 	return make(Requests, 0, size)
 }
 
-func (r Requests) Add(fn string, id *Identity, argsList ...interface{}) Requests {
-	for _, args := range argsList {
-		r = append(r, NewRequest(fn).WithArgs(args).WithIdentity(id))
+func (r Requests) Add(fn string, id *Identity, inputs ...interface{}) Requests {
+	for _, input := range inputs {
+		r = append(r, NewRequest(fn).WithInput(input).WithIdentity(id))
 	}
 
 	return r

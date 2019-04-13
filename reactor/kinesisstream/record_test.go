@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/onedaycat/zamus/common"
 	"github.com/onedaycat/zamus/eventstore"
-	"github.com/stretchr/testify/require"
 )
 
 //320

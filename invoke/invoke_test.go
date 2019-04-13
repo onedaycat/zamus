@@ -33,7 +33,7 @@ func TestInvoke(t *testing.T) {
 		in := invoke.NewInvoke(ld)
 
 		result := map[string]interface{}{}
-		req := invoke.NewRequest("m1").WithArgs(args).WithIdentity(&invoke.Identity{}).WithPermission("hello", "read")
+		req := invoke.NewRequest("m1").WithInput(args).WithIdentity(&invoke.Identity{}).WithPermission("hello", "read")
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -57,7 +57,7 @@ func TestInvoke(t *testing.T) {
 		in := invoke.NewInvoke(ld)
 
 		var result string
-		req := invoke.NewRequest("m1").WithArgs(args).WithIdentity(&invoke.Identity{}).WithPermission("hello", "read")
+		req := invoke.NewRequest("m1").WithInput(args).WithIdentity(&invoke.Identity{}).WithPermission("hello", "read")
 		reqByte, _ := req.MarshalRequest()
 		mockResultStringByte := []byte(`"123"`)
 		expResultString := "123"
@@ -83,8 +83,8 @@ func TestInvoke(t *testing.T) {
 		in := invoke.NewInvoke(ld)
 
 		result := map[string]interface{}{}
-		// builder := random.InvokeReq("m1").Args(args)
-		req := invoke.NewRequest("m1").WithArgs(args).WithPermission("hello", "read")
+		// builder := random.InvokeReq("m1").Input(args)
+		req := invoke.NewRequest("m1").WithInput(args).WithPermission("hello", "read")
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -107,7 +107,7 @@ func TestInvoke(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		builder := random.InvokeReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Input(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -131,7 +131,7 @@ func TestInvoke(t *testing.T) {
 		in := invoke.NewInvoke(ld)
 
 		result := map[string]interface{}{}
-		builder := random.InvokeReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Input(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -156,7 +156,7 @@ func TestInvoke(t *testing.T) {
 		in := invoke.NewInvoke(ld)
 
 		result := map[string]interface{}{}
-		builder := random.InvokeReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Input(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -186,7 +186,7 @@ func TestInvokeAsync(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		builder := random.InvokeReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Input(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 
@@ -205,7 +205,7 @@ func TestInvokeAsync(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		builder := random.InvokeReq("m1").Args(args)
+		builder := random.InvokeReq("m1").Input(args)
 		req := builder.Build()
 		reqByte := builder.BuildJSON()
 

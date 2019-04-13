@@ -40,17 +40,17 @@ func (e *SagaRequest) MarshalRequest() ([]byte, errors.Error) {
 }
 
 type Request struct {
-	Function   string      `json:"function"`
-	Args       interface{} `json:"arguments,omitempty"`
+	Method     string      `json:"method"`
+	Input      interface{} `json:"input,omitempty"`
 	Identity   *Identity   `json:"identity,omitempty"`
 	Warmer     bool        `json:"warmer,omitempty"`
 	Concurency int         `json:"concurency,omitempty"`
 	index      int
 }
 
-func NewRequest(fn string) *Request {
+func NewRequest(method string) *Request {
 	return &Request{
-		Function: fn,
+		Method: method,
 		Identity: &Identity{
 			ID: defaultReqID,
 		},
@@ -79,8 +79,8 @@ func (e *Request) WithPermission(key, val string) *Request {
 	return e
 }
 
-func (e *Request) WithArgs(args interface{}) *Request {
-	e.Args = args
+func (e *Request) WithInput(input interface{}) *Request {
+	e.Input = input
 
 	return e
 }
@@ -95,9 +95,9 @@ func NewRequests(size int) Requests {
 	return make(Requests, 0, size)
 }
 
-func (r Requests) Add(fn string, id *Identity, argsList ...interface{}) Requests {
-	for _, args := range argsList {
-		r = append(r, NewRequest(fn).WithArgs(args).WithIdentity(id))
+func (r Requests) Add(method string, id *Identity, inputs ...interface{}) Requests {
+	for _, input := range inputs {
+		r = append(r, NewRequest(method).WithInput(input).WithIdentity(id))
 	}
 
 	return r

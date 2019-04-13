@@ -6,8 +6,9 @@ import (
 
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/tracer"
 	"github.com/rs/zerolog/log"
+
+	"github.com/onedaycat/zamus/tracer"
 )
 
 func TraceError(ctx context.Context, msgs EventMsgs, err errors.Error) {

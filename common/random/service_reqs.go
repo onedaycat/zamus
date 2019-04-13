@@ -21,9 +21,9 @@ func (b *serviceReqsBuilder) Build() []*service.Request {
 	return b.reqs
 }
 
-func (b *serviceReqsBuilder) Add(fn string, args ...interface{}) *serviceReqsBuilder {
-	for _, arg := range args {
-		b.reqs = append(b.reqs, ServiceReq(fn).Args(arg).Build())
+func (b *serviceReqsBuilder) Add(method string, inputs ...interface{}) *serviceReqsBuilder {
+	for _, input := range inputs {
+		b.reqs = append(b.reqs, ServiceReq(method).Input(input).Build())
 	}
 
 	return b

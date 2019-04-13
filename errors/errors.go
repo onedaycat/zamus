@@ -41,11 +41,11 @@ const (
 	ErrUnauthorizedCode     = "Unauthorized"
 	ErrUnavailableCode      = "Unavailable"
 	ErrNotImplementCode     = "NotImplement"
-	ErrUnableUnmarshalCode  = "ErrUnableUnmarshal"
-	ErrUnableMarshalCode    = "ErrUnableMarshal"
-	ErrUnableEncodeCode     = "ErrUnableEncode"
-	ErrUnableDecodeCode     = "ErrUnableDecode"
-	ErrUnableApplyEventCode = "ErrUnableApplyEvent"
+	ErrUnableUnmarshalCode  = "UnableUnmarshal"
+	ErrUnableMarshalCode    = "UnableMarshal"
+	ErrUnableEncodeCode     = "UnableEncode"
+	ErrUnableDecodeCode     = "UnableDecode"
+	ErrUnableApplyEventCode = "UnableApplyEvent"
 )
 
 var (

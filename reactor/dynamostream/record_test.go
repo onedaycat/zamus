@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/golang/snappy"
+
 	"github.com/onedaycat/zamus/common"
 
 	"github.com/stretchr/testify/require"

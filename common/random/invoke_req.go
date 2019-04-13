@@ -11,13 +11,13 @@ type invokeReqBuilder struct {
 	req *invoke.Request
 }
 
-func InvokeReq(fn string) *invokeReqBuilder {
+func InvokeReq(method string) *invokeReqBuilder {
 	username := random.Noun()
 	email := random.Email()
 	ip := random.IpV4Address()
 	return &invokeReqBuilder{
 		req: &invoke.Request{
-			Function: fn,
+			Method: method,
 			Identity: &invoke.Identity{
 				ID:     username,
 				Email:  email,
@@ -29,8 +29,8 @@ func InvokeReq(fn string) *invokeReqBuilder {
 	}
 }
 
-func (b *invokeReqBuilder) Args(v interface{}) *invokeReqBuilder {
-	b.req.WithArgs(v)
+func (b *invokeReqBuilder) Input(v interface{}) *invokeReqBuilder {
+	b.req.WithInput(v)
 
 	return b
 }

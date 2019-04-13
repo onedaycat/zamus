@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	appErr "github.com/onedaycat/zamus/errors"
 )
 
 func TestShardHandler(t *testing.T) {

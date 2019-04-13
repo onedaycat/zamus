@@ -11,6 +11,7 @@ import (
 	ldService "github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/errors/sentry"
+
 	"github.com/onedaycat/zamus/common"
 	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/tracer"
@@ -265,9 +266,9 @@ func (h *ServiceHandler) Handle(ctx context.Context, req *Request) (interface{},
 
 	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 
-	info, ok := h.handlers[req.Function]
+	info, ok := h.handlers[req.Method]
 	if !ok {
-		return nil, appErr.ErrFunctionNotFound(req.Function)
+		return nil, appErr.ErrFunctionNotFound(req.Method)
 	}
 
 	return h.runHandler(info, zmctx, req)
@@ -337,26 +338,26 @@ func (q *handlerinfo) mergeReq(req *Request) []int {
 	reqIndex := make([]int, 0, len(q.reqs))
 
 	for i := 0; i < len(q.reqs); i++ {
-		if len(q.reqs[i].Args) == 0 {
+		if len(q.reqs[i].Input) == 0 {
 			continue
 		}
 
 		if !first {
 			b.WriteByte(44)
 		}
-		b.Write(q.reqs[i].Args)
+		b.Write(q.reqs[i].Input)
 		first = false
 		n = n + 1
 		reqIndex = append(reqIndex, q.reqs[i].index)
 	}
 	b.WriteByte(93)
 
-	req.Function = q.reqs[0].Function
-	req.Args = b.Bytes()
+	req.Method = q.reqs[0].Method
+	req.Input = b.Bytes()
 	req.Identity = q.reqs[0].Identity
 
-	if len(req.Args) == 2 {
-		req.Args = nil
+	if len(req.Input) == 2 {
+		req.Input = nil
 	}
 
 	return reqIndex

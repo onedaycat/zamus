@@ -17,7 +17,7 @@ func ServiceReq(fn string) *reqBuilder {
 	ip := random.IpV4Address()
 	return &reqBuilder{
 		req: &service.Request{
-			Function: fn,
+			Method: fn,
 			Identity: &service.Identity{
 				ID:     username,
 				Email:  email,
@@ -29,8 +29,8 @@ func ServiceReq(fn string) *reqBuilder {
 	}
 }
 
-func (b *reqBuilder) Args(v interface{}) *reqBuilder {
-	b.req.WithArgs(v)
+func (b *reqBuilder) Input(v interface{}) *reqBuilder {
+	b.req.WithInput(v)
 
 	return b
 }

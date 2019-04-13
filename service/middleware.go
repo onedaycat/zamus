@@ -42,6 +42,6 @@ func Sentry(ctx context.Context, req *Request, err errors.Error) {
 	}
 
 	packet.AddError(err)
-	packet.AddTag("function", req.Function)
+	packet.AddTag("function", req.Method)
 	sentry.CaptureAndWait(packet)
 }

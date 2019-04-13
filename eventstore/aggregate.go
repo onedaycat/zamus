@@ -136,4 +136,3 @@ func (a *AggregateBase) HasEvent(eventType string) bool {
 
 	return false
 }
-

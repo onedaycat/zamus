@@ -34,13 +34,13 @@ func (h *ServiceHandler) BatchHandle(ctx context.Context, reqs []*Request) Batch
 	}
 
 	for i, req := range reqs {
-		_, ok := h.handlers[req.Function]
+		_, ok := h.handlers[req.Method]
 		if !ok {
-			h.req.batchResult[i].Error = appErr.ErrFunctionNotFound(req.Function).(*errors.AppError)
+			h.req.batchResult[i].Error = appErr.ErrFunctionNotFound(req.Method).(*errors.AppError)
 			continue
 		}
 
-		h.handlers[req.Function].reqs = append(h.handlers[req.Function].reqs, req)
+		h.handlers[req.Method].reqs = append(h.handlers[req.Method].reqs, req)
 	}
 
 	for _, handler := range h.handlers {

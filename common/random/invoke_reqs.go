@@ -21,9 +21,9 @@ func (b *invokeReqsBuilder) Build() []*invoke.Request {
 	return b.reqs
 }
 
-func (b *invokeReqsBuilder) Add(fn string, args ...interface{}) *invokeReqsBuilder {
-	for _, arg := range args {
-		b.reqs = append(b.reqs, InvokeReq(fn).Args(arg).Build())
+func (b *invokeReqsBuilder) Add(fn string, inputs ...interface{}) *invokeReqsBuilder {
+	for _, input := range inputs {
+		b.reqs = append(b.reqs, InvokeReq(fn).Input(input).Build())
 	}
 
 	return b

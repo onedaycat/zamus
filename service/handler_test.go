@@ -64,7 +64,7 @@ func (s *HandlerSuite) WithHandlerCheckReq(t *testing.T, name string) *HandlerSu
 	s.h.RegisterHandler(name, func(ctx context.Context, req *service.Request) (interface{}, errors.Error) {
 		s.spy.Called(name)
 		getargs := make(map[string]interface{})
-		err := req.ParseArgs(&getargs)
+		err := req.ParseInput(&getargs)
 		require.NoError(t, err)
 
 		return req, nil
@@ -134,7 +134,7 @@ func (s *HandlerSuite) WithMergeHandler(name string, mode int) *HandlerSuite {
 		}
 
 		args := BatchArgsList{}
-		if err := req.ParseArgs(&args); err != nil {
+		if err := req.ParseInput(&args); err != nil {
 			return err
 		}
 
@@ -162,7 +162,7 @@ func (s *HandlerSuite) WithBatchHandler(name string, mode int) *HandlerSuite {
 		}
 
 		args := &BatchArgs{}
-		if err := req.ParseArgs(args); err != nil {
+		if err := req.ParseInput(args); err != nil {
 			return nil, err
 		}
 
@@ -210,6 +210,7 @@ func (s *HandlerSuite) WithPostHandler(name string, mode int, result interface{}
 	return s
 }
 
+//noinspection GoNilness,GoNilness,GoNilness,GoNilness
 func TestHandler(t *testing.T) {
 	s := setupHandlerSuite()
 	req := random.ServiceReq("f1").Build()
@@ -271,7 +272,7 @@ func TestHandler(t *testing.T) {
 	t.Run("NotFound", func(t *testing.T) {
 		s.WithHandler("f1", MODE_NORMAL, s.result)
 
-		req.Function = "f2"
+		req.Method = "f2"
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
@@ -297,6 +298,7 @@ func TestWarmer(t *testing.T) {
 	require.Equal(t, 0, s.spy.Count("err"))
 }
 
+//noinspection GoNilness,GoNilness
 func TestInPreHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		s := setupHandlerSuite()
@@ -335,6 +337,7 @@ func TestInPreHandler(t *testing.T) {
 		res := make(map[string]interface{})
 		err := s.h.Run(context.Background(), req, &res)
 
+		//noinspection GoNilness
 		require.Equal(t, appErr.ToLambdaError(appErr.ErrInternalError).Error(), err.Error())
 		require.Len(t, res, 0)
 		require.Equal(t, 0, s.spy.Count("f1"))
@@ -359,6 +362,7 @@ func TestInPreHandler(t *testing.T) {
 	})
 }
 
+//noinspection GoNilness,GoNilness
 func TestPreHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		s := setupHandlerSuite()
@@ -429,6 +433,7 @@ func TestPreHandler(t *testing.T) {
 	})
 }
 
+//noinspection GoNilness,GoNilness
 func TestPostHandler(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		s := setupHandlerSuite()
@@ -502,9 +507,9 @@ func TestPostHandler(t *testing.T) {
 func TestArgsHandler(t *testing.T) {
 	s := setupHandlerSuite()
 
-	req1 := &service.Request{Function: "f1", Args: []byte(`{"email": "test@test.com"}`)}
-	req2 := &service.Request{Function: "f1"}
-	req3 := &service.Request{Function: "f1"}
+	req1 := &service.Request{Method: "f1", Input: []byte(`{"email": "test@test.com"}`)}
+	req2 := &service.Request{Method: "f1"}
+	req3 := &service.Request{Method: "f1"}
 
 	reqByte1, _ := req1.MarshalRequest()
 	reqByte2, _ := req2.MarshalRequest()
