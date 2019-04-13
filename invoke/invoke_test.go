@@ -230,15 +230,19 @@ func TestBatchInvoke(t *testing.T) {
 		{"id": "3"},
 	}
 	mockResults := invoke.BatchResults{
-		{Data: map[string]interface{}{"id": "1"}},
-		{Data: map[string]interface{}{"id": "2"}},
-		{Data: map[string]interface{}{"id": "3"}},
+		{Data: []byte(`{"id":"1"}`)},
+		{Data: []byte(`{"id":"2"}`)},
+		{Data: []byte(`{"id":"3"}`)},
 	}
 
 	mockResultsWithError := invoke.BatchResults{
-		{Data: map[string]interface{}{"id": "1"}},
+		{Data: []byte(`{"id":"1"}`)},
 		{Error: appErr.ErrNotImplement},
-		{Data: map[string]interface{}{"id": "3"}},
+		{Data: []byte(`{"id":"3"}`)},
+	}
+
+	type ResultData struct {
+		ID string
 	}
 
 	mockResultsByte, _ := common.MarshalJSON(mockResults)
@@ -268,6 +272,13 @@ func TestBatchInvoke(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, mockResults, results)
 		ld.AssertExpectations(t)
+
+		data := &ResultData{}
+		err = mockResults[0].UnmarshalData(data)
+		require.NoError(t, err)
+		require.Equal(t, &ResultData{
+			ID: "1",
+		}, data)
 	})
 
 	t.Run("Success But No Data", func(t *testing.T) {

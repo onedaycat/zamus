@@ -4,6 +4,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/common"
+	appErr "github.com/onedaycat/zamus/errors"
 )
 
 const defaultReqID = "zamus"
@@ -105,8 +106,16 @@ func (r Requests) Add(fn string, id *Identity, argsList ...interface{}) Requests
 type BatchResults []*BatchResult
 
 type BatchResult struct {
-	Error *errors.AppError `json:"error,omitempty"`
-	Data  interface{}      `json:"data,omitempty"`
+	Error *errors.AppError    `json:"error,omitempty"`
+	Data  jsoniter.RawMessage `json:"data,omitempty"`
+}
+
+func (r *BatchResult) UnmarshalData(v interface{}) errors.Error {
+	if r.Data != nil {
+		return common.UnmarshalJSON(r.Data, v)
+	}
+
+	return appErr.ErrUnableUnmarshal.WithCaller()
 }
 
 type Identity struct {
