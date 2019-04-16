@@ -209,7 +209,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:4ac696e3c344cf3ef14e6045779538b9c3e6d9d2fcb21980dc84eb3c82fc5105"
+  digest = "1:ffac73a1da6f90db776dc7266e2fa04046358607634b825ee7b627dcfa7b0c31"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -217,7 +217,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "a54cf0d5a9326276c140d7685e9ce7bf6074b365"
+  revision = "12e4d1b3292e8e19499a117d6562a8321bea0f41"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -329,11 +329,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3e01c69b34e7c3fa4b7a118ca95a6beaecea00f7f4fb701545d83eacd3badb3c"
+  digest = "1:28d862f4f9bf2d1976d1d320481bff661b7565eb876d4df2a981f79e7f40e4cd"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "3fd5a3612ccd7907f26270fa92579a0f2f76f734"
+  revision = "12500544f89f9420afe9529ba8940bf72d294972"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
