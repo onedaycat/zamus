@@ -1,43 +1,44 @@
 package batchdynamo
 
 import (
-	"context"
+    "context"
 
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"golang.org/x/sync/errgroup"
+    "github.com/aws/aws-sdk-go/service/dynamodb"
+    "golang.org/x/sync/errgroup"
 )
 
+//noinspection GoUnusedExportedFunction
 func LargeBatchWrite(ctx context.Context, db *dynamodb.DynamoDB, tableName string, size int, reqs []*dynamodb.WriteRequest) error {
-	var batchReqs []*dynamodb.WriteRequest
-	curSize := 0
-	maxSize := len(reqs)
-	inputs := make([]*dynamodb.BatchWriteItemInput, 0, (maxSize/size)+1)
+    var batchReqs []*dynamodb.WriteRequest
+    curSize := 0
+    maxSize := len(reqs)
+    inputs := make([]*dynamodb.BatchWriteItemInput, 0, (maxSize/size)+1)
 
-	for i := 0; i < maxSize; i += size {
-		curSize = i + size
-		if curSize > maxSize {
-			batchReqs = reqs[i:maxSize]
-		} else {
-			batchReqs = reqs[i:curSize]
-		}
+    for i := 0; i < maxSize; i += size {
+        curSize = i + size
+        if curSize > maxSize {
+            batchReqs = reqs[i:maxSize]
+        } else {
+            batchReqs = reqs[i:curSize]
+        }
 
-		input := &dynamodb.BatchWriteItemInput{
-			RequestItems: map[string][]*dynamodb.WriteRequest{
-				tableName: batchReqs,
-			},
-		}
+        input := &dynamodb.BatchWriteItemInput{
+            RequestItems: map[string][]*dynamodb.WriteRequest{
+                tableName: batchReqs,
+            },
+        }
 
-		inputs = append(inputs, input)
-	}
+        inputs = append(inputs, input)
+    }
 
-	wg := &errgroup.Group{}
-	for _, in := range inputs {
-		in := in
-		wg.Go(func() error {
-			_, err := db.BatchWriteItemWithContext(ctx, in)
-			return err
-		})
-	}
+    wg := &errgroup.Group{}
+    for _, in := range inputs {
+        in := in
+        wg.Go(func() error {
+            _, err := db.BatchWriteItemWithContext(ctx, in)
+            return err
+        })
+    }
 
-	return wg.Wait()
+    return wg.Wait()
 }

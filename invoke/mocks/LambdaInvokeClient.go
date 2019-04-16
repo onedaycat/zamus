@@ -13,36 +13,6 @@ type LambdaInvokeClient struct {
 	mock.Mock
 }
 
-// InvokeAsyncWithContext provides a mock function with given fields: ctx, input, opts
-func (_m *LambdaInvokeClient) InvokeAsyncWithContext(ctx context.Context, input *lambda.InvokeAsyncInput, opts ...request.Option) (*lambda.InvokeAsyncOutput, error) {
-	_va := make([]interface{}, len(opts))
-	for _i := range opts {
-		_va[_i] = opts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, input)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 *lambda.InvokeAsyncOutput
-	if rf, ok := ret.Get(0).(func(context.Context, *lambda.InvokeAsyncInput, ...request.Option) *lambda.InvokeAsyncOutput); ok {
-		r0 = rf(ctx, input, opts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*lambda.InvokeAsyncOutput)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *lambda.InvokeAsyncInput, ...request.Option) error); ok {
-		r1 = rf(ctx, input, opts...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // InvokeWithContext provides a mock function with given fields: ctx, input, opts
 func (_m *LambdaInvokeClient) InvokeWithContext(ctx context.Context, input *lambda.InvokeInput, opts ...request.Option) (*lambda.InvokeOutput, error) {
 	_va := make([]interface{}, len(opts))

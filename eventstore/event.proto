@@ -1,26 +1,18 @@
 syntax = "proto3";
-package eventstore;
-
-// protoc --gofast_out=. event.proto
-
-// message Metadata {
-//   map<string,string> extra = 1;
-//   string userID = 2;
-//   string ip = 3;
-//   string correlationID = 4;
-//   string txID = 5;
-// }
+package zamus.eventstore;
+option go_package = "eventstore";
+import "google/protobuf/any.proto";
 
 message EventMsg {
   string eventID = 1;
   string eventType = 2;
   string eventVersion = 3;
   string aggregateID = 4;
-  bytes event = 5;
+  google.protobuf.Any event = 5;
   int64 time = 6;
   int64 seq = 7;
   int64 expired = 8;
-  map<string,string> metadata = 9;
+  map<string, string> metadata = 9;
 }
 
 message EventMsgList {

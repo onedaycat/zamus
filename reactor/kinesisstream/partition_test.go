@@ -11,16 +11,16 @@ package kinesisstream_test
 
 // func TestPartitionHandler(t *testing.T) {
 // 	s := setupPartition().
-// 		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_3).
-// 		WithHandler("h2", MODE_NORMAL, EVENT_TYPE_3).
+// 		WithHandler("h1", ModeNormal, EventType1, EventType3).
+// 		WithHandler("h2", ModeNormal, EventType3).
 // 		WithError("err")
 
 // 	err := s.strategy.Process(context.Background(), s.records)
 
 // 	require.NoError(t, err)
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 	require.Equal(t, 6, s.spy.Count(EVENT_TYPE_3))
+// 	require.Equal(t, 3, s.spy.Count(EventType1))
+// 	require.Equal(t, 0, s.spy.Count(EventType2))
+// 	require.Equal(t, 6, s.spy.Count(EventType3))
 // 	require.Equal(t, 0, s.spy.Count("err"))
 // 	require.Equal(t, 2, s.spy.Count("h1"))
 // 	require.Equal(t, 1, s.spy.Count("h2"))
@@ -28,20 +28,20 @@ package kinesisstream_test
 
 // func TestPartitionHandlerWithPreAndPost(t *testing.T) {
 // 	s := setupPartition().
-// 		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_3).
-// 		WithHandler("h2", MODE_NORMAL, EVENT_TYPE_3).
-// 		WithPreHandler("pre1", MODE_NORMAL).
-// 		WithPreHandler("pre2", MODE_NORMAL).
-// 		WithPostHandler("post1", MODE_NORMAL).
-// 		WithPostHandler("post2", MODE_NORMAL).
+// 		WithHandler("h1", ModeNormal, EventType1, EventType3).
+// 		WithHandler("h2", ModeNormal, EventType3).
+// 		WithPreHandler("pre1", ModeNormal).
+// 		WithPreHandler("pre2", ModeNormal).
+// 		WithPostHandler("post1", ModeNormal).
+// 		WithPostHandler("post2", ModeNormal).
 // 		WithError("err")
 
 // 	err := s.strategy.Process(context.Background(), s.records)
 
 // 	require.NoError(t, err)
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 	require.Equal(t, 6, s.spy.Count(EVENT_TYPE_3))
+// 	require.Equal(t, 3, s.spy.Count(EventType1))
+// 	require.Equal(t, 0, s.spy.Count(EventType2))
+// 	require.Equal(t, 6, s.spy.Count(EventType3))
 // 	require.Equal(t, 0, s.spy.Count("err"))
 // 	require.Equal(t, 2, s.spy.Count("h1"))
 // 	require.Equal(t, 1, s.spy.Count("h2"))
@@ -53,32 +53,32 @@ package kinesisstream_test
 
 // func TestPartitionHandlerNoFilter(t *testing.T) {
 // 	s := setupPartition().
-// 		WithHandler("h1", MODE_NORMAL).
+// 		WithHandler("h1", ModeNormal).
 // 		WithError("err")
 
 // 	err := s.strategy.Process(context.Background(), s.records)
 
 // 	require.NoError(t, err)
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_2))
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_3))
+// 	require.Equal(t, 3, s.spy.Count(EventType1))
+// 	require.Equal(t, 3, s.spy.Count(EventType2))
+// 	require.Equal(t, 3, s.spy.Count(EventType3))
 // 	require.Equal(t, 0, s.spy.Count("err"))
 // 	require.Equal(t, 3, s.spy.Count("h1"))
 // }
 
 // func TestPartitionError(t *testing.T) {
 // 	s := setupPartition().
-// 		WithHandler("h1", MODE_ERROR, EVENT_TYPE_1, EVENT_TYPE_2).
-// 		WithPreHandler("pre1", MODE_NORMAL).
-// 		WithPostHandler("post1", MODE_NORMAL).
+// 		WithHandler("h1", ModeError, EventType1, EventType2).
+// 		WithPreHandler("pre1", ModeNormal).
+// 		WithPostHandler("post1", ModeNormal).
 // 		WithError("err")
 
 // 	err := s.strategy.Process(context.Background(), s.records)
 
 // 	require.Equal(t, appErr.ErrInternalError, err)
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 	require.Equal(t, 3, s.spy.Count(EventType1))
+// 	require.Equal(t, 0, s.spy.Count(EventType2))
+// 	require.Equal(t, 0, s.spy.Count(EventType3))
 // 	require.Equal(t, 1, s.spy.Count("err"))
 // 	require.Equal(t, 1, s.spy.Count("h1"))
 // 	require.Equal(t, 1, s.spy.Count("pre1"))
@@ -88,17 +88,17 @@ package kinesisstream_test
 // func TestPartitionPanic(t *testing.T) {
 // 	t.Run("Panic Error", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_PANIC, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModePanic, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err")
 
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.Equal(t, appErr.ErrPanic, err)
-// 		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 3, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 1, s.spy.Count("err"))
 // 		require.Equal(t, 1, s.spy.Count("h1"))
 // 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -107,9 +107,9 @@ package kinesisstream_test
 
 // 	t.Run("Panic String", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_PANIC_STRING, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModePanicString, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err")
 
 // 		err := s.strategy.Process(context.Background(), s.records)
@@ -124,10 +124,10 @@ package kinesisstream_test
 
 // func TestPartitionPreError(t *testing.T) {
 // 	s := setupPartition().
-// 		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 		WithPreHandler("pre1", MODE_ERROR).
-// 		WithPreHandler("pre2", MODE_ERROR).
-// 		WithPostHandler("post1", MODE_NORMAL).
+// 		WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 		WithPreHandler("pre1", ModeError).
+// 		WithPreHandler("pre2", ModeError).
+// 		WithPostHandler("post1", ModeNormal).
 // 		WithError("err")
 
 // 	err := s.strategy.Process(context.Background(), s.records)
@@ -143,10 +143,10 @@ package kinesisstream_test
 // func TestPartitionPrePanic(t *testing.T) {
 // 	t.Run("Panic Error", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_PANIC).
-// 			WithPreHandler("pre2", MODE_PANIC).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModePanic).
+// 			WithPreHandler("pre2", ModePanic).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err")
 
 // 		err := s.strategy.Process(context.Background(), s.records)
@@ -160,10 +160,10 @@ package kinesisstream_test
 
 // 	t.Run("Panic String", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_PANIC_STRING).
-// 			WithPreHandler("pre2", MODE_PANIC_STRING).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModePanicString).
+// 			WithPreHandler("pre2", ModePanicString).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err")
 
 // 		err := s.strategy.Process(context.Background(), s.records)
@@ -178,18 +178,18 @@ package kinesisstream_test
 
 // func TestPartitionPostError(t *testing.T) {
 // 	s := setupPartition().
-// 		WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 		WithPreHandler("pre1", MODE_NORMAL).
-// 		WithPostHandler("post1", MODE_ERROR).
-// 		WithPostHandler("post2", MODE_ERROR).
+// 		WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 		WithPreHandler("pre1", ModeNormal).
+// 		WithPostHandler("post1", ModeError).
+// 		WithPostHandler("post2", ModeError).
 // 		WithError("err")
 
 // 	err := s.strategy.Process(context.Background(), s.records)
 
 // 	require.Equal(t, appErr.ErrInternalError, err)
-// 	require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 	require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 	require.Equal(t, 3, s.spy.Count(EventType1))
+// 	require.Equal(t, 0, s.spy.Count(EventType2))
+// 	require.Equal(t, 0, s.spy.Count(EventType3))
 // 	require.Equal(t, 1, s.spy.Count("err"))
 // 	require.Equal(t, 1, s.spy.Count("h1"))
 // 	require.Equal(t, 1, s.spy.Count("pre1"))
@@ -200,18 +200,18 @@ package kinesisstream_test
 // func TestPartitionPostPanic(t *testing.T) {
 // 	t.Run("Panic Error", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_PANIC).
-// 			WithPostHandler("post2", MODE_PANIC).
+// 			WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModePanic).
+// 			WithPostHandler("post2", ModePanic).
 // 			WithError("err")
 
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.Equal(t, appErr.ErrPanic, err)
-// 		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 3, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 1, s.spy.Count("err"))
 // 		require.Equal(t, 1, s.spy.Count("h1"))
 // 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -221,18 +221,18 @@ package kinesisstream_test
 
 // 	t.Run("Panic String", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_PANIC_STRING).
-// 			WithPostHandler("post2", MODE_PANIC_STRING).
+// 			WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModePanicString).
+// 			WithPostHandler("post2", ModePanicString).
 // 			WithError("err")
 
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.Equal(t, appErr.ErrPanic, err)
-// 		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 3, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 1, s.spy.Count("err"))
 // 		require.Equal(t, 1, s.spy.Count("h1"))
 // 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -244,9 +244,9 @@ package kinesisstream_test
 // func TestPartitionDQL(t *testing.T) {
 // 	t.Run("Retry 3", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_ERROR, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModeError, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err").
 // 			WithDQL(3)
 
@@ -257,9 +257,9 @@ package kinesisstream_test
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.NoError(t, err)
-// 		require.Equal(t, 9, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 9, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 3, s.spy.Count("err"))
 // 		require.Equal(t, 3, s.spy.Count("h1"))
 // 		require.Equal(t, 3, s.spy.Count("pre1"))
@@ -269,9 +269,9 @@ package kinesisstream_test
 
 // 	t.Run("Retry 1", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_ERROR, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModeError, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err").
 // 			WithDQL(1)
 
@@ -282,9 +282,9 @@ package kinesisstream_test
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.NoError(t, err)
-// 		require.Equal(t, 3, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 3, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 1, s.spy.Count("err"))
 // 		require.Equal(t, 1, s.spy.Count("h1"))
 // 		require.Equal(t, 1, s.spy.Count("pre1"))
@@ -294,9 +294,9 @@ package kinesisstream_test
 
 // 	t.Run("Retry 3 on Panic", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_PANIC, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModePanic, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err").
 // 			WithDQL(3)
 
@@ -307,9 +307,9 @@ package kinesisstream_test
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.NoError(t, err)
-// 		require.Equal(t, 9, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 9, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 3, s.spy.Count("err"))
 // 		require.Equal(t, 3, s.spy.Count("h1"))
 // 		require.Equal(t, 3, s.spy.Count("pre1"))
@@ -319,9 +319,9 @@ package kinesisstream_test
 
 // 	t.Run("Retry 3 on Panic String", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_PANIC_STRING, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_NORMAL).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModePanicString, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeNormal).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err").
 // 			WithDQL(3)
 
@@ -332,9 +332,9 @@ package kinesisstream_test
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.NoError(t, err)
-// 		require.Equal(t, 9, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 9, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 3, s.spy.Count("err"))
 // 		require.Equal(t, 3, s.spy.Count("h1"))
 // 		require.Equal(t, 3, s.spy.Count("pre1"))
@@ -346,9 +346,9 @@ package kinesisstream_test
 // func TestPartitionPredDQL(t *testing.T) {
 // 	t.Run("Retry 3", func(t *testing.T) {
 // 		s := setupPartition().
-// 			WithHandler("h1", MODE_NORMAL, EVENT_TYPE_1, EVENT_TYPE_2).
-// 			WithPreHandler("pre1", MODE_ERROR).
-// 			WithPostHandler("post1", MODE_NORMAL).
+// 			WithHandler("h1", ModeNormal, EventType1, EventType2).
+// 			WithPreHandler("pre1", ModeError).
+// 			WithPostHandler("post1", ModeNormal).
 // 			WithError("err").
 // 			WithDQL(3)
 
@@ -359,9 +359,9 @@ package kinesisstream_test
 // 		err := s.strategy.Process(context.Background(), s.records)
 
 // 		require.NoError(t, err)
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_1))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_2))
-// 		require.Equal(t, 0, s.spy.Count(EVENT_TYPE_3))
+// 		require.Equal(t, 0, s.spy.Count(EventType1))
+// 		require.Equal(t, 0, s.spy.Count(EventType2))
+// 		require.Equal(t, 0, s.spy.Count(EventType3))
 // 		require.Equal(t, 3, s.spy.Count("err"))
 // 		require.Equal(t, 0, s.spy.Count("h1"))
 // 		require.Equal(t, 3, s.spy.Count("pre1"))

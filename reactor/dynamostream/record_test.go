@@ -1,29 +1,23 @@
 package dynamostream
 
 import (
-	"encoding/base64"
-	"fmt"
-	"sort"
-	"testing"
+    "encoding/base64"
+    "fmt"
+    "sort"
+    "testing"
 
-	"github.com/golang/snappy"
-
-	"github.com/onedaycat/zamus/common"
-
-	"github.com/stretchr/testify/require"
+    "github.com/onedaycat/zamus/common"
+    "github.com/onedaycat/zamus/testdata/domain"
+    "github.com/stretchr/testify/require"
 )
 
 func TestParseDynamoDBStreamEvent(t *testing.T) {
-	p, err := common.MarshalJSON(map[string]interface{}{
-		"id": "1",
-	})
-	require.NoError(t, err)
+    evt := &domain.StockItemCreated{Id: "1"}
+    p, err := common.MarshalEvent(evt)
+    require.NoError(t, err)
+    p64 := base64.StdEncoding.EncodeToString(p)
 
-	var dst []byte
-	dst = snappy.Encode(dst, p)
-	p64 := base64.StdEncoding.EncodeToString(dst)
-
-	payload := fmt.Sprintf(`
+    payload := fmt.Sprintf(`
 	{
 		"Records": [
 			{
@@ -43,22 +37,19 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						}
 					},
 					"NewImage": {
-						"a": {
+						"aggregateID": {
 							"S": "a1"
 						},
-						"b": {
-							"S": "domain.aggregate"
-						},
-						"v": {
+						"version": {
 							"N": "10"
 						},
-						"b": {
+						"eventType": {
 							"S": "domain.aggregate.event"
 						},
-						"s": {
+						"seq": {
 							"N": "10002"
 						},
-						"e": {
+						"event": {
 							"B": "%s"
 						}
 					},
@@ -81,22 +72,19 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 					  }
 				   },
 				   "NewImage": {
-					"a": {
+					"aggregateID": {
 						"S": "a1"
 					},
-					"b": {
-						"S": "domain.aggregate"
-					},
-					"v": {
+					"version": {
 						"N": "10"
 					},
-					"b": {
+					"eventType": {
 						"S": "domain.aggregate.event"
 					},
-					"s": {
+					"seq": {
 						"N": "10001"
 					},
-					"e": {
+					"event": {
 						"B": "%s"
 					}
 				},
@@ -109,26 +97,18 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 		]
 	}`, p64, p64)
 
-	type pdata struct {
-		ID string `json:"id"`
-	}
-
-	event := &DynamoDBStreamEvent{}
-	err = common.UnmarshalJSON([]byte(payload), event)
-	sort.Sort(event.Records)
-	require.NoError(t, err)
-	require.Len(t, event.Records, 2)
-	require.Equal(t, eventRemove, event.Records[0].EventName)
-	require.Equal(t, int64(10001), event.Records[0].DynamoDB.NewImage.EventMsg.Seq)
-	require.Equal(t, EventInsert, event.Records[1].EventName)
-	require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
-
-	xx, _ := common.MarshalJSON(event.Records[0].DynamoDB.NewImage.EventMsg)
-	fmt.Println(string(xx))
-
-	pp := &pdata{}
-	event.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
-	require.NoError(t, err)
-	fmt.Println(pp)
-	require.Equal(t, &pdata{"1"}, pp)
+    event := &DynamoDBStreamEvent{}
+    err = common.UnmarshalJSON([]byte(payload), event)
+    sort.Sort(event.Records)
+    require.NoError(t, err)
+    require.Len(t, event.Records, 2)
+    require.Equal(t, eventRemove, event.Records[0].EventName)
+    require.Equal(t, int64(10001), event.Records[0].DynamoDB.NewImage.EventMsg.Seq)
+    require.Equal(t, EventInsert, event.Records[1].EventName)
+    require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
+    
+    pp := &domain.StockItemCreated{}
+    err = event.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
+    require.NoError(t, err)
+    require.Equal(t, evt, pp)
 }

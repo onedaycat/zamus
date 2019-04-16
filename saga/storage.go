@@ -1,13 +1,13 @@
 package saga
 
 import (
-	"context"
+    "context"
 
-	"github.com/onedaycat/errors"
+    "github.com/onedaycat/errors"
 )
 
 //go:generate mockery -name=Storage
 type Storage interface {
-	Get(ctx context.Context, id string) (*State, errors.Error)
-	Save(ctx context.Context, state *State) errors.Error
+    Get(ctx context.Context, stateName, id string) (*State, errors.Error)
+    Save(ctx context.Context, state *State) errors.Error
 }

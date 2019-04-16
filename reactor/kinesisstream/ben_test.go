@@ -1,84 +1,84 @@
 package kinesisstream_test
 
 import (
-	"context"
-	"testing"
+    "context"
+    "testing"
 
-	"github.com/onedaycat/errors"
+    "github.com/onedaycat/errors"
 
-	"github.com/onedaycat/zamus/common/random"
-	"github.com/onedaycat/zamus/eventstore"
-	"github.com/onedaycat/zamus/reactor/kinesisstream"
+    "github.com/onedaycat/zamus/common/random"
+    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/reactor/kinesisstream"
 )
 
 func BenchmarkPartition(b *testing.B) {
-	h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
-		// time.Sleep(100 * time.Millisecond)
-		return nil
-	}
+    h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
+        // time.Sleep(100 * time.Millisecond)
+        return nil
+    }
 
-	ksevent := random.KinesisEvents().RandomMessage(100).Build()
-	eventTypes := make([]string, 0, 100)
-	for _, x := range ksevent.Records {
-		eventTypes = append(eventTypes, x.Kinesis.Data.EventMsg.EventType)
-	}
+    ksevent := random.KinesisEvents().RandomMessage(100).Build()
+    eventTypes := make([]string, 0, 100)
+    for _, x := range ksevent.Records {
+        eventTypes = append(eventTypes, x.Kinesis.Data.EventMsg.EventType)
+    }
 
-	cm := kinesisstream.NewPartitionStrategy()
-	cm.RegisterHandler(h, eventTypes)
+    cm := kinesisstream.NewPartitionStrategy()
+    cm.RegisterHandler(h, eventTypes)
 
-	ctx := context.Background()
+    ctx := context.Background()
 
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		cm.Process(ctx, ksevent.Records)
-	}
+    b.ReportAllocs()
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _ = cm.Process(ctx, ksevent.Records)
+    }
 }
 
 func BenchmarkSimple(b *testing.B) {
-	h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
-		// time.Sleep(100 * time.Millisecond)
-		return nil
-	}
+    h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
+        // time.Sleep(100 * time.Millisecond)
+        return nil
+    }
 
-	ksevent := random.KinesisEvents().RandomMessage(100).Build()
-	eventTypes := make([]string, 0, 100)
-	for _, x := range ksevent.Records {
-		eventTypes = append(eventTypes, x.Kinesis.Data.EventMsg.EventType)
-	}
+    ksevent := random.KinesisEvents().RandomMessage(100).Build()
+    eventTypes := make([]string, 0, 100)
+    for _, x := range ksevent.Records {
+        eventTypes = append(eventTypes, x.Kinesis.Data.EventMsg.EventType)
+    }
 
-	cm := kinesisstream.NewSimpleStrategy()
-	cm.RegisterHandler(h, eventTypes)
+    cm := kinesisstream.NewSimpleStrategy()
+    cm.RegisterHandler(h, eventTypes)
 
-	ctx := context.Background()
+    ctx := context.Background()
 
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		cm.Process(ctx, ksevent.Records)
-	}
+    b.ReportAllocs()
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _ = cm.Process(ctx, ksevent.Records)
+    }
 }
 
 func BenchmarkShard(b *testing.B) {
-	h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
-		// time.Sleep(100 * time.Millisecond)
-		return nil
-	}
+    h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
+        // time.Sleep(100 * time.Millisecond)
+        return nil
+    }
 
-	ksevent := random.KinesisEvents().RandomMessage(100).Build()
-	eventTypes := make([]string, 0, 100)
-	for _, x := range ksevent.Records {
-		eventTypes = append(eventTypes, x.Kinesis.Data.EventMsg.EventType)
-	}
+    ksevent := random.KinesisEvents().RandomMessage(100).Build()
+    eventTypes := make([]string, 0, 100)
+    for _, x := range ksevent.Records {
+        eventTypes = append(eventTypes, x.Kinesis.Data.EventMsg.EventType)
+    }
 
-	cm := kinesisstream.NewShardStrategy()
-	cm.RegisterHandler(h, eventTypes)
+    cm := kinesisstream.NewShardStrategy()
+    cm.RegisterHandler(h, eventTypes)
 
-	ctx := context.Background()
+    ctx := context.Background()
 
-	b.ReportAllocs()
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		cm.Process(ctx, ksevent.Records)
-	}
+    b.ReportAllocs()
+    b.ResetTimer()
+    for i := 0; i < b.N; i++ {
+        _ = cm.Process(ctx, ksevent.Records)
+    }
 }

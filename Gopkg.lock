@@ -135,11 +135,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:318f1c959a8a740366fce4b1e1eb2fd914036b4af58fbd0a003349b305f118ad"
-  name = "github.com/golang/protobuf"
+  digest = "1:48092bf6632f55839850666c33469f546f6d45fdbd59a66759ec12e84d853dc2"
+  name = "github.com/gogo/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
-  revision = "e91709a02e0e8ff8b86b7aa913fdc9ae9498e825"
+  revision = "67e450fba6944c63d2f80b7553b0ef522d345962"
 
 [[projects]]
   branch = "master"
@@ -370,7 +370,6 @@
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/awserr",
     "github.com/aws/aws-sdk-go/aws/client",
-    "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/request",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/dynamodb",
@@ -380,7 +379,7 @@
     "github.com/aws/aws-xray-sdk-go/xray",
     "github.com/aws/aws-xray-sdk-go/xraylog",
     "github.com/go-sql-driver/mysql",
-    "github.com/golang/protobuf/proto",
+    "github.com/gogo/protobuf/proto",
     "github.com/golang/snappy",
     "github.com/json-iterator/go",
     "github.com/magefile/mage/sh",

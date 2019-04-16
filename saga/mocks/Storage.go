@@ -12,13 +12,13 @@ type Storage struct {
 	mock.Mock
 }
 
-// Get provides a mock function with given fields: ctx, id
-func (_m *Storage) Get(ctx context.Context, id string) (*saga.State, errors.Error) {
-	ret := _m.Called(ctx, id)
+// Get provides a mock function with given fields: ctx, stateName, id
+func (_m *Storage) Get(ctx context.Context, stateName string, id string) (*saga.State, errors.Error) {
+	ret := _m.Called(ctx, stateName, id)
 
 	var r0 *saga.State
-	if rf, ok := ret.Get(0).(func(context.Context, string) *saga.State); ok {
-		r0 = rf(ctx, id)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) *saga.State); ok {
+		r0 = rf(ctx, stateName, id)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*saga.State)
@@ -26,8 +26,8 @@ func (_m *Storage) Get(ctx context.Context, id string) (*saga.State, errors.Erro
 	}
 
 	var r1 errors.Error
-	if rf, ok := ret.Get(1).(func(context.Context, string) errors.Error); ok {
-		r1 = rf(ctx, id)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) errors.Error); ok {
+		r1 = rf(ctx, stateName, id)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).(errors.Error)

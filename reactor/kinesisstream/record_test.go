@@ -1,98 +1,43 @@
 package kinesisstream
 
 import (
-	"encoding/base64"
-	"fmt"
-	"testing"
+    "encoding/base64"
+    "fmt"
+    "testing"
 
-	"github.com/stretchr/testify/require"
-
-	"github.com/onedaycat/zamus/common"
-	"github.com/onedaycat/zamus/eventstore"
+    "github.com/gogo/protobuf/proto"
+    "github.com/onedaycat/zamus/common"
+    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/testdata/domain"
+    "github.com/stretchr/testify/require"
 )
 
-//320
-//248 22.5%
-//224 30%
-
-func TestJSONSize(t *testing.T) {
-	var err error
-	data := eventstore.EventMsg{
-		EventID:     "bhh9lvkrtr33vbmh6djg1",
-		EventType:   "domain.subdomain.aggregate.StockItemCreated",
-		AggregateID: "bhh9lvkrtr33vbmh6djg",
-		Seq:         10,
-		Time:        1549966068,
-	}
-
-	data.Event, err = common.MarshalJSON(map[string]interface{}{
-		"id": "1",
-	})
-	require.NoError(t, err)
-	bdata, err := common.MarshalJSON(data)
-	require.NoError(t, err)
-	data1 := base64.StdEncoding.EncodeToString(bdata)
-
-	fmt.Println(data1)
-	fmt.Println(len(data1)) //320 30%
-}
-
-func TestSizeProto(t *testing.T) {
-	var err error
-	data := eventstore.EventMsg{
-		EventID:     "bhh9lvkrtr33vbmh6djg1",
-		EventType:   "domain.subdomain.aggregate.StockItemCreated",
-		AggregateID: "bhh9lvkrtr33vbmh6djg",
-		Seq:         10,
-		Time:        1549966068,
-	}
-
-	data.Event, err = common.MarshalJSON(map[string]interface{}{
-		"id": "1",
-	})
-	require.NoError(t, err)
-	bdata, err := data.Marshal()
-	require.NoError(t, err)
-	data1 := base64.StdEncoding.EncodeToString(bdata)
-
-	fmt.Println(data1)
-	fmt.Println(len(data1)) //224
-}
-
 func TestParseKinesisStreamEvent(t *testing.T) {
-	var err error
-	_ = []byte(`{
-		"a": "a1",
-		"b": "domain.aggregate",
-		"s": 10,
-		"e": "domain.aggregate.event",
-		"x": 10001,
-		"d": "{"id":"1"}"
-	}`)
+    var err error
 
-	data := eventstore.EventMsg{
-		AggregateID: "a1",
-		Seq:         10,
-		EventType:   "domain.aggregate.event",
-	}
+    evt := &domain.StockItemCreated{Id: "1"}
+    evtByte, _ := common.MarshalEvent(evt)
+    msg1 := &eventstore.EventMsg{
+        AggregateID: "a1",
+        Seq:         10,
+        Event:       evtByte,
+        EventType:   proto.MessageName(evt),
+    }
 
-	data.Event, err = common.MarshalJSON(map[string]interface{}{
-		"id": "1",
-	})
-	require.NoError(t, err)
+    msg1Byte, _ := common.MarshalEventMsg(msg1)
+    data1 := base64.StdEncoding.EncodeToString(msg1Byte)
 
-	bdata, err := data.Marshal()
-	require.NoError(t, err)
-	data1 := base64.StdEncoding.EncodeToString(bdata)
-	fmt.Println(data1)
-	fmt.Println(len(data1))
+    msg2 := &eventstore.EventMsg{
+        AggregateID: "a1",
+        Seq:         11,
+        Event:       evtByte,
+        EventType:   proto.MessageName(evt),
+    }
 
-	data.Seq = 11
-	bdata, err = data.Marshal()
-	require.NoError(t, err)
-	data2 := base64.StdEncoding.EncodeToString(bdata)
+    msg1Byte, _ = common.MarshalEventMsg(msg2)
+    data2 := base64.StdEncoding.EncodeToString(msg1Byte)
 
-	payload := fmt.Sprintf(`{
+    payload := fmt.Sprintf(`{
 		"Records": [
 			{
 				"kinesis": {
@@ -129,23 +74,17 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		]
 	}`, data1, data2)
 
-	bpayload := []byte(payload)
+    bpayload := []byte(payload)
 
-	type pdata struct {
-		ID string `json:"id"`
-	}
+    event := &KinesisStreamEvent{}
+    err = common.UnmarshalJSON(bpayload, event)
+    require.NoError(t, err)
+    require.Len(t, event.Records, 2)
+    require.Equal(t, msg1, event.Records[0].Kinesis.Data.EventMsg)
+    require.Equal(t, msg2, event.Records[1].Kinesis.Data.EventMsg)
 
-	event := &KinesisStreamEvent{}
-	err = common.UnmarshalJSON(bpayload, event)
-	require.NoError(t, err)
-	require.Len(t, event.Records, 2)
-	require.Equal(t, "domain.aggregate.event", event.Records[0].Kinesis.Data.EventMsg.EventType)
-	require.Equal(t, int64(10), event.Records[0].Kinesis.Data.EventMsg.Seq)
-	require.Equal(t, int64(11), event.Records[1].Kinesis.Data.EventMsg.Seq)
-
-	pp := &pdata{}
-	err = common.UnmarshalJSON(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
-	require.NoError(t, err)
-	fmt.Println(pp)
-	require.Equal(t, &pdata{"1"}, pp)
+    pp := &domain.StockItemCreated{}
+    err = common.UnmarshalEvent(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
+    require.NoError(t, err)
+    require.Equal(t, evt, pp)
 }

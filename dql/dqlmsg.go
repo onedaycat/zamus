@@ -1,24 +1,23 @@
 package dql
 
-import (
-	jsoniter "github.com/json-iterator/go"
-)
-
+//noinspection GoNameStartsWithPackageName
 type DQLErrors = []*DQLError
 
+//noinspection GoNameStartsWithPackageName
 type DQLError struct {
-	Message string      `json:"message"`
-	Cause   string      `json:"cause"`
-	Input   interface{} `json:"input"`
-	Stacks  []string    `json:"stacks"`
+    Message string      `json:"message"`
+    Cause   string      `json:"cause"`
+    Input   interface{} `json:"input"`
+    Stacks  []string    `json:"stacks"`
 }
 
+//noinspection GoNameStartsWithPackageName
 type DQLMsg struct {
-	ID             string              `json:"id" db:"id"`
-	Service        string              `json:"service" db:"service"`
-	Time           int64               `json:"time" db:"time"`
-	Version        string              `json:"version" db:"version"`
-	LambdaFunction string              `json:"lambdaFunction" db:"lambdaFunction"`
-	EventMsgs      jsoniter.RawMessage `json:"eventMsgs" db:"eventMsgs"`
-	Errors         []*DQLError         `json:"errors" db:"errors"`
+    ID             string      `json:"id"`
+    Service        string      `json:"service"`
+    Time           int64       `json:"time"`
+    Version        string      `json:"version"`
+    LambdaFunction string      `json:"lambdaFunction"`
+    EventMsgs      []byte      `json:"eventMsgs"`
+    Errors         []*DQLError `json:"errors"`
 }

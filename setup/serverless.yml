@@ -70,14 +70,14 @@ resources:
         StreamSpecification:
           StreamViewType: NEW_IMAGE
         AttributeDefinitions:
-          - AttributeName: a
+          - AttributeName: hk
             AttributeType: S
-          - AttributeName: s
+          - AttributeName: rk
             AttributeType: 'N'
         KeySchema:
-          - AttributeName: a
+          - AttributeName: hk
             KeyType: HASH
-          - AttributeName: s
+          - AttributeName: rk
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-eventstore-${self:provider.stage}
@@ -86,14 +86,14 @@ resources:
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: a
+          - AttributeName: hk
             AttributeType: S
-          - AttributeName: v
+          - AttributeName: rk
             AttributeType: 'N'
         KeySchema:
-          - AttributeName: a
+          - AttributeName: hk
             KeyType: HASH
-          - AttributeName: v
+          - AttributeName: rk
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-snapshot-${self:provider.stage}
@@ -102,14 +102,14 @@ resources:
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: service
+          - AttributeName: hk
             AttributeType: S
-          - AttributeName: id
+          - AttributeName: rk
             AttributeType: S
         KeySchema:
-          - AttributeName: service
+          - AttributeName: hk
             KeyType: HASH
-          - AttributeName: id
+          - AttributeName: rk
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-dql-${self:provider.stage}
@@ -118,11 +118,15 @@ resources:
       # DeletionPolicy: Retain
       Properties:
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: hk
+            AttributeType: S
+          - AttributeName: rk
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: hk
             KeyType: HASH
+          - AttributeName: rk
+            KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:service}-saga-${self:provider.stage}
     S3Event:
@@ -265,14 +269,14 @@ resources:
             InputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
             OutputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
             Columns:
-              - { Name: i, Type: string }
-              - { Name: b, Type: string }
-              - { Name: v, Type: string }
-              - { Name: a, Type: string }
-              - { Name: e, Type: string }
-              - { Name: t, Type: bigint }
-              - { Name: s, Type: bigint }
-              - { Name: m, Type: 'map<string,string>' }
+              - { Name: eventID, Type: string }
+              - { Name: eventType, Type: string }
+              - { Name: eventVersion, Type: string }
+              - { Name: aggregateID, Type: string }
+              - { Name: event, Type: string }
+              - { Name: time, Type: bigint }
+              - { Name: seq, Type: bigint }
+              - { Name: metadata, Type: 'map<string,string>' }
             SerdeInfo:
               SerializationLibrary: 'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
               Parameters:

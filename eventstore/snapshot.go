@@ -1,10 +1,10 @@
 package eventstore
 
 type Snapshot struct {
-	AggregateID string `json:"a" bson:"_id"`
-	Aggregate   []byte `json:"b" bson:"b"`
-	EventID     string `json:"i" bson:"i"`
-	Time        int64  `json:"t" bson:"t"`
-	Seq         int64  `json:"s" bson:"s"`
-	Version     int    `json:"v" bson:"v"`
+    AggregateID string `json:"aggregateID"`
+    Aggregate   []byte `json:"aggregate"`
+    EventID     string `json:"eventID"`
+    Time        int64  `json:"time"`
+    Seq         int64  `json:"seq"`
+    Version     int    `json:"version"`
 }

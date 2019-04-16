@@ -1,51 +1,48 @@
 package eventstore
 
 import (
-	"time"
+    "reflect"
+    "time"
 
-	"github.com/onedaycat/errors"
-	"github.com/onedaycat/zamus/common"
+    "github.com/gogo/protobuf/proto"
+    "github.com/onedaycat/errors"
+    "github.com/onedaycat/zamus/common"
+    appErr "github.com/onedaycat/zamus/errors"
 )
 
 type EventPublish struct {
-	EventType string
-	// EventVersion string
-	Event    interface{}
-	Metadata Metadata
-	// optional, auto id if empty
-	AggregateID string
-	// optional, auto seq if 0
-	Seq int64
+    Event    proto.Message
+    Metadata Metadata
+    // optional, auto id if empty
+    AggregateID string
+    // optional, auto seq if 0
+    Seq int64
 }
 
-func (e *EventMsg) UnmarshalEvent(v interface{}) errors.Error {
-	return common.UnmarshalJSONSnappy(e.Event, v)
+func (m *EventMsg) UnmarshalEvent(evt proto.Message) errors.Error {
+    return common.UnmarshalEvent(m.Event, evt)
 }
 
-func (e *EventMsg) MustUnmarshalEvent(v interface{}) {
-	if err := common.UnmarshalJSONSnappy(e.Event, v); err != nil {
-		panic(err)
-	}
+func (m *EventMsg) MustUnmarshalEvent(evt proto.Message) {
+    if err := m.UnmarshalEvent(evt); err != nil {
+        panic(err)
+    }
 }
 
-func (e *EventMsg) AddExpired(d time.Duration) {
-	e.Expired = time.Unix(e.Time, 0).Add(d).Unix()
+func (m *EventMsg) AddExpired(d time.Duration) {
+    m.Expired = time.Unix(m.Time, 0).Add(d).Unix()
 }
 
-// EventID              string            `protobuf:"bytes,1,opt,name=eventID,proto3" json:"i,omitempty"`
-// EventType            string            `protobuf:"bytes,2,opt,name=eventType,proto3" json:"b,omitempty"`
-// EventVersion         string            `protobuf:"bytes,3,opt,name=eventVersion,proto3" json:"v,omitempty"`
-// AggregateID          string            `protobuf:"bytes,4,opt,name=aggregateID,proto3" json:"a,omitempty"`
-// Event                []byte            `protobuf:"bytes,5,opt,name=event,proto3" json:"e,omitempty"`
-// Time                 int64             `protobuf:"varint,6,opt,name=time,proto3" json:"t,omitempty"`
-// Seq                  int64             `protobuf:"varint,7,opt,name=seq,proto3" json:"s,omitempty"`
-// Expired              int64             `protobuf:"varint,8,opt,name=expired,proto3" json:"l,omitempty"`
-// Metadata             map[string]string `protobuf:"bytes,9,rep,name=metadata,proto3" json:"m,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+func (m *EventMsg) MustParseEvent() proto.Message {
+    t := proto.MessageType(m.EventType)
+    if t == nil {
+        panic(appErr.ErrEventProtoNotRegistered.WithCaller().WithInput(m))
+    }
+    msg := reflect.New(t.Elem()).Interface().(proto.Message)
 
-// EventMsgs            []*EventMsg `protobuf:"bytes,1,rep,name=eventMsgs,proto3" json:"e,omitempty"`
+    if err := common.UnmarshalEvent(m.Event, msg); err != nil {
+        panic(err)
+    }
 
-// Extra                map[string]string `protobuf:"bytes,1,rep,name=extra,proto3" json:"e,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-// UserID               string            `protobuf:"bytes,2,opt,name=userID,proto3" json:"u,omitempty"`
-// Ip                   string            `protobuf:"bytes,3,opt,name=ip,proto3" json:"i,omitempty"`
-// CorrelationID        string            `protobuf:"bytes,4,opt,name=correlationID,proto3" json:"c,omitempty"`
-// TxID                 string            `protobuf:"bytes,5,opt,name=txID,proto3" json:"t,omitempty"`
+    return msg
+}

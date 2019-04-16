@@ -38,7 +38,7 @@
   version = "1.17.4"
 
 [[constraint]]
-  name = "github.com/golang/protobuf"
+  name = "github.com/gogo/protobuf"
   branch = "master"
 
 [[constraint]]

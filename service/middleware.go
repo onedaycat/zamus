@@ -1,47 +1,50 @@
 package service
 
 import (
-	"context"
-	"fmt"
+    "context"
+    "fmt"
 
-	"github.com/onedaycat/errors"
-	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/tracer"
-	"github.com/rs/zerolog/log"
+    "github.com/onedaycat/errors"
+    "github.com/onedaycat/errors/sentry"
+    "github.com/onedaycat/zamus/tracer"
+    "github.com/rs/zerolog/log"
 )
 
+//noinspection GoUnusedParameter
 func PrintPanic(ctx context.Context, req *Request, err errors.Error) {
-	if err.GetPanic() {
-		fmt.Printf("%+v", err)
-	}
+    if err.GetPanic() {
+        fmt.Printf("%+v", err)
+    }
 }
 
+//noinspection GoUnusedParameter
 func TraceError(ctx context.Context, req *Request, err errors.Error) {
-	tracer.AddError(ctx, err)
+    tracer.AddError(ctx, err)
 }
 
+//noinspection GoUnusedParameter
 func Sentry(ctx context.Context, req *Request, err errors.Error) {
-	if !err.HasStackTrace() {
-		return
-	}
+    if !err.HasStackTrace() {
+        return
+    }
 
-	l := log.Error()
-	if input := err.GetInput(); input != nil {
-		l.Interface("input", input)
-	}
-	if cause := err.GetCause(); cause != nil {
-		l.Interface("cause", cause.Error())
-	}
-	l.Msg(err.Error())
+    l := log.Error()
+    if input := err.GetInput(); input != nil {
+        l.Interface("input", input)
+    }
+    if cause := err.GetCause(); cause != nil {
+        l.Interface("cause", cause.Error())
+    }
+    l.Msg(err.Error())
 
-	packet := sentry.NewPacket(err)
-	if req.Identity != nil && req.Identity.ID != "" {
-		packet.AddUser(&sentry.User{
-			ID: req.Identity.ID,
-		})
-	}
+    packet := sentry.NewPacket(err)
+    if req.Identity != nil && req.Identity.ID != "" {
+        packet.AddUser(&sentry.User{
+            ID: req.Identity.ID,
+        })
+    }
 
-	packet.AddError(err)
-	packet.AddTag("function", req.Method)
-	sentry.CaptureAndWait(packet)
+    packet.AddError(err)
+    packet.AddTag("function", req.Method)
+    sentry.CaptureAndWait(packet)
 }
