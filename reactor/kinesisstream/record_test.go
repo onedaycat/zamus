@@ -16,7 +16,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
     var err error
 
     evt := &domain.StockItemCreated{Id: "1"}
-    evtByte, _ := common.MarshalEvent(evt)
+    evtByte, _ := eventstore.MarshalEvent(evt)
     msg1 := &eventstore.EventMsg{
         AggregateID: "a1",
         Seq:         10,
@@ -24,7 +24,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
         EventType:   proto.MessageName(evt),
     }
 
-    msg1Byte, _ := common.MarshalEventMsg(msg1)
+    msg1Byte, _ := eventstore.MarshalEventMsg(msg1)
     data1 := base64.StdEncoding.EncodeToString(msg1Byte)
 
     msg2 := &eventstore.EventMsg{
@@ -34,7 +34,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
         EventType:   proto.MessageName(evt),
     }
 
-    msg1Byte, _ = common.MarshalEventMsg(msg2)
+    msg1Byte, _ = eventstore.MarshalEventMsg(msg2)
     data2 := base64.StdEncoding.EncodeToString(msg1Byte)
 
     payload := fmt.Sprintf(`{
@@ -84,7 +84,7 @@ func TestParseKinesisStreamEvent(t *testing.T) {
     require.Equal(t, msg2, event.Records[1].Kinesis.Data.EventMsg)
 
     pp := &domain.StockItemCreated{}
-    err = common.UnmarshalEvent(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
+    err = eventstore.UnmarshalEvent(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
     require.NoError(t, err)
     require.Equal(t, evt, pp)
 }

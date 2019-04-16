@@ -9,7 +9,6 @@ import (
     "github.com/onedaycat/zamus/dql/mocks"
     "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
-    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/clock"
     "github.com/onedaycat/zamus/internal/common/eid"
     "github.com/onedaycat/zamus/random"
@@ -47,7 +46,7 @@ func TestDQL(t *testing.T) {
     eid.FreezeID("1")
     clock.Freeze(now)
 
-    msgListByte, _ := common.MarshalEventMsg(msgList)
+    msgListByte, _ := eventstore.MarshalEventMsg(msgList)
 
     dqlMsg := &dql.DQLMsg{
         ID:             "1",

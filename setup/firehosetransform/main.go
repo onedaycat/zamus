@@ -25,7 +25,7 @@ func (h *Handler) Handle(ctx context.Context, event *events.KinesisFirehoseEvent
 
     for i, record := range event.Records {
         eventmsg = &eventstore.EventMsg{}
-        if err = common.UnmarshalEventMsg(record.Data, eventmsg); err != nil {
+        if err = eventstore.UnmarshalEventMsg(record.Data, eventmsg); err != nil {
             xerr := appErr.ErrUnableDecode.WithCaller().WithCause(err).WithInput(record.Data)
             Sentry(ctx, event, xerr)
             result[i] = events.KinesisFirehoseResponseRecord{

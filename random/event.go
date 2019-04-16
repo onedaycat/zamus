@@ -73,7 +73,7 @@ func (b *eventBuilder) Versionn(version string) *eventBuilder {
 }
 
 func (b *eventBuilder) Event(evt proto.Message) *eventBuilder {
-    data, err := common.MarshalEvent(evt)
+    data, err := eventstore.MarshalEvent(evt)
     if err != nil {
         panic(err)
     }
@@ -85,7 +85,7 @@ func (b *eventBuilder) Event(evt proto.Message) *eventBuilder {
 }
 
 func (b *eventBuilder) BuildProto() []byte {
-    data, err := common.MarshalEventMsg(b.msg)
+    data, err := eventstore.MarshalEventMsg(b.msg)
     if err != nil {
         panic(err)
     }

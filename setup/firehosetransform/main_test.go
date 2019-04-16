@@ -24,7 +24,7 @@ func TestHandle(t *testing.T) {
     }
 
     for i, msg := range msgs {
-        data, err = common.MarshalEventMsg(msg)
+        data, err = eventstore.MarshalEventMsg(msg)
         require.NoError(t, err)
         event.Records[i].Data = data
         event.Records[i].RecordID = strconv.Itoa(i)

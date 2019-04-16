@@ -4,7 +4,6 @@ import (
     "encoding/base64"
 
     "github.com/onedaycat/zamus/eventstore"
-    "github.com/onedaycat/zamus/internal/common"
 )
 
 type Records = []*Record
@@ -55,7 +54,7 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
     }
 
     p.EventMsg = &eventstore.EventMsg{}
-    if err = common.UnmarshalEventMsg(bdata[:n], p.EventMsg); err != nil {
+    if err = eventstore.UnmarshalEventMsg(bdata[:n], p.EventMsg); err != nil {
         return err
     }
 

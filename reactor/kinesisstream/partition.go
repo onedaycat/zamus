@@ -7,11 +7,10 @@ import (
 
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/errgroup"
-    "github.com/onedaycat/zamus/internal/common"
-
     "github.com/onedaycat/zamus/dql"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type partitionStrategy struct {
@@ -141,7 +140,7 @@ DQLRetry:
             msgList := &eventstore.EventMsgList{
                 EventMsgs: msgs,
             }
-            msgListByte, _ := common.MarshalEventMsg(msgList)
+            msgListByte, _ := eventstore.MarshalEventMsg(msgList)
 
             return c.dql.Save(ctx, msgListByte)
         }

@@ -11,7 +11,6 @@ import (
     "github.com/onedaycat/zamus/dql"
     "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
-    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/eid"
     "github.com/onedaycat/zamus/internal/common/ptr"
     "github.com/onedaycat/zamus/random"
@@ -47,7 +46,7 @@ func TestSaveAndGet(t *testing.T) {
 
     msgs := random.EventMsgs().RandomEventMsgs(10).Build()
     msgsList := eventstore.EventMsgList{EventMsgs: msgs}
-    msgsListByte, _ := common.MarshalEventMsg(&msgsList)
+    msgsListByte, _ := eventstore.MarshalEventMsg(&msgsList)
     appErr := errors.ErrUnableSaveDQLMessages.
         WithCaller().
         WithCause(errors.ErrUnknown).
@@ -81,7 +80,7 @@ func TestMultiSave(t *testing.T) {
     msgList := &eventstore.EventMsgList{
         EventMsgs: msgs,
     }
-    msgListByte, _ := common.MarshalEventMsg(msgList)
+    msgListByte, _ := eventstore.MarshalEventMsg(msgList)
 
     err := d.Save(context.Background(), msgListByte)
     require.NoError(t, err)

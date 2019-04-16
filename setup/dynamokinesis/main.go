@@ -15,7 +15,7 @@ import (
     "github.com/onedaycat/errors/errgroup"
     "github.com/onedaycat/errors/sentry"
     appErr "github.com/onedaycat/zamus/errors"
-    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/eventstore"
     "github.com/onedaycat/zamus/reactor/dynamostream"
     "github.com/onedaycat/zamus/warmer"
     "github.com/rs/zerolog/log"
@@ -62,7 +62,7 @@ func (h *Handler) Process(ctx context.Context, stream *dynamostream.DynamoDBStre
             continue
         }
 
-        data, _ := common.MarshalEventMsg(records[i].DynamoDB.NewImage.EventMsg)
+        data, _ := eventstore.MarshalEventMsg(records[i].DynamoDB.NewImage.EventMsg)
         if len(h.records) <= h.count {
             h.records = append(h.records, &kinesis.PutRecordsRequestEntry{
                 Data:         data,

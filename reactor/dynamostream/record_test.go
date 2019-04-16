@@ -6,6 +6,7 @@ import (
     "sort"
     "testing"
 
+    "github.com/onedaycat/zamus/eventstore"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
@@ -13,7 +14,7 @@ import (
 
 func TestParseDynamoDBStreamEvent(t *testing.T) {
     evt := &domain.StockItemCreated{Id: "1"}
-    p, err := common.MarshalEvent(evt)
+    p, err := eventstore.MarshalEvent(evt)
     require.NoError(t, err)
     p64 := base64.StdEncoding.EncodeToString(p)
 

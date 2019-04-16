@@ -5,7 +5,6 @@ import (
     "time"
 
     "github.com/onedaycat/zamus/eventstore"
-    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )
@@ -14,7 +13,7 @@ func TestEventMsgs(t *testing.T) {
     var msgs []*eventstore.EventMsg
 
     event := &domain.StockItemCreated{Id: "1"}
-    eventAny, _ := common.MarshalEvent(event)
+    eventAny, _ := eventstore.MarshalEvent(event)
 
     metadata := eventstore.NewMetadata().SetUserID("u1")
 

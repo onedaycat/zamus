@@ -150,7 +150,7 @@ DQLRetry:
                 EventMsgs: msgs,
             }
 
-            msgListByte, _ := common.MarshalEventMsg(msgList)
+            msgListByte, _ := eventstore.MarshalEventMsg(msgList)
 
             return c.dql.Save(ctx, msgListByte)
         }

@@ -135,7 +135,7 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
         seq := agg.GetSequence()
         evtID := eid.CreateEventID(aggid, seq)
 
-        eventAny, err := common.MarshalEvent(events[i])
+        eventAny, err := MarshalEvent(events[i])
         if err != nil {
             return err
         }
@@ -204,7 +204,7 @@ func (es *eventStore) PublishEvents(ctx context.Context, events ...*EventPublish
         evtid := eid.CreateEventID(aggid, seq)
         eventType := proto.MessageName(events[i].Event)
 
-        eventAny, err := common.MarshalEvent(events[i].Event)
+        eventAny, err := MarshalEvent(events[i].Event)
         if err != nil {
             return err
         }
