@@ -4,14 +4,14 @@ import (
     "context"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/testdata/domain"
-
     "github.com/onedaycat/zamus/common"
     "github.com/onedaycat/zamus/common/random"
     "github.com/onedaycat/zamus/dql"
     "github.com/onedaycat/zamus/dql/mocks"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/reactor"
     "github.com/onedaycat/zamus/reactor/kinesisstream"
+    "github.com/onedaycat/zamus/testdata/domain"
 )
 
 const (
@@ -30,7 +30,7 @@ const (
     EventType3 = "EventType3"
 )
 
-var EventTypes = common.EventTypes((*domain.StockItemCreated)(nil), (*domain.StockItemUpdated)(nil), (*domain.StockItemRemoved)(nil))
+var EventTypes = reactor.EventTypes((*domain.StockItemCreated)(nil), (*domain.StockItemUpdated)(nil), (*domain.StockItemRemoved)(nil))
 
 var _records kinesisstream.Records
 

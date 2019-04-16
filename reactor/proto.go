@@ -1,4 +1,4 @@
-package common
+package reactor
 
 import (
     "github.com/gogo/protobuf/proto"
