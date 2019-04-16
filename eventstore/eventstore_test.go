@@ -7,13 +7,13 @@ import (
     "time"
 
     "github.com/golang/snappy"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/clock"
-    "github.com/onedaycat/zamus/common/eid"
     "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
     "github.com/onedaycat/zamus/eventstore/mocks"
     "github.com/onedaycat/zamus/eventstore/storage/memory"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/clock"
+    "github.com/onedaycat/zamus/internal/common/eid"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )

@@ -8,13 +8,13 @@ import (
 
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/eid"
-    "github.com/onedaycat/zamus/common/ptr"
-    "github.com/onedaycat/zamus/common/random"
     "github.com/onedaycat/zamus/dql"
     "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/eid"
+    "github.com/onedaycat/zamus/internal/common/ptr"
+    "github.com/onedaycat/zamus/random"
     "github.com/stretchr/testify/require"
 )
 

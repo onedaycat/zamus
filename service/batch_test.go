@@ -4,8 +4,8 @@ import (
     "context"
     "testing"
 
-    "github.com/onedaycat/zamus/common/random"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/random"
     "github.com/stretchr/testify/require"
 )
 

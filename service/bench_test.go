@@ -4,7 +4,7 @@ import (
     "context"
     "testing"
 
-    "github.com/onedaycat/zamus/common/random"
+    "github.com/onedaycat/zamus/random"
 )
 
 func BenchmarkHandler(b *testing.B) {

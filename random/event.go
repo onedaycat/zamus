@@ -5,9 +5,9 @@ import (
 
     random "github.com/Pallinder/go-randomdata"
     "github.com/gogo/protobuf/proto"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/eid"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/eid"
 )
 
 type eventBuilder struct {

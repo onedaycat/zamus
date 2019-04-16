@@ -6,8 +6,8 @@ import (
 
     "github.com/gogo/protobuf/proto"
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type EventPublish struct {

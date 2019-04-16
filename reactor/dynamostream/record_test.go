@@ -6,7 +6,7 @@ import (
     "sort"
     "testing"
 
-    "github.com/onedaycat/zamus/common"
+    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )
@@ -106,7 +106,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
     require.Equal(t, int64(10001), event.Records[0].DynamoDB.NewImage.EventMsg.Seq)
     require.Equal(t, EventInsert, event.Records[1].EventName)
     require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
-    
+
     pp := &domain.StockItemCreated{}
     err = event.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
     require.NoError(t, err)

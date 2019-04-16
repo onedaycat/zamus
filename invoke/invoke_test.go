@@ -6,12 +6,12 @@ import (
 
     "github.com/aws/aws-sdk-go/service/lambda"
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/ptr"
-    "github.com/onedaycat/zamus/common/random"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/ptr"
     "github.com/onedaycat/zamus/invoke"
     "github.com/onedaycat/zamus/invoke/mocks"
+    "github.com/onedaycat/zamus/random"
     "github.com/stretchr/testify/mock"
     "github.com/stretchr/testify/require"
 )

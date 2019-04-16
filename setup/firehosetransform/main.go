@@ -9,9 +9,9 @@ import (
     "github.com/aws/aws-lambda-go/lambdacontext"
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/sentry"
-    "github.com/onedaycat/zamus/common"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type Handler struct {

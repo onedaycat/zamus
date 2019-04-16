@@ -3,8 +3,8 @@ package kinesisstream
 import (
     "encoding/base64"
 
-    "github.com/onedaycat/zamus/common"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type Records = []*Record

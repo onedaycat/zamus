@@ -1,29 +1,28 @@
 package dynamostream
 
 import (
-	"github.com/onedaycat/zamus/common"
-	"github.com/onedaycat/zamus/errors"
-
-	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+    "github.com/aws/aws-sdk-go/service/dynamodb"
+    "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
+    "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type Payload struct {
-	EventMsg *EventMsg
+    EventMsg *EventMsg
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
-	var err error
-	data := make(map[string]*dynamodb.AttributeValue)
-	if err = common.UnmarshalJSON(b, &data); err != nil {
-		return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
-	}
+    var err error
+    data := make(map[string]*dynamodb.AttributeValue)
+    if err = common.UnmarshalJSON(b, &data); err != nil {
+        return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
+    }
 
-	if err = dynamodbattribute.UnmarshalMap(data, &p.EventMsg); err != nil {
-		return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
-	}
+    if err = dynamodbattribute.UnmarshalMap(data, &p.EventMsg); err != nil {
+        return errors.ErrUnableUnmarshal.WithCaller().WithCause(err)
+    }
 
-	return nil
+    return nil
 }
 
 const EventInsert = "INSERT"
@@ -34,32 +33,32 @@ type Records []*Record
 func (a Records) Len() int      { return len(a) }
 func (a Records) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a Records) Less(i, j int) bool {
-	return a[i].DynamoDB.NewImage.EventMsg.Seq < a[j].DynamoDB.NewImage.EventMsg.Seq
+    return a[i].DynamoDB.NewImage.EventMsg.Seq < a[j].DynamoDB.NewImage.EventMsg.Seq
 }
 
 type DynamoDBStreamEvent struct {
-	Records    Records `json:"Records"`
-	Warmer     bool    `json:"warmer,omitempty"`
-	Concurency int     `json:"concurency,omitempty"`
+    Records    Records `json:"Records"`
+    Warmer     bool    `json:"warmer,omitempty"`
+    Concurency int     `json:"concurency,omitempty"`
 }
 
 type Record struct {
-	EventName string          `json:"eventName"`
-	DynamoDB  *DynamoDBRecord `json:"dynamodb"`
+    EventName string          `json:"eventName"`
+    DynamoDB  *DynamoDBRecord `json:"dynamodb"`
 }
 
 func (r *Record) add(key, eid, etype string) {
-	r.DynamoDB = &DynamoDBRecord{
-		NewImage: &Payload{
-			EventMsg: &EventMsg{
-				AggregateID: key,
-				EventID:     eid,
-				EventType:   etype,
-			},
-		},
-	}
+    r.DynamoDB = &DynamoDBRecord{
+        NewImage: &Payload{
+            EventMsg: &EventMsg{
+                AggregateID: key,
+                EventID:     eid,
+                EventType:   etype,
+            },
+        },
+    }
 }
 
 type DynamoDBRecord struct {
-	NewImage *Payload `json:"NewImage"`
+    NewImage *Payload `json:"NewImage"`
 }

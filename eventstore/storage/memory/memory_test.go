@@ -6,10 +6,10 @@ import (
 
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/errgroup"
-    "github.com/onedaycat/zamus/common/clock"
-    "github.com/onedaycat/zamus/common/random"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common/clock"
+    "github.com/onedaycat/zamus/random"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )

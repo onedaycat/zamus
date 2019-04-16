@@ -4,8 +4,8 @@ import (
     "context"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type stubStorage struct {

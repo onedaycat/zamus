@@ -2,8 +2,8 @@ package domain
 
 import (
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common/clock"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common/clock"
 )
 
 type CreateStockCmd struct {

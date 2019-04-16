@@ -6,8 +6,8 @@ import (
     "testing"
 
     "github.com/gogo/protobuf/proto"
-    "github.com/onedaycat/zamus/common"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )

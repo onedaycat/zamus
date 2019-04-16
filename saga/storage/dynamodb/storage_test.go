@@ -10,8 +10,8 @@ import (
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common/ptr"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common/ptr"
     "github.com/onedaycat/zamus/saga"
     "github.com/stretchr/testify/require"
 )

@@ -8,8 +8,8 @@ import (
     "github.com/aws/aws-sdk-go/service/dynamodb"
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common/ptr"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common/ptr"
     "github.com/onedaycat/zamus/saga"
 )
 

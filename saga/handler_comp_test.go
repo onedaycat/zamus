@@ -6,10 +6,10 @@ import (
     "time"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/clock"
-    "github.com/onedaycat/zamus/common/eid"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/clock"
+    "github.com/onedaycat/zamus/internal/common/eid"
     "github.com/stretchr/testify/require"
 )
 

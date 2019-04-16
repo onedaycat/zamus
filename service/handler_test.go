@@ -5,9 +5,9 @@ import (
     "testing"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/random"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/random"
     "github.com/onedaycat/zamus/service"
     "github.com/stretchr/testify/require"
 )

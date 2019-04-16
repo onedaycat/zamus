@@ -5,14 +5,14 @@ import (
     "testing"
     "time"
 
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/clock"
-    "github.com/onedaycat/zamus/common/eid"
-    "github.com/onedaycat/zamus/common/random"
     "github.com/onedaycat/zamus/dql"
     "github.com/onedaycat/zamus/dql/mocks"
     "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/clock"
+    "github.com/onedaycat/zamus/internal/common/eid"
+    "github.com/onedaycat/zamus/random"
     "github.com/stretchr/testify/require"
 )
 

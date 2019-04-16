@@ -10,8 +10,8 @@ import (
     jsoniter "github.com/json-iterator/go"
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/sentry"
-    "github.com/onedaycat/zamus/common"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/tracer"
     "github.com/onedaycat/zamus/zamuscontext"
 )

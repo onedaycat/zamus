@@ -6,11 +6,10 @@ import (
     "testing"
     "time"
 
-    "github.com/onedaycat/zamus/eventstore"
-
     "github.com/aws/aws-lambda-go/events"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/random"
+    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/random"
     "github.com/stretchr/testify/require"
 )
 

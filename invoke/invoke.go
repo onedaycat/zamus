@@ -6,9 +6,9 @@ import (
     "github.com/aws/aws-sdk-go/aws/request"
     "github.com/aws/aws-sdk-go/service/lambda"
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
-    "github.com/onedaycat/zamus/common/ptr"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/internal/common/ptr"
 )
 
 var LATEST = "$LATEST"

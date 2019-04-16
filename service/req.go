@@ -3,8 +3,8 @@ package service
 import (
     jsoniter "github.com/json-iterator/go"
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/common"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 const (

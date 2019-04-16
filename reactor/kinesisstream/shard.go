@@ -7,11 +7,10 @@ import (
 
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/errgroup"
-
-    "github.com/onedaycat/zamus/common"
     "github.com/onedaycat/zamus/dql"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type shardinfoList []*shardinfo
