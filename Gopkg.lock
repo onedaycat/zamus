@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:b55047bf597bbca5b70de16eb404f217d40363ceef5dbf7463f3574c2a1ffae8"
+  digest = "1:0d588991d61a665fa3435cba532e1fd9fc41f64064c6683f9b413197616ac175"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,8 +69,8 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "56c1def75689cceec1fa6f14c2eedb4b798827f9"
-  version = "v1.19.11"
+  revision = "cf58d169c2d60e36f54964ceb4b9baa3434dbfe7"
+  version = "v1.19.12"
 
 [[projects]]
   branch = "master"
