@@ -6,7 +6,7 @@ import (
     "testing"
 
     "github.com/gogo/protobuf/proto"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
@@ -16,25 +16,25 @@ func TestParseKinesisStreamEvent(t *testing.T) {
     var err error
 
     evt := &domain.StockItemCreated{Id: "1"}
-    evtByte, _ := eventstore.MarshalEvent(evt)
-    msg1 := &eventstore.EventMsg{
-        AggregateID: "a1",
-        Seq:         10,
-        Event:       evtByte,
-        EventType:   proto.MessageName(evt),
+    evtByte, _ := event.MarshalEvent(evt)
+    msg1 := &event.Msg{
+        AggID:     "a1",
+        Seq:       10,
+        Event:     evtByte,
+        EventType: proto.MessageName(evt),
     }
 
-    msg1Byte, _ := eventstore.MarshalEventMsg(msg1)
+    msg1Byte, _ := event.MarshalMsg(msg1)
     data1 := base64.StdEncoding.EncodeToString(msg1Byte)
 
-    msg2 := &eventstore.EventMsg{
-        AggregateID: "a1",
-        Seq:         11,
-        Event:       evtByte,
-        EventType:   proto.MessageName(evt),
+    msg2 := &event.Msg{
+        AggID:     "a1",
+        Seq:       11,
+        Event:     evtByte,
+        EventType: proto.MessageName(evt),
     }
 
-    msg1Byte, _ = eventstore.MarshalEventMsg(msg2)
+    msg1Byte, _ = event.MarshalMsg(msg2)
     data2 := base64.StdEncoding.EncodeToString(msg1Byte)
 
     payload := fmt.Sprintf(`{
@@ -76,15 +76,15 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 
     bpayload := []byte(payload)
 
-    event := &KinesisStreamEvent{}
-    err = common.UnmarshalJSON(bpayload, event)
+    kinevt := &KinesisStreamEvent{}
+    err = common.UnmarshalJSON(bpayload, kinevt)
     require.NoError(t, err)
-    require.Len(t, event.Records, 2)
-    require.Equal(t, msg1, event.Records[0].Kinesis.Data.EventMsg)
-    require.Equal(t, msg2, event.Records[1].Kinesis.Data.EventMsg)
+    require.Len(t, kinevt.Records, 2)
+    require.Equal(t, msg1, kinevt.Records[0].Kinesis.Data.EventMsg)
+    require.Equal(t, msg2, kinevt.Records[1].Kinesis.Data.EventMsg)
 
     pp := &domain.StockItemCreated{}
-    err = eventstore.UnmarshalEvent(event.Records[0].Kinesis.Data.EventMsg.Event, pp)
+    err = event.UnmarshalEvent(kinevt.Records[0].Kinesis.Data.EventMsg.Event, pp)
     require.NoError(t, err)
     require.Equal(t, evt, pp)
 }

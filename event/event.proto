@@ -1,0 +1,17 @@
+syntax = "proto3";
+package zamus.event;
+option go_package = "event";
+
+message Msg {
+    string id = 1;
+    string aggID = 2;
+    string eventType = 3;
+    bytes event = 4;
+    int64 time = 5;
+    int64 seq = 6;
+    map<string, string> metadata = 7;
+}
+
+message MsgList {
+    repeated Msg msgs = 1;
+}

@@ -4,10 +4,11 @@ import (
     "github.com/gogo/protobuf/proto"
     "github.com/onedaycat/errors"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
 )
 
 type AggregateRoot interface {
-    Apply(payload *EventMsg) errors.Error
+    Apply(payload *event.Msg) errors.Error
     CurrentVersion() int
     GetAggregateID() string
     SetAggregateID(id string)
@@ -33,7 +34,6 @@ type AggregateBase struct {
     eventid        string
     id             string
     currentVersion int
-    snpshotVersion int
 }
 
 // InitAggregate if id is empty, id will be generated
@@ -56,7 +56,7 @@ func (a *AggregateBase) SetAggregateID(id string) {
 
 func (a *AggregateBase) Publish(eventData proto.Message) {
     a.events = append(a.events, eventData)
-    a.eventTypes = append(a.eventTypes, proto.MessageName(eventData))
+    a.eventTypes = append(a.eventTypes, event.EventType(eventData))
 }
 
 func (a *AggregateBase) GetEvents() []proto.Message {
@@ -112,17 +112,18 @@ func (a *AggregateBase) CurrentVersion() int {
     return a.currentVersion
 }
 
-func (a *AggregateBase) SnapshotVersion() int {
-    return a.snpshotVersion
-}
-
-func (a *AggregateBase) Apply(msg *EventMsg) errors.Error {
+func (a *AggregateBase) Apply(msg *event.Msg) errors.Error {
     return appErr.ErrNotImplement
 }
 
-func (a *AggregateBase) HasEvent(eventType string) bool {
+func (a *AggregateBase) HasEvent(evt proto.Message) bool {
+    name := event.EventType(evt)
+    if name == emptyStr {
+        return false
+    }
+
     for _, et := range a.eventTypes {
-        if et == eventType {
+        if et == name {
             return true
         }
     }

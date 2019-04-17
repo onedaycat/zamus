@@ -4,18 +4,18 @@ import (
     "testing"
     "time"
 
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )
 
 func TestEventMsg(t *testing.T) {
-    var msg *eventstore.EventMsg
+    var msg *event.Msg
 
     msg = EventMsg().
         AggregateID("f1").
         Build()
-    require.Equal(t, "f1", msg.AggregateID)
+    require.Equal(t, "f1", msg.AggID)
 
     msg = EventMsg().
         New().
@@ -33,25 +33,15 @@ func TestEventMsg(t *testing.T) {
         Build()
     require.Equal(t, now, msg.Time)
 
-    metadata := eventstore.NewMetadata().SetUserID("u1")
+    metadata := event.Metadata{"u": "u1"}
     msg = EventMsg().
         Metadata(metadata).
         Build()
     require.Equal(t, map[string]string(metadata), msg.Metadata)
 
-    event := &domain.StockItemCreated{Id: "1"}
+    evt := &domain.StockItemCreated{Id: "1"}
     msg = EventMsg().
-        Event(event).
+        Event(evt).
         Build()
     require.NotNil(t, msg)
-
-    msg = EventMsg().
-        Versionn("2").
-        Build()
-    require.Equal(t, "2", msg.EventVersion)
-
-    msgByte := EventMsg().
-        Versionn("2").
-        BuildJSON()
-    require.NotNil(t, msgByte)
 }

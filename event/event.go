@@ -1,8 +1,7 @@
-package eventstore
+package event
 
 import (
     "reflect"
-    "time"
 
     "github.com/gogo/protobuf/proto"
     "github.com/golang/snappy"
@@ -10,30 +9,21 @@ import (
     appErr "github.com/onedaycat/zamus/errors"
 )
 
-type EventPublish struct {
-    Event    proto.Message
-    Metadata Metadata
-    // optional, auto id if empty
-    AggregateID string
-    // optional, auto seq if 0
-    Seq int64
-}
+type Metadata = map[string]string
+type Event = proto.Message
+type Msgs = []*Msg
 
-func (m *EventMsg) UnmarshalEvent(evt proto.Message) errors.Error {
+func (m *Msg) UnmarshalEvent(evt proto.Message) errors.Error {
     return UnmarshalEvent(m.Event, evt)
 }
 
-func (m *EventMsg) MustUnmarshalEvent(evt proto.Message) {
+func (m *Msg) MustUnmarshalEvent(evt proto.Message) {
     if err := m.UnmarshalEvent(evt); err != nil {
         panic(err)
     }
 }
 
-func (m *EventMsg) AddExpired(d time.Duration) {
-    m.Expired = time.Unix(m.Time, 0).Add(d).Unix()
-}
-
-func (m *EventMsg) MustParseEvent() proto.Message {
+func (m *Msg) MustParseEvent() proto.Message {
     t := proto.MessageType(m.EventType)
     if t == nil {
         panic(appErr.ErrEventProtoNotRegistered.WithCaller().WithInput(m))
@@ -69,7 +59,7 @@ func UnmarshalEvent(data []byte, evt proto.Message) errors.Error {
     return nil
 }
 
-func MarshalEventMsg(evt proto.Message) ([]byte, errors.Error) {
+func MarshalMsg(evt proto.Message) ([]byte, errors.Error) {
     data, err := proto.Marshal(evt)
     if err != nil {
         return nil, appErr.ErrUnableMarshal.WithCause(err).WithCaller().WithInput(evt)
@@ -81,7 +71,7 @@ func MarshalEventMsg(evt proto.Message) ([]byte, errors.Error) {
     return dst, nil
 }
 
-func UnmarshalEventMsg(data []byte, evt proto.Message) errors.Error {
+func UnmarshalMsg(data []byte, evt proto.Message) errors.Error {
     var dst []byte
     var err error
     dst, err = snappy.Decode(dst, data)
@@ -94,4 +84,19 @@ func UnmarshalEventMsg(data []byte, evt proto.Message) errors.Error {
     }
 
     return nil
+}
+
+//noinspection GoUnusedExportedFunction
+func EventType(evt proto.Message) string {
+    return proto.MessageName(evt)
+}
+
+//noinspection GoUnusedExportedFunction
+func EventTypes(evts ...proto.Message) []string {
+    types := make([]string, len(evts))
+    for i, evt := range evts {
+        types[i] = proto.MessageName(evt)
+    }
+
+    return types
 }

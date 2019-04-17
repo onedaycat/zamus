@@ -7,18 +7,19 @@ import (
 
     "github.com/onedaycat/errors"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/eventstore"
 )
 
 type EventStoreStroage struct {
-    eventstore map[string][]*eventstore.EventMsg
+    eventstore map[string]event.Msgs
     snapshot   map[string]*eventstore.Snapshot
     locker     sync.Mutex
 }
 
 func New() *EventStoreStroage {
     return &EventStoreStroage{
-        eventstore: make(map[string][]*eventstore.EventMsg),
+        eventstore: make(map[string]event.Msgs),
         snapshot:   make(map[string]*eventstore.Snapshot),
     }
 }
@@ -27,11 +28,11 @@ func (d *EventStoreStroage) Truncate() {
     d.locker.Lock()
     defer d.locker.Unlock()
 
-    d.eventstore = make(map[string][]*eventstore.EventMsg)
+    d.eventstore = make(map[string]event.Msgs)
     d.snapshot = make(map[string]*eventstore.Snapshot)
 }
 
-func (d *EventStoreStroage) GetEvents(ctx context.Context, aggID string, seq int64) ([]*eventstore.EventMsg, errors.Error) {
+func (d *EventStoreStroage) GetEvents(ctx context.Context, aggID string, seq int64) (event.Msgs, errors.Error) {
     d.locker.Lock()
     defer d.locker.Unlock()
 
@@ -40,7 +41,7 @@ func (d *EventStoreStroage) GetEvents(ctx context.Context, aggID string, seq int
         return nil, nil
     }
 
-    msgs := make([]*eventstore.EventMsg, 0, 1000)
+    msgs := make(event.Msgs, 0, 1000)
 
     for _, msg := range store {
         if seq < msg.Seq {
@@ -71,7 +72,7 @@ func (d *EventStoreStroage) GetSnapshot(ctx context.Context, aggID string, versi
     return snap, nil
 }
 
-func (d *EventStoreStroage) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
+func (d *EventStoreStroage) Save(ctx context.Context, msgs event.Msgs, snapshot *eventstore.Snapshot) errors.Error {
     d.locker.Lock()
     defer d.locker.Unlock()
 
@@ -82,11 +83,11 @@ func (d *EventStoreStroage) Save(ctx context.Context, msgs []*eventstore.EventMs
     return d.saveSnapshot(ctx, snapshot)
 }
 
-func (d *EventStoreStroage) saveEvents(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
-    aggid := msgs[0].AggregateID
+func (d *EventStoreStroage) saveEvents(ctx context.Context, msgs event.Msgs) errors.Error {
+    aggid := msgs[0].AggID
     dmsgs, ok := d.eventstore[aggid]
     if !ok {
-        d.eventstore[aggid] = make([]*eventstore.EventMsg, 0, 1000)
+        d.eventstore[aggid] = make(event.Msgs, 0, 1000)
         dmsgs = d.eventstore[aggid]
     }
 
@@ -111,7 +112,7 @@ func (d *EventStoreStroage) saveSnapshot(ctx context.Context, snapshot *eventsto
         return nil
     }
 
-    d.snapshot[snapshot.AggregateID+":"+strconv.Itoa(snapshot.Version)] = snapshot
+    d.snapshot[snapshot.AggID+":"+strconv.Itoa(snapshot.Version)] = snapshot
 
     return nil
 }

@@ -6,22 +6,23 @@ import (
     "github.com/gogo/protobuf/proto"
     "github.com/onedaycat/errors"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/clock"
     "github.com/onedaycat/zamus/internal/common/eid"
 )
 
-//go:generate mockery -name=EventStore
-
 const emptyStr = ""
 
+//go:generate mockery -name=EventStore
 type EventStore interface {
-    GetEvents(ctx context.Context, aggID string, seq int64) ([]*EventMsg, errors.Error)
+    GetEvents(ctx context.Context, aggID string, seq int64) (event.Msgs, errors.Error)
     GetAggregate(ctx context.Context, aggID string, agg AggregateRoot) errors.Error
     GetAggregateBySeq(ctx context.Context, aggID string, agg AggregateRoot, seq int64) errors.Error
     Save(ctx context.Context, agg AggregateRoot) errors.Error
-    SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata Metadata) errors.Error
-    PublishEvents(ctx context.Context, events ...*EventPublish) errors.Error
+    SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata event.Metadata) errors.Error
+    PublishEvents(ctx context.Context, evts ...proto.Message) errors.Error
+    PublishEventsWithMetadata(ctx context.Context, metadata map[string]string, evts ...proto.Message) errors.Error
 }
 
 type eventStore struct {
@@ -46,7 +47,7 @@ func (es *eventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg A
 
     for _, msg := range msgs {
         agg.SetSequence(msg.Seq)
-        agg.SetLastEventID(msg.EventID)
+        agg.SetLastEventID(msg.Id)
         agg.SetLastEventTime(msg.Time)
         seq = msg.Seq
         if err = agg.Apply(msg); err != nil {
@@ -68,12 +69,12 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
     }
 
     if snapshot != nil {
-        agg.SetAggregateID(snapshot.AggregateID)
+        agg.SetAggregateID(snapshot.AggID)
         agg.SetSequence(snapshot.Seq)
-        agg.SetLastEventID(snapshot.EventID)
+        agg.SetLastEventID(snapshot.EventMsgID)
         agg.SetLastEventTime(snapshot.Time)
 
-        if err := common.UnmarshalJSONSnappy(snapshot.Aggregate, agg); err != nil {
+        if err := common.UnmarshalJSONSnappy(snapshot.Agg, agg); err != nil {
             return err
         }
 
@@ -91,7 +92,7 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
 
     for _, msg := range msgs {
         agg.SetSequence(msg.Seq)
-        agg.SetLastEventID(msg.EventID)
+        agg.SetLastEventID(msg.Id)
         agg.SetLastEventTime(msg.Time)
         seq = msg.Seq
         if err = agg.Apply(msg); err != nil {
@@ -104,7 +105,7 @@ func (es *eventStore) GetAggregate(ctx context.Context, aggID string, agg Aggreg
     return nil
 }
 
-func (es *eventStore) GetEvents(ctx context.Context, id string, seq int64) ([]*EventMsg, errors.Error) {
+func (es *eventStore) GetEvents(ctx context.Context, id string, seq int64) (event.Msgs, errors.Error) {
     return es.storage.GetEvents(ctx, id, seq)
 }
 
@@ -112,7 +113,7 @@ func (es *eventStore) GetSnapshot(ctx context.Context, aggID string, version int
     return es.storage.GetSnapshot(ctx, aggID, version)
 }
 
-func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata Metadata) errors.Error {
+func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, metadata event.Metadata) errors.Error {
     events := agg.GetEvents()
     n := len(events)
     if n == 0 {
@@ -123,31 +124,31 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
         return appErr.ErrNoAggregateID.WithCaller().WithInput(agg)
     }
 
-    msgs := make([]*EventMsg, n)
+    msgs := make(event.Msgs, n)
     now := clock.Now().Unix()
     eventTypes := agg.GetEventTypes()
 
-    var lastEvent *EventMsg
+    var lastEvent *event.Msg
 
     for i := 0; i < n; i++ {
         agg.IncreaseSequence()
         aggid := agg.GetAggregateID()
         seq := agg.GetSequence()
-        evtID := eid.CreateEventID(aggid, seq)
+        evtID := eid.GenerateID()
 
-        eventAny, err := MarshalEvent(events[i])
+        eventAny, err := event.MarshalEvent(events[i])
         if err != nil {
             return err
         }
 
-        msgs[i] = &EventMsg{
-            EventID:     evtID,
-            EventType:   eventTypes[i],
-            AggregateID: aggid,
-            Seq:         seq,
-            Event:       eventAny,
-            Time:        now,
-            Metadata:    metadata,
+        msgs[i] = &event.Msg{
+            Id:        evtID,
+            EventType: eventTypes[i],
+            AggID:     aggid,
+            Seq:       seq,
+            Event:     eventAny,
+            Time:      now,
+            Metadata:  metadata,
         }
     }
 
@@ -164,12 +165,12 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
     }
 
     snapshot = &Snapshot{
-        AggregateID: agg.GetAggregateID(),
-        Aggregate:   aggDataSnap,
-        EventID:     lastEvent.EventID,
-        Time:        lastEvent.Time,
-        Seq:         lastEvent.Seq,
-        Version:     agg.CurrentVersion(),
+        AggID:      agg.GetAggregateID(),
+        Agg:        aggDataSnap,
+        EventMsgID: lastEvent.Id,
+        Time:       lastEvent.Time,
+        Seq:        lastEvent.Seq,
+        Version:    agg.CurrentVersion(),
     }
 
     if err := es.storage.Save(ctx, msgs, snapshot); err != nil {
@@ -178,7 +179,7 @@ func (es *eventStore) SaveWithMetadata(ctx context.Context, agg AggregateRoot, m
 
     agg.ClearEvents()
     agg.SetLastEventTime(lastEvent.Time)
-    agg.SetLastEventID(lastEvent.EventID)
+    agg.SetLastEventID(lastEvent.Id)
 
     return nil
 }
@@ -187,38 +188,36 @@ func (es *eventStore) Save(ctx context.Context, agg AggregateRoot) errors.Error 
     return es.SaveWithMetadata(ctx, agg, nil)
 }
 
-func (es *eventStore) PublishEvents(ctx context.Context, events ...*EventPublish) errors.Error {
-    msgs := make([]*EventMsg, len(events))
+func (es *eventStore) PublishEventsWithMetadata(ctx context.Context, metadata map[string]string, evts ...proto.Message) errors.Error {
+    msgs := make(event.Msgs, len(evts))
     now := clock.Now().Unix()
+    var seq int64
+    seq = 1
 
-    for i := 0; i < len(events); i++ {
-        aggid := events[i].AggregateID
-        if aggid == emptyStr {
-            aggid = eid.GenerateID()
-        }
-        seq := events[i].Seq
-        if seq == 0 {
-            seq = now
-        }
-
-        evtid := eid.CreateEventID(aggid, seq)
-        eventType := proto.MessageName(events[i].Event)
-
-        eventAny, err := MarshalEvent(events[i].Event)
+    for i := 0; i < len(evts); i++ {
+        aggid := eid.GenerateID()
+        evtid := aggid
+        eventType := event.EventType(evts[i])
+        eventPayload, err := event.MarshalEvent(evts[i])
         if err != nil {
             return err
         }
 
-        msgs[i] = &EventMsg{
-            EventID:     evtid,
-            EventType:   eventType,
-            AggregateID: aggid,
-            Event:       eventAny,
-            Time:        now,
-            Seq:         seq,
-            Metadata:    events[i].Metadata,
+        msgs[i] = &event.Msg{
+            Id:        evtid,
+            EventType: eventType,
+            AggID:     aggid,
+            Event:     eventPayload,
+            Time:      now,
+            Seq:       seq,
+            Metadata:  metadata,
         }
+        seq++
     }
 
     return es.storage.Save(ctx, msgs, nil)
+}
+
+func (es *eventStore) PublishEvents(ctx context.Context, evts ...proto.Message) errors.Error {
+    return es.PublishEventsWithMetadata(ctx, nil, evts...)
 }

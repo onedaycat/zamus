@@ -5,12 +5,12 @@ import (
 
     "github.com/onedaycat/errors"
     "github.com/onedaycat/zamus/dql"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
 )
 
-type EventMsg = eventstore.EventMsg
-type EventMsgs = []*eventstore.EventMsg
+type EventMsg = event.Msg
+type EventMsgs = event.Msgs
 
 type LambdaHandler func(ctx context.Context, event *KinesisStreamEvent)
 type EventMessagesHandler func(ctx context.Context, msgs EventMsgs) errors.Error

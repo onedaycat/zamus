@@ -1,7 +1,7 @@
 package random
 
 import (
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/reactor/dynamostream"
 )
@@ -42,17 +42,17 @@ func (b *dynamodbBuilder) RandomMessage(n int) *dynamodbBuilder {
     return b
 }
 
-func (b *dynamodbBuilder) Add(events ...*eventstore.EventMsg) *dynamodbBuilder {
-    for _, event := range events {
+func (b *dynamodbBuilder) Add(events ...*event.Msg) *dynamodbBuilder {
+    for _, evt := range events {
         b.event.Records = append(b.event.Records, &dynamostream.Record{
             EventName: dynamostream.EventInsert,
             DynamoDB: &dynamostream.DynamoDBRecord{
                 NewImage: &dynamostream.Payload{
-                    EventMsg: event,
+                    EventMsg: evt,
                 },
             },
         })
-        b.eventTypes.Set(event.EventType)
+        b.eventTypes.Set(evt.EventType)
     }
 
     return b

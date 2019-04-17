@@ -2,7 +2,7 @@ package random
 
 import (
     "github.com/gogo/protobuf/proto"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/reactor/kinesisstream"
 )
@@ -10,14 +10,13 @@ import (
 type EventMsgsOption func(opts *eventMsgsOptions)
 
 type eventMsgsOptions struct {
-    meatadata eventstore.Metadata
+    meatadata event.Metadata
     aggid     string
     eventTime int64
-    version   string
     events    []proto.Message
 }
 
-func WithMetadata(meatadata eventstore.Metadata) EventMsgsOption {
+func WithMetadata(meatadata event.Metadata) EventMsgsOption {
     return func(opts *eventMsgsOptions) {
         opts.meatadata = meatadata
     }
@@ -41,25 +40,19 @@ func WithEvent(events ...proto.Message) EventMsgsOption {
     }
 }
 
-func WithVersion(version string) EventMsgsOption {
-    return func(opts *eventMsgsOptions) {
-        opts.version = version
-    }
-}
-
 type eventsBuilder struct {
     seq  int64
-    msgs []*eventstore.EventMsg
+    msgs event.Msgs
 }
 
 func EventMsgs() *eventsBuilder {
     return &eventsBuilder{
-        msgs: make([]*eventstore.EventMsg, 0, 100),
+        msgs: make(event.Msgs, 0, 100),
         seq:  1,
     }
 }
 
-func (b *eventsBuilder) Build() []*eventstore.EventMsg {
+func (b *eventsBuilder) Build() event.Msgs {
     return b.msgs
 }
 
@@ -79,7 +72,7 @@ func (b *eventsBuilder) Add(options ...EventMsgsOption) *eventsBuilder {
     return b
 }
 
-func (b *eventsBuilder) AddEventMsgs(msgs ...*eventstore.EventMsg) *eventsBuilder {
+func (b *eventsBuilder) AddEventMsgs(msgs ...*event.Msg) *eventsBuilder {
     for _, msg := range msgs {
         b.msgs = append(b.msgs, msg)
         b.seq++
@@ -132,10 +125,6 @@ func (b *eventsBuilder) setOptions(opts *eventMsgsOptions, builder *eventBuilder
 
     if opts.eventTime > 0 {
         builder.Time(opts.eventTime)
-    }
-
-    if opts.version != "" {
-        builder.Versionn(opts.version)
     }
 
     if len(opts.events) > 0 {

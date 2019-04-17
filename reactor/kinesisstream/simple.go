@@ -7,7 +7,7 @@ import (
     "github.com/onedaycat/errors"
     "github.com/onedaycat/zamus/dql"
     appErr "github.com/onedaycat/zamus/errors"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
 )
 
@@ -146,11 +146,11 @@ DQLRetry:
                 }
             }
 
-            msgList := &eventstore.EventMsgList{
-                EventMsgs: msgs,
+            msgList := &event.MsgList{
+                Msgs: msgs,
             }
 
-            msgListByte, _ := eventstore.MarshalEventMsg(msgList)
+            msgListByte, _ := event.MarshalMsg(msgList)
 
             return c.dql.Save(ctx, msgListByte)
         }

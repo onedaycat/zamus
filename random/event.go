@@ -5,13 +5,13 @@ import (
 
     random "github.com/Pallinder/go-randomdata"
     "github.com/gogo/protobuf/proto"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/eid"
 )
 
 type eventBuilder struct {
-    msg *eventstore.EventMsg
+    msg *event.Msg
 }
 
 func EventMsg() *eventBuilder {
@@ -20,23 +20,22 @@ func EventMsg() *eventBuilder {
     eventID := eid.CreateEventID(aggid, 1)
 
     return &eventBuilder{
-        msg: &eventstore.EventMsg{
-            EventID:      eventID,
-            EventType:    random.SillyName(),
-            EventVersion: "1",
-            AggregateID:  aggid,
-            Time:         t,
-            Seq:          1,
+        msg: &event.Msg{
+            Id:        eventID,
+            EventType: random.SillyName(),
+            AggID:     aggid,
+            Time:      t,
+            Seq:       1,
         },
     }
 }
 
-func (b *eventBuilder) Build() *eventstore.EventMsg {
+func (b *eventBuilder) Build() *event.Msg {
     return b.msg
 }
 
 func (b *eventBuilder) AggregateID(aggid string) *eventBuilder {
-    b.msg.AggregateID = aggid
+    b.msg.AggID = aggid
 
     return b
 }
@@ -49,7 +48,7 @@ func (b *eventBuilder) New() *eventBuilder {
 
 func (b *eventBuilder) Seq(seq int64) *eventBuilder {
     b.msg.Seq = seq
-    b.msg.EventID = eid.CreateEventID(b.msg.AggregateID, b.msg.Seq)
+    b.msg.Id = eid.CreateEventID(b.msg.AggID, b.msg.Seq)
 
     return b
 }
@@ -60,20 +59,14 @@ func (b *eventBuilder) Time(t int64) *eventBuilder {
     return b
 }
 
-func (b *eventBuilder) Metadata(metadata eventstore.Metadata) *eventBuilder {
+func (b *eventBuilder) Metadata(metadata event.Metadata) *eventBuilder {
     b.msg.Metadata = metadata
 
     return b
 }
 
-func (b *eventBuilder) Versionn(version string) *eventBuilder {
-    b.msg.EventVersion = version
-
-    return b
-}
-
 func (b *eventBuilder) Event(evt proto.Message) *eventBuilder {
-    data, err := eventstore.MarshalEvent(evt)
+    data, err := event.MarshalEvent(evt)
     if err != nil {
         panic(err)
     }
@@ -85,7 +78,7 @@ func (b *eventBuilder) Event(evt proto.Message) *eventBuilder {
 }
 
 func (b *eventBuilder) BuildProto() []byte {
-    data, err := eventstore.MarshalEventMsg(b.msg)
+    data, err := event.MarshalMsg(b.msg)
     if err != nil {
         panic(err)
     }

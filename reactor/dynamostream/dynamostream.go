@@ -1,9 +1,9 @@
 package dynamostream
 
 import (
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
 )
 
-type EventMsg = eventstore.EventMsg
-type EventMsgs = []*eventstore.EventMsg
-type EventMsgList = eventstore.EventMsgList
+type EventMsg = event.Msg
+type EventMsgs = []*event.Msg
+type EventMsgList = event.MsgList

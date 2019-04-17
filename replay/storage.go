@@ -1,9 +1,9 @@
 package replay
 
 import (
-	"github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
 )
 
 type Storage interface {
-	Query(fromTime, toTime int64, eventTypes []string, aggID string) ([]*eventstore.EventMsg, error)
+    Query(fromTime, toTime int64, eventTypes []string, aggID string) (event.Msgs, error)
 }

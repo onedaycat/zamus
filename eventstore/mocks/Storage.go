@@ -4,6 +4,7 @@ package mocks
 
 import context "context"
 import errors "github.com/onedaycat/errors"
+import event "github.com/onedaycat/zamus/event"
 import eventstore "github.com/onedaycat/zamus/eventstore"
 import mock "github.com/stretchr/testify/mock"
 
@@ -13,15 +14,15 @@ type Storage struct {
 }
 
 // GetEvents provides a mock function with given fields: ctx, aggID, seq
-func (_m *Storage) GetEvents(ctx context.Context, aggID string, seq int64) ([]*eventstore.EventMsg, errors.Error) {
+func (_m *Storage) GetEvents(ctx context.Context, aggID string, seq int64) ([]*event.Msg, errors.Error) {
 	ret := _m.Called(ctx, aggID, seq)
 
-	var r0 []*eventstore.EventMsg
-	if rf, ok := ret.Get(0).(func(context.Context, string, int64) []*eventstore.EventMsg); ok {
+	var r0 []*event.Msg
+	if rf, ok := ret.Get(0).(func(context.Context, string, int64) []*event.Msg); ok {
 		r0 = rf(ctx, aggID, seq)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*eventstore.EventMsg)
+			r0 = ret.Get(0).([]*event.Msg)
 		}
 	}
 
@@ -63,11 +64,11 @@ func (_m *Storage) GetSnapshot(ctx context.Context, aggID string, version int) (
 }
 
 // Save provides a mock function with given fields: ctx, msgs, snapshot
-func (_m *Storage) Save(ctx context.Context, msgs []*eventstore.EventMsg, snapshot *eventstore.Snapshot) errors.Error {
+func (_m *Storage) Save(ctx context.Context, msgs []*event.Msg, snapshot *eventstore.Snapshot) errors.Error {
 	ret := _m.Called(ctx, msgs, snapshot)
 
 	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, []*eventstore.EventMsg, *eventstore.Snapshot) errors.Error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []*event.Msg, *eventstore.Snapshot) errors.Error); ok {
 		r0 = rf(ctx, msgs, snapshot)
 	} else {
 		if ret.Get(0) != nil {

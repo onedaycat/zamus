@@ -6,24 +6,25 @@ import (
 
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/sentry"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/tracer"
     "github.com/rs/zerolog/log"
 )
 
 //noinspection GoUnusedParameter
-func TraceError(ctx context.Context, msgs EventMsgs, err errors.Error) {
+func TraceError(ctx context.Context, msgs event.Msgs, err errors.Error) {
     tracer.AddError(ctx, err)
 }
 
 //noinspection GoUnusedExportedFunction, GoUnusedParameter
-func PrintPanic(ctx context.Context, msgs EventMsgs, err errors.Error) {
+func PrintPanic(ctx context.Context, msgs event.Msgs, err errors.Error) {
     if err.GetPanic() {
         fmt.Printf("%+v", err)
     }
 }
 
 //noinspection GoUnusedParameter
-func Sentry(ctx context.Context, msgs EventMsgs, err errors.Error) {
+func Sentry(ctx context.Context, msgs event.Msgs, err errors.Error) {
     if !err.HasStackTrace() {
         return
     }

@@ -10,24 +10,24 @@ import (
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/sentry"
     appErr "github.com/onedaycat/zamus/errors"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
 )
 
 type Handler struct {
 }
 
-func (h *Handler) Handle(ctx context.Context, event *events.KinesisFirehoseEvent) (*events.KinesisFirehoseResponse, errors.Error) {
-    var eventmsg *eventstore.EventMsg
+func (h *Handler) Handle(ctx context.Context, kinevt *events.KinesisFirehoseEvent) (*events.KinesisFirehoseResponse, errors.Error) {
+    var eventmsg *event.Msg
     var data []byte
     var err error
-    result := make([]events.KinesisFirehoseResponseRecord, len(event.Records))
+    result := make([]events.KinesisFirehoseResponseRecord, len(kinevt.Records))
 
-    for i, record := range event.Records {
-        eventmsg = &eventstore.EventMsg{}
-        if err = eventstore.UnmarshalEventMsg(record.Data, eventmsg); err != nil {
+    for i, record := range kinevt.Records {
+        eventmsg = &event.Msg{}
+        if err = event.UnmarshalMsg(record.Data, eventmsg); err != nil {
             xerr := appErr.ErrUnableDecode.WithCaller().WithCause(err).WithInput(record.Data)
-            Sentry(ctx, event, xerr)
+            Sentry(ctx, kinevt, xerr)
             result[i] = events.KinesisFirehoseResponseRecord{
                 RecordID: record.RecordID,
                 Result:   events.KinesisFirehoseTransformedStateProcessingFailed,
@@ -39,7 +39,7 @@ func (h *Handler) Handle(ctx context.Context, event *events.KinesisFirehoseEvent
         data, err = common.MarshalJSON(eventmsg)
         if err != nil {
             xerr := appErr.ErrUnableMarshal.WithCaller().WithCause(err).WithInput(eventmsg)
-            Sentry(ctx, event, xerr)
+            Sentry(ctx, kinevt, xerr)
             result[i] = events.KinesisFirehoseResponseRecord{
                 RecordID: record.RecordID,
                 Result:   events.KinesisFirehoseTransformedStateProcessingFailed,

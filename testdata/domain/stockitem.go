@@ -2,6 +2,7 @@ package domain
 
 import (
     "github.com/onedaycat/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/eventstore"
     "github.com/onedaycat/zamus/internal/common/clock"
 )
@@ -35,7 +36,7 @@ func (st *StockItem) Create(id, productID string, qty Qty) {
     })
 }
 
-func (st *StockItem) Apply(msg *eventstore.EventMsg) errors.Error {
+func (st *StockItem) Apply(msg *event.Msg) errors.Error {
     switch evt := msg.MustParseEvent().(type) {
     case *StockItemCreated:
         st.ProductID = evt.ProductID

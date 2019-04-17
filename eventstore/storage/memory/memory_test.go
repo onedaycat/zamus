@@ -112,12 +112,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -133,12 +133,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -154,12 +154,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -175,12 +175,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -218,12 +218,12 @@ func TestSave(t *testing.T) {
             Build()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.Save(context.Background(), msgs, v1)
@@ -253,12 +253,12 @@ func TestSave(t *testing.T) {
                 Build()
 
             v1 := &eventstore.Snapshot{
-                AggregateID: "a1",
-                Aggregate:   nil,
-                EventID:     "e1",
-                Time:        clock.Now().Unix(),
-                Seq:         10,
-                Version:     1,
+                AggID:      "a1",
+                Agg:        nil,
+                EventMsgID: "e1",
+                Time:       clock.Now().Unix(),
+                Seq:        10,
+                Version:    1,
             }
 
             return db.Save(context.Background(), msgs, v1)
@@ -271,12 +271,12 @@ func TestSave(t *testing.T) {
                 Build()
 
             v1 := &eventstore.Snapshot{
-                AggregateID: "a1",
-                Aggregate:   nil,
-                EventID:     "e1",
-                Time:        clock.Now().Unix(),
-                Seq:         10,
-                Version:     1,
+                AggID:      "a1",
+                Agg:        nil,
+                EventMsgID: "e1",
+                Time:       clock.Now().Unix(),
+                Seq:        10,
+                Version:    1,
             }
 
             return db.Save(context.Background(), msgs, v1)

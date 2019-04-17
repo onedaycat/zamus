@@ -51,9 +51,9 @@ func (r *Record) add(key, eid, etype string) {
     r.DynamoDB = &DynamoDBRecord{
         NewImage: &Payload{
             EventMsg: &EventMsg{
-                AggregateID: key,
-                EventID:     eid,
-                EventType:   etype,
+                Id:        eid,
+                AggID:     key,
+                EventType: etype,
             },
         },
     }

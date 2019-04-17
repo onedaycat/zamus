@@ -6,7 +6,7 @@ import (
     "sort"
     "testing"
 
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
@@ -14,7 +14,7 @@ import (
 
 func TestParseDynamoDBStreamEvent(t *testing.T) {
     evt := &domain.StockItemCreated{Id: "1"}
-    p, err := eventstore.MarshalEvent(evt)
+    p, err := event.MarshalEvent(evt)
     require.NoError(t, err)
     p64 := base64.StdEncoding.EncodeToString(p)
 
@@ -38,14 +38,11 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						}
 					},
 					"NewImage": {
-						"aggregateID": {
+						"aggID": {
 							"S": "a1"
 						},
-						"version": {
-							"N": "10"
-						},
 						"eventType": {
-							"S": "domain.aggregate.event"
+							"S": "domain.aggregate.dyevt"
 						},
 						"seq": {
 							"N": "10002"
@@ -73,14 +70,11 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 					  }
 				   },
 				   "NewImage": {
-					"aggregateID": {
+					"aggID": {
 						"S": "a1"
 					},
-					"version": {
-						"N": "10"
-					},
 					"eventType": {
-						"S": "domain.aggregate.event"
+						"S": "domain.aggregate.dyevt"
 					},
 					"seq": {
 						"N": "10001"
@@ -98,18 +92,18 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 		]
 	}`, p64, p64)
 
-    event := &DynamoDBStreamEvent{}
-    err = common.UnmarshalJSON([]byte(payload), event)
-    sort.Sort(event.Records)
+    dyevt := &DynamoDBStreamEvent{}
+    err = common.UnmarshalJSON([]byte(payload), dyevt)
+    sort.Sort(dyevt.Records)
     require.NoError(t, err)
-    require.Len(t, event.Records, 2)
-    require.Equal(t, eventRemove, event.Records[0].EventName)
-    require.Equal(t, int64(10001), event.Records[0].DynamoDB.NewImage.EventMsg.Seq)
-    require.Equal(t, EventInsert, event.Records[1].EventName)
-    require.Equal(t, int64(10002), event.Records[1].DynamoDB.NewImage.EventMsg.Seq)
+    require.Len(t, dyevt.Records, 2)
+    require.Equal(t, eventRemove, dyevt.Records[0].EventName)
+    require.Equal(t, int64(10001), dyevt.Records[0].DynamoDB.NewImage.EventMsg.Seq)
+    require.Equal(t, EventInsert, dyevt.Records[1].EventName)
+    require.Equal(t, int64(10002), dyevt.Records[1].DynamoDB.NewImage.EventMsg.Seq)
 
     pp := &domain.StockItemCreated{}
-    err = event.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
+    err = dyevt.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
     require.NoError(t, err)
     require.Equal(t, evt, pp)
 }

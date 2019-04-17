@@ -8,6 +8,7 @@ import (
 
     "github.com/golang/snappy"
     "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/eventstore"
     "github.com/onedaycat/zamus/eventstore/mocks"
     "github.com/onedaycat/zamus/eventstore/storage/memory"
@@ -68,6 +69,7 @@ func TestWorkFlow(t *testing.T) {
             Qty:       1,
         }, st.GetEvents()[0])
 
+        eid.FreezeID("xxx")
         now := time.Now()
         clock.Freeze(now)
         err = s.es.Save(s.ctx, st)
@@ -75,7 +77,7 @@ func TestWorkFlow(t *testing.T) {
         require.Equal(t, int64(1), st.GetSequence())
         require.Len(t, st.GetEvents(), 0)
         require.Equal(t, now.Unix(), st.GetLastEventTime())
-        require.Equal(t, "a1:1", st.GetLastEventID())
+        require.Equal(t, "xxx", st.GetLastEventID())
 
         st2 := domain.NewStockItem()
         err = s.es.GetAggregate(s.ctx, "a1", st2)
@@ -99,6 +101,8 @@ func TestWorkFlow(t *testing.T) {
             Qty:       1,
         }, st.GetEvents()[0])
 
+        eid.FreezeID("xxx")
+
         now := time.Now()
         clock.Freeze(now)
         err = s.es.Save(s.ctx, st)
@@ -115,7 +119,7 @@ func TestWorkFlow(t *testing.T) {
         require.Equal(t, int64(3), st2.GetSequence())
         require.Len(t, st.GetEvents(), 0)
         require.Equal(t, now.Unix(), st2.GetLastEventTime())
-        require.Equal(t, "a1:3", st2.GetLastEventID())
+        require.Equal(t, "xxx", st2.GetLastEventID())
 
         st3 := domain.NewStockItem()
         err = s.es.GetAggregate(s.ctx, "a1", st3)
@@ -154,12 +158,12 @@ func TestGetAggregate(t *testing.T) {
         clock.Freeze(now)
 
         snapshot := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   dst,
-            EventID:     "a1:1",
-            Time:        now.Unix(),
-            Seq:         1,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        dst,
+            EventMsgID: "a1:1",
+            Time:       now.Unix(),
+            Seq:        1,
+            Version:    1,
         }
 
         s.mockStore.On("GetSnapshot", s.ctx, "a1", 1).Return(snapshot, nil)
@@ -180,7 +184,7 @@ func TestSaveAndGet(t *testing.T) {
     now1 := time.Now().UTC().Add(time.Second * -10)
     now2 := time.Now().UTC().Add(time.Second * -5)
 
-    metadata := eventstore.NewMetadata().SetUserID("u1")
+    metadata := event.Metadata{"u": "u1"}
 
     id := eid.GenerateID()
     st := domain.NewStockItem()
@@ -310,51 +314,15 @@ func TestPubishEvents(t *testing.T) {
 
         eid.FreezeID("id1")
 
-        st := &domain.StockItemCreated{
-            Id:        "id1",
-            ProductID: "p1",
-            Qty:       1,
-        }
-
-        event := &eventstore.EventPublish{
-            Event: st,
-        }
-
-        err := es.PublishEvents(ctx, event)
-        require.NoError(t, err)
-
-        getEvents, err := es.GetEvents(ctx, "id1", 0)
-        require.NoError(t, err)
-        require.Len(t, getEvents, 1)
-    })
-
-    t.Run("SuccessWithAggAndSeq", func(t *testing.T) {
-        db := getDB()
-        ctx := context.Background()
-
-        db.Truncate()
-        es := eventstore.NewEventStore(db)
-
-        eid.UnFreezeID()
-        now := time.Now().UTC()
-
-        events := []*eventstore.EventPublish{
-            {
-                AggregateID: "id1",
-                Seq:         now.Add(time.Second * 1).Unix(),
-                Event: &domain.StockItemCreated{
-                    Id:        "id1",
-                    ProductID: "p1",
-                    Qty:       1,
-                },
+        events := []event.Event{
+            &domain.StockItemCreated{
+                Id:        "id1",
+                ProductID: "p1",
+                Qty:       1,
             },
-            {
-                AggregateID: "id1",
-                Seq:         now.Add(time.Second * 2).Unix(),
-                Event: &domain.StockItemRemoved{
-                    ProductID: "p1",
-                    RemovedAt: 1,
-                },
+            &domain.StockItemRemoved{
+                ProductID: "p1",
+                RemovedAt: 1,
             },
         }
 

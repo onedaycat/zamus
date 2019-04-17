@@ -4,7 +4,6 @@ package dynamodb
 
 import (
     "context"
-    "fmt"
     "testing"
 
     "github.com/aws/aws-sdk-go/aws"
@@ -99,7 +98,6 @@ func TestGetEvents(t *testing.T) {
         err := db.saveEvents(context.Background(), msgs)
         require.NoError(t, err)
         msgsResult, err := db.GetEvents(context.Background(), "a1", 10)
-        fmt.Println(msgsResult)
         require.NoError(t, err)
         require.Len(t, msgsResult, 0)
         require.Nil(t, msgsResult)
@@ -132,12 +130,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -153,12 +151,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -174,12 +172,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -195,12 +193,12 @@ func TestGetSnapshot(t *testing.T) {
         db.Truncate()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.saveSnapshot(context.Background(), v1)
@@ -238,12 +236,12 @@ func TestSave(t *testing.T) {
             Build()
 
         v1 := &eventstore.Snapshot{
-            AggregateID: "a1",
-            Aggregate:   nil,
-            EventID:     "e1",
-            Time:        clock.Now().Unix(),
-            Seq:         10,
-            Version:     1,
+            AggID:      "a1",
+            Agg:        nil,
+            EventMsgID: "e1",
+            Time:       clock.Now().Unix(),
+            Seq:        10,
+            Version:    1,
         }
 
         err := db.Save(context.Background(), msgs, v1)
@@ -273,12 +271,12 @@ func TestSave(t *testing.T) {
                 Build()
 
             v1 := &eventstore.Snapshot{
-                AggregateID: "a1",
-                Aggregate:   nil,
-                EventID:     "e1",
-                Time:        clock.Now().Unix(),
-                Seq:         10,
-                Version:     1,
+                AggID:      "a1",
+                Agg:        nil,
+                EventMsgID: "e1",
+                Time:       clock.Now().Unix(),
+                Seq:        10,
+                Version:    1,
             }
 
             return db.Save(context.Background(), msgs, v1)
@@ -291,12 +289,12 @@ func TestSave(t *testing.T) {
                 Build()
 
             v1 := &eventstore.Snapshot{
-                AggregateID: "a1",
-                Aggregate:   nil,
-                EventID:     "e1",
-                Time:        clock.Now().Unix(),
-                Seq:         10,
-                Version:     1,
+                AggID:      "a1",
+                Agg:        nil,
+                EventMsgID: "e1",
+                Time:       clock.Now().Unix(),
+                Seq:        10,
+                Version:    1,
             }
 
             return db.Save(context.Background(), msgs, v1)

@@ -1,7 +1,7 @@
 package random
 
 import (
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/reactor/kinesisstream"
 )
@@ -46,17 +46,17 @@ func (b *kinesisBuilder) RandomMessage(n int) *kinesisBuilder {
     return b
 }
 
-func (b *kinesisBuilder) Add(events ...*eventstore.EventMsg) *kinesisBuilder {
-    for _, event := range events {
+func (b *kinesisBuilder) Add(events ...*event.Msg) *kinesisBuilder {
+    for _, evt := range events {
         b.event.Records = append(b.event.Records, &kinesisstream.Record{
             Kinesis: &kinesisstream.KinesisPayload{
-                PartitionKey: event.AggregateID,
+                PartitionKey: evt.AggID,
                 Data: &kinesisstream.Payload{
-                    EventMsg: event,
+                    EventMsg: evt,
                 },
             },
         })
-        b.eventTypes.Set(event.EventType)
+        b.eventTypes.Set(evt.EventType)
     }
 
     return b

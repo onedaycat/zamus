@@ -5,13 +5,13 @@ import (
     "testing"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/random"
     "github.com/onedaycat/zamus/reactor/kinesisstream"
 )
 
 func BenchmarkPartition(b *testing.B) {
-    h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
+    h := func(ctx context.Context, msgs event.Msgs) errors.Error {
         // time.Sleep(100 * time.Millisecond)
         return nil
     }
@@ -35,7 +35,7 @@ func BenchmarkPartition(b *testing.B) {
 }
 
 func BenchmarkSimple(b *testing.B) {
-    h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
+    h := func(ctx context.Context, msgs event.Msgs) errors.Error {
         // time.Sleep(100 * time.Millisecond)
         return nil
     }
@@ -59,7 +59,7 @@ func BenchmarkSimple(b *testing.B) {
 }
 
 func BenchmarkShard(b *testing.B) {
-    h := func(ctx context.Context, msgs []*eventstore.EventMsg) errors.Error {
+    h := func(ctx context.Context, msgs event.Msgs) errors.Error {
         // time.Sleep(100 * time.Millisecond)
         return nil
     }

@@ -7,7 +7,7 @@ import (
     "time"
 
     "github.com/aws/aws-lambda-go/events"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/random"
     "github.com/stretchr/testify/require"
@@ -17,21 +17,21 @@ func TestHandle(t *testing.T) {
     var data []byte
     var err error
     now := time.Now()
-    msgs := random.EventMsgs().RandomEventMsgs(10, random.WithMetadata(eventstore.NewMetadata().SetUserID("1"))).Build()
+    msgs := random.EventMsgs().RandomEventMsgs(10, random.WithMetadata(event.Metadata{"u": "1"})).Build()
 
-    event := &events.KinesisFirehoseEvent{
+    evt := &events.KinesisFirehoseEvent{
         Records: make([]events.KinesisFirehoseEventRecord, 10),
     }
 
     for i, msg := range msgs {
-        data, err = eventstore.MarshalEventMsg(msg)
+        data, err = event.MarshalMsg(msg)
         require.NoError(t, err)
-        event.Records[i].Data = data
-        event.Records[i].RecordID = strconv.Itoa(i)
-        event.Records[i].ApproximateArrivalTimestamp = events.MilliSecondsEpochTime{Time: now}
+        evt.Records[i].Data = data
+        evt.Records[i].RecordID = strconv.Itoa(i)
+        evt.Records[i].ApproximateArrivalTimestamp = events.MilliSecondsEpochTime{Time: now}
     }
 
-    data, err = common.MarshalJSON(event)
+    data, err = common.MarshalJSON(evt)
     require.NoError(t, err)
 
     h := &Handler{}
@@ -43,12 +43,12 @@ func TestHandle(t *testing.T) {
 
     require.Len(t, res.Records, 10)
 
-    var msg *eventstore.EventMsg
+    var msg *event.Msg
     for i, rec := range res.Records {
         require.Equal(t, events.KinesisFirehoseTransformedStateOk, rec.Result)
         require.Equal(t, strconv.Itoa(i), rec.RecordID)
 
-        msg = &eventstore.EventMsg{}
+        msg = &event.Msg{}
         err = common.UnmarshalJSON(rec.Data, msg)
         require.NoError(t, err)
         require.Equal(t, msgs[i], msg)

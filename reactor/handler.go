@@ -11,7 +11,6 @@ import (
     "github.com/onedaycat/errors/sentry"
     "github.com/onedaycat/zamus/dql"
     appErr "github.com/onedaycat/zamus/errors"
-    "github.com/onedaycat/zamus/eventstore"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/reactor/kinesisstream"
     "github.com/onedaycat/zamus/tracer"
@@ -21,8 +20,6 @@ import (
 
 type EventHandler = kinesisstream.EventMessagesHandler
 type ErrorHandler = kinesisstream.EventMessagesErrorHandler
-type EventMsg = eventstore.EventMsg
-type EventMsgs = []*eventstore.EventMsg
 type LambdaEvent = kinesisstream.KinesisStreamEvent
 
 type Config struct {

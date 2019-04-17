@@ -9,7 +9,7 @@ import (
     "github.com/onedaycat/errors/errgroup"
     "github.com/onedaycat/zamus/dql"
     appErr "github.com/onedaycat/zamus/errors"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
 )
 
@@ -113,18 +113,18 @@ func (s *shardhandler) AddPK(pk string) int {
 
 func (s *shardhandler) AddEventMsg(msg *EventMsg) bool {
     if s.FilterEvents == nil {
-        index, ok := s.GetPK(msg.AggregateID)
+        index, ok := s.GetPK(msg.AggID)
         if !ok {
-            index = s.AddPK(msg.AggregateID)
+            index = s.AddPK(msg.AggID)
         }
         s.EventMsgs[index] = append(s.EventMsgs[index], msg)
         return true
     }
 
     if s.FilterEvents.Has(msg.EventType) {
-        index, ok := s.GetPK(msg.AggregateID)
+        index, ok := s.GetPK(msg.AggID)
         if !ok {
-            index = s.AddPK(msg.AggregateID)
+            index = s.AddPK(msg.AggID)
         }
         s.EventMsgs[index] = append(s.EventMsgs[index], msg)
         return true
@@ -258,10 +258,10 @@ DQLRetry:
                 }
             }
 
-            msgList := &eventstore.EventMsgList{
-                EventMsgs: msgs,
+            msgList := &event.MsgList{
+                Msgs: msgs,
             }
-            msgListByte, _ := eventstore.MarshalEventMsg(msgList)
+            msgListByte, _ := event.MarshalMsg(msgList)
 
             return c.dql.Save(ctx, msgListByte)
         }

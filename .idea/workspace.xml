@@ -6,7 +6,57 @@
   <component name="ChangeListManager">
     <list default="true" id="2171b6fe-5476-4a7d-8009-8419f4fa2d79" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Gopkg.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Gopkg.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dql/dql_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/dql/dql_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/aggregate.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/aggregate.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/event.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/event.proto" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/eventstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/eventstore.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/eventstore.pb.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/eventstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/eventstore_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/metadata.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/mocks/EventStore.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/mocks/EventStore.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/mocks/Storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/mocks/Storage.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/snapshot.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/snapshot.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/storage/memory/memory.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/memory/memory.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/eventstore/storage/memory/memory_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/memory/memory_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/dynamodb.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/dynamodb.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/event.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/event.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/event_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/event_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/events.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/events.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/events_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/events_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/random/kinesis.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/kinesis.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/dynamostream/dynamostream.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/dynamostream/dynamostream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/dynamostream/record.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/dynamostream/record.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/dynamostream/record_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/dynamostream/record_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/errors.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/handler.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/ben_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/ben_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/partition.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/partition.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/record.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/record.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/record_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/record_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/shard.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/shard.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/simple.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/simple.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/middleware.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/projectionapplyer/applyer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/projectionapplyer/mocks/ProjectionApplyer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/reactor/proto.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/replay/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/replay/storage.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/errors.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup/dynamokinesis/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/dynamokinesis/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup/dynamokinesis/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/dynamokinesis/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup/firehosetransform/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/firehosetransform/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup/firehosetransform/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/firehosetransform/main_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem.go" beforeDir="false" afterPath="$PROJECT_DIR$/testdata/domain/stockitem.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem_created.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem_removed.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem_updated.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/trigger/errors.go" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,12 +65,39 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+    <leaf>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/record_test.go">
+        <entry file="file://$PROJECT_DIR$/setup/firehosetransform/main_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="358">
-              <caret line="87" column="21" selection-start-line="87" selection-start-column="21" selection-end-line="87" selection-end-column="21" />
+            <state relative-caret-position="378">
+              <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/reactor/middleware.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="331">
+              <caret line="18" column="45" selection-start-line="18" selection-start-column="45" selection-end-line="18" selection-end-column="45" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/reactor/dynamostream/record_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1116">
+              <caret line="72" column="26" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="26" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="295">
+              <caret line="237" column="8" selection-start-line="237" selection-start-column="8" selection-end-line="237" selection-end-column="8" />
             </state>
           </provider>
         </entry>
@@ -28,72 +105,49 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/random/events.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-52">
-              <caret line="116" column="11" selection-start-line="116" selection-start-column="11" selection-end-line="116" selection-end-column="11" />
+            <state relative-caret-position="131">
+              <caret line="64" column="24" selection-start-line="64" selection-start-column="24" selection-end-line="64" selection-end-column="24" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/shard.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="266">
-              <caret line="267" selection-start-line="267" selection-end-line="267" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/simple.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="182">
-              <caret line="152" column="40" selection-start-line="152" selection-start-column="40" selection-end-line="152" selection-end-column="40" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1806">
-              <caret line="86" selection-start-line="86" selection-end-line="86" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/eventstore/aggreagte_test.go">
+        <entry file="file://$PROJECT_DIR$/random/event_test.go">
           <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/eventstore/aggregate.go">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/eventstore/event.go">
+        <entry file="file://$PROJECT_DIR$/reactor/dynamostream/dynamostream.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="976">
-              <caret line="61" selection-start-line="61" selection-end-line="61" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-1578">
-              <caret line="29" column="24" selection-start-line="29" selection-start-column="17" selection-end-line="29" selection-end-column="24" />
+            <state relative-caret-position="189">
+              <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/internal/common/serialize.go">
+        <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="28" selection-start-line="28" selection-end-line="28" />
+            <state relative-caret-position="5052">
+              <caret line="318" column="84" selection-start-line="318" selection-start-column="84" selection-end-line="318" selection-end-column="84" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/reactor/handler.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="325">
+              <caret line="21" column="59" selection-start-line="21" selection-start-column="59" selection-end-line="21" selection-end-column="59" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/setup/firehosetransform/main.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="245">
+              <caret line="30" column="32" lean-forward="true" selection-start-line="30" selection-start-column="32" selection-end-line="30" selection-end-column="32" />
             </state>
           </provider>
         </entry>
@@ -125,13 +179,16 @@
       <find>Value</find>
       <find>reflect</find>
       <find>golang/protobuf</find>
-      <find>fmt</find>
       <find>ldService</find>
       <find>saga</find>
       <find>&quot;github.com/onedaycat/zamus/internal&quot;</find>
       <find>random</find>
       <find>&quot;github.com/onedaycat/zamus&quot;</find>
       <find>common</find>
+      <find>AggregateRoot</find>
+      <find>snpshotVersion</find>
+      <find>event.</find>
+      <find>fmt</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/vendor/github.com/golang/protobuf</dir>
@@ -155,57 +212,57 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/jack2/main.go" />
-        <option value="$PROJECT_DIR$/reactor/handler.go" />
-        <option value="$PROJECT_DIR$/saga/handler.go" />
-        <option value="$PROJECT_DIR$/saga/state.go" />
-        <option value="$PROJECT_DIR$/saga/storage/dynamodb/storage.go" />
-        <option value="$PROJECT_DIR$/trigger/handler.go" />
-        <option value="$PROJECT_DIR$/internal/common/eid/eid_test.go" />
-        <option value="$PROJECT_DIR$/saga/handler_resume_test.go" />
-        <option value="$PROJECT_DIR$/saga/handler_test.go" />
-        <option value="$PROJECT_DIR$/saga/suite_test.go" />
-        <option value="$PROJECT_DIR$/saga/request_test.go" />
-        <option value="$PROJECT_DIR$/saga/handler_comp_test.go" />
         <option value="$PROJECT_DIR$/warmer/warmer_test.go" />
         <option value="$PROJECT_DIR$/internal/common/clock/clock_test.go" />
         <option value="$PROJECT_DIR$/saga/storage/dynamodb/storage_test.go" />
         <option value="$PROJECT_DIR$/internal/common/random/event_test.go" />
-        <option value="$PROJECT_DIR$/testdata/domain/stockitem.go" />
-        <option value="$PROJECT_DIR$/eventstore/eventstore_test.go" />
         <option value="$PROJECT_DIR$/internal/common/random/events_test.go" />
-        <option value="$PROJECT_DIR$/random/events.go" />
         <option value="$PROJECT_DIR$/random/invoke_reqs.go" />
-        <option value="$PROJECT_DIR$/random/kinesis.go" />
-        <option value="$PROJECT_DIR$/random/event_test.go" />
-        <option value="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go" />
         <option value="$PROJECT_DIR$/random/service_reqs.go" />
-        <option value="$PROJECT_DIR$/setup/dynamokinesis/main_test.go" />
-        <option value="$PROJECT_DIR$/random/dynamodb.go" />
-        <option value="$PROJECT_DIR$/reactor/kinesisstream/ben_test.go" />
         <option value="$PROJECT_DIR$/service/batch_test.go" />
         <option value="$PROJECT_DIR$/invoke/invoke_test.go" />
         <option value="$PROJECT_DIR$/service/handler_test.go" />
         <option value="$PROJECT_DIR$/service/bench_test.go" />
-        <option value="$PROJECT_DIR$/eventstore/storage/memory/memory_test.go" />
-        <option value="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go" />
         <option value="$PROJECT_DIR$/internal/common/serialize.go" />
         <option value="$PROJECT_DIR$/eventstore/event.go" />
-        <option value="$PROJECT_DIR$/dql/dql_test.go" />
-        <option value="$PROJECT_DIR$/random/event.go" />
-        <option value="$PROJECT_DIR$/random/events_test.go" />
+        <option value="$PROJECT_DIR$/internal/common/serialize_test.go" />
+        <option value="$PROJECT_DIR$/testdata/domain/stockitem.go" />
+        <option value="$PROJECT_DIR$/eventstore/snapshot.go" />
+        <option value="$PROJECT_DIR$/eventstore/aggregate.go" />
+        <option value="$PROJECT_DIR$/event/event.go" />
+        <option value="$PROJECT_DIR$/eventstore/storage.go" />
+        <option value="$PROJECT_DIR$/eventstore/storage/memory/memory.go" />
+        <option value="$PROJECT_DIR$/eventstore/eventstore_test.go" />
         <option value="$PROJECT_DIR$/eventstore/eventstore.go" />
-        <option value="$PROJECT_DIR$/setup/dynamokinesis/main.go" />
-        <option value="$PROJECT_DIR$/setup/firehosetransform/main.go" />
-        <option value="$PROJECT_DIR$/setup/firehosetransform/main_test.go" />
-        <option value="$PROJECT_DIR$/reactor/kinesisstream/partition.go" />
+        <option value="$PROJECT_DIR$/random/event.go" />
+        <option value="$PROJECT_DIR$/random/event_test.go" />
+        <option value="$PROJECT_DIR$/random/events_test.go" />
         <option value="$PROJECT_DIR$/reactor/kinesisstream/record.go" />
-        <option value="$PROJECT_DIR$/reactor/dynamostream/record_test.go" />
+        <option value="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream.go" />
+        <option value="$PROJECT_DIR$/reactor/dynamostream/dynamostream.go" />
+        <option value="$PROJECT_DIR$/reactor/kinesisstream/partition.go" />
         <option value="$PROJECT_DIR$/reactor/kinesisstream/shard.go" />
         <option value="$PROJECT_DIR$/reactor/kinesisstream/simple.go" />
+        <option value="$PROJECT_DIR$/reactor/dynamostream/record.go" />
+        <option value="$PROJECT_DIR$/random/kinesis.go" />
+        <option value="$PROJECT_DIR$/random/dynamodb.go" />
+        <option value="$PROJECT_DIR$/reactor/kinesisstream/ben_test.go" />
+        <option value="$PROJECT_DIR$/dql/dql_test.go" />
+        <option value="$PROJECT_DIR$/reactor/handler.go" />
+        <option value="$PROJECT_DIR$/eventstore/storage/memory/memory_test.go" />
+        <option value="$PROJECT_DIR$/setup/dynamokinesis/main_test.go" />
         <option value="$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go" />
-        <option value="$PROJECT_DIR$/internal/common/serialize_test.go" />
+        <option value="$PROJECT_DIR$/replay/storage.go" />
         <option value="$PROJECT_DIR$/reactor/kinesisstream/record_test.go" />
+        <option value="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go" />
+        <option value="$PROJECT_DIR$/setup/firehosetransform/main_test.go" />
+        <option value="$PROJECT_DIR$/setup/dynamokinesis/main.go" />
+        <option value="$PROJECT_DIR$/setup/firehosetransform/main.go" />
+        <option value="$PROJECT_DIR$/reactor/middleware.go" />
+        <option value="$PROJECT_DIR$/reactor/dynamostream/record_test.go" />
+        <option value="$PROJECT_DIR$/random/events.go" />
+        <option value="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go" />
+        <option value="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go" />
       </list>
     </option>
   </component>
@@ -232,12 +289,61 @@
             <path>
               <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
               <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="dql" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="dql" type="462c0819:PsiDirectoryNode" />
+              <item name="storage" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="dql" type="462c0819:PsiDirectoryNode" />
+              <item name="storage" type="462c0819:PsiDirectoryNode" />
+              <item name="dynamodb" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
               <item name="eventstore" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
               <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
+              <item name="storage" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
+              <item name="storage" type="462c0819:PsiDirectoryNode" />
+              <item name="dynamodb" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
+              <item name="storage" type="462c0819:PsiDirectoryNode" />
+              <item name="memory" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="random" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
               <item name="reactor" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="reactor" type="462c0819:PsiDirectoryNode" />
+              <item name="dynamostream" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
@@ -248,7 +354,34 @@
             <path>
               <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
               <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="warmer" type="462c0819:PsiDirectoryNode" />
+              <item name="replay" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="service" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="setup" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="setup" type="462c0819:PsiDirectoryNode" />
+              <item name="dynamokinesis" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="setup" type="462c0819:PsiDirectoryNode" />
+              <item name="firehosetransform" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
+              <item name="zamus" type="462c0819:PsiDirectoryNode" />
+              <item name="trigger" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -296,41 +429,29 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.go test saga">
-    <configuration name="TestMultiSave in github.com/onedaycat/zamus/dql/storage/dynamodb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Go Test.go test github.com/onedaycat/zamus/eventstore/storage/dynamodb">
+    <configuration name="TestParseDynamoDBStreamEvent in github.com/onedaycat/zamus/reactor/dynamostream" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="zamus" />
-      <working_directory value="$PROJECT_DIR$/dql/storage/dynamodb" />
+      <working_directory value="$PROJECT_DIR$/reactor/dynamostream" />
       <useCustomBuildTags value="true" />
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/onedaycat/zamus/dql/storage/dynamodb" />
+      <package value="github.com/onedaycat/zamus/reactor/dynamostream" />
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestMultiSave$" />
+      <pattern value="^TestParseDynamoDBStreamEvent$" />
       <method v="2" />
     </configuration>
-    <configuration name="TestSaveAndGet in github.com/onedaycat/zamus/dql/storage/dynamodb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="zamus" />
-      <working_directory value="$PROJECT_DIR$/dql/storage/dynamodb" />
+      <working_directory value="$PROJECT_DIR$/eventstore/storage/dynamodb" />
       <useCustomBuildTags value="true" />
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/onedaycat/zamus/dql/storage/dynamodb" />
+      <package value="github.com/onedaycat/zamus/eventstore/storage/dynamodb" />
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestSaveAndGet$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestSaveAndGet in github.com/onedaycat/zamus/saga/storage/dynamodb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="zamus" />
-      <working_directory value="$PROJECT_DIR$/saga/storage/dynamodb" />
-      <useCustomBuildTags value="true" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/onedaycat/zamus/saga/storage/dynamodb" />
-      <directory value="$PROJECT_DIR$/" />
-      <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestSaveAndGet$" />
+      <pattern value="^TestSave$/^Success$" />
       <method v="2" />
     </configuration>
     <configuration default="true" type="GoTestRunConfiguration" factoryName="Go Test">
@@ -345,95 +466,107 @@
       <filePath value="$PROJECT_DIR$/" />
       <method v="2" />
     </configuration>
-    <configuration name="go test github.com/onedaycat/zamus/dql/storage/dynamodb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="go test github.com/onedaycat/zamus/eventstore" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="zamus" />
-      <working_directory value="$PROJECT_DIR$/dql/storage/dynamodb" />
+      <working_directory value="$PROJECT_DIR$/eventstore" />
       <useCustomBuildTags value="true" />
       <framework value="gotest" />
       <kind value="PACKAGE" />
-      <package value="github.com/onedaycat/zamus/dql/storage/dynamodb" />
+      <package value="github.com/onedaycat/zamus/eventstore" />
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
       <method v="2" />
     </configuration>
-    <configuration name="go test saga" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+    <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="zamus" />
-      <working_directory value="$PROJECT_DIR$/saga" />
+      <working_directory value="$PROJECT_DIR$/eventstore/storage/dynamodb" />
+      <useCustomBuildTags value="true" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/onedaycat/zamus/eventstore/storage/dynamodb" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <method v="2" />
+    </configuration>
+    <configuration name="go test random" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="zamus" />
+      <working_directory value="$PROJECT_DIR$/random" />
       <useCustomBuildTags value="true" />
       <framework value="gotest" />
       <kind value="DIRECTORY" />
       <package value="github.com/onedaycat/zamus" />
-      <directory value="$PROJECT_DIR$/saga" />
+      <directory value="$PROJECT_DIR$/random" />
       <filePath value="$PROJECT_DIR$/" />
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Go Test.go test github.com/onedaycat/zamus/dql/storage/dynamodb" />
-      <item itemvalue="Go Test.go test saga" />
-      <item itemvalue="Go Test.TestSaveAndGet in github.com/onedaycat/zamus/dql/storage/dynamodb" />
-      <item itemvalue="Go Test.TestMultiSave in github.com/onedaycat/zamus/dql/storage/dynamodb" />
-      <item itemvalue="Go Test.TestSaveAndGet in github.com/onedaycat/zamus/saga/storage/dynamodb" />
+      <item itemvalue="Go Test.go test github.com/onedaycat/zamus/eventstore" />
+      <item itemvalue="Go Test.go test random" />
+      <item itemvalue="Go Test.go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" />
+      <item itemvalue="Go Test.TestParseDynamoDBStreamEvent in github.com/onedaycat/zamus/reactor/dynamostream" />
+      <item itemvalue="Go Test.TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Go Test.go test saga" />
-        <item itemvalue="Go Test.TestSaveAndGet in github.com/onedaycat/zamus/saga/storage/dynamodb" />
-        <item itemvalue="Go Test.TestMultiSave in github.com/onedaycat/zamus/dql/storage/dynamodb" />
-        <item itemvalue="Go Test.TestSaveAndGet in github.com/onedaycat/zamus/dql/storage/dynamodb" />
-        <item itemvalue="Go Test.go test github.com/onedaycat/zamus/dql/storage/dynamodb" />
+        <item itemvalue="Go Test.go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" />
+        <item itemvalue="Go Test.TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" />
+        <item itemvalue="Go Test.TestParseDynamoDBStreamEvent in github.com/onedaycat/zamus/reactor/dynamostream" />
+        <item itemvalue="Go Test.go test random" />
+        <item itemvalue="Go Test.go test github.com/onedaycat/zamus/eventstore" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="TestMultiSave_in_github_com_onedaycat_zamus_dql_storage_dynamodb - 2019.04.16 at 12h 56m 51s.xml">
-      <configuration name="TestMultiSave in github.com/onedaycat/zamus/dql/storage/dynamodb" configurationId="GoTestRunConfiguration" />
+    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 56m 07s.xml">
+      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="TestSaveAndGet_in_github_com_onedaycat_zamus_saga_storage_dynamodb - 2019.04.16 at 12h 58m 59s.xml">
-      <configuration name="TestSaveAndGet in github.com/onedaycat/zamus/saga/storage/dynamodb" configurationId="GoTestRunConfiguration" />
+    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 56m 29s.xml">
+      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="TestSaveAndGet_in_github_com_onedaycat_zamus_saga_storage_dynamodb - 2019.04.16 at 13h 01m 57s.xml">
-      <configuration name="TestSaveAndGet in github.com/onedaycat/zamus/saga/storage/dynamodb" configurationId="GoTestRunConfiguration" />
+    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 56m 57s.xml">
+      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 02m 16s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 57m 17s.xml">
+      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 02m 38s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestParseDynamoDBStreamEvent_in_github_com_onedaycat_zamus_reactor_dynamostream - 2019.04.17 at 23h 11m 20s.xml">
+      <configuration name="TestParseDynamoDBStreamEvent in github.com/onedaycat/zamus/reactor/dynamostream" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 04m 14s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 12m 12s.xml">
+      <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 04m 39s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 18m 31s.xml">
+      <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 05m 35s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 19m 45s.xml">
+      <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 06m 54s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 21m 28s.xml">
+      <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
-    <history-entry file="go_test_saga - 2019.04.16 at 13h 07m 07s.xml">
-      <configuration name="go test saga" configurationId="GoTestRunConfiguration" />
+    <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 23m 38s.xml">
+      <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="976" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.23626374" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24481075" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3280543" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.32876712" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3280543" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39954337" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" weight="0.32918552" />
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32918552" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32857144" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Inspection Results" order="10" weight="0.3280543" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="11" visible="true" weight="0.3280543" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.3280543" />
       <window_info anchor="bottom" id="Event Log" order="12" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -493,394 +626,323 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/eventstore/eventstore_test.go</url>
-          <line>224</line>
+          <line>228</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/reactor/handler.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="117" column="21" selection-start-line="117" selection-start-column="21" selection-end-line="117" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/handler.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="287" column="21" selection-start-line="287" selection-start-column="21" selection-end-line="287" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/state.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="196" column="29" selection-start-line="196" selection-start-column="29" selection-end-line="196" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/storage/dynamodb/storage.go">
+    <entry file="file://$PROJECT_DIR$/testdata/domain/stockitem_created.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/trigger/handler.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="125" column="28" selection-start-line="125" selection-start-column="28" selection-end-line="125" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/internal/common/eid/eid_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="378">
-          <caret line="18" column="16" selection-start-line="18" selection-start-column="16" selection-end-line="18" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/handler_resume_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="907" column="37" selection-start-line="907" selection-start-column="37" selection-end-line="907" selection-end-column="37" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/handler_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="197">
-          <caret line="247" column="35" selection-start-line="247" selection-start-column="35" selection-end-line="247" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/suite_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="257" column="26" selection-start-line="257" selection-start-column="26" selection-end-line="257" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/request_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="42">
-          <caret line="20" column="17" selection-start-line="20" selection-start-column="17" selection-end-line="20" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/handler_comp_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="90" selection-start-line="90" selection-end-line="90" />
-          <caret line="91" column="27" selection-start-line="91" selection-start-column="27" selection-end-line="91" selection-end-column="27" />
-          <caret line="168" column="30" selection-start-line="168" selection-start-column="30" selection-end-line="168" selection-end-column="30" />
-          <caret line="169" selection-start-line="169" selection-end-line="169" />
-          <caret line="254" selection-start-line="254" selection-end-line="254" />
-          <caret line="255" column="27" selection-start-line="255" selection-start-column="27" selection-end-line="255" selection-end-column="27" />
-          <caret line="347" selection-start-line="347" selection-end-line="347" />
-          <caret line="348" column="27" selection-start-line="348" selection-start-column="27" selection-end-line="348" selection-end-column="27" />
-          <caret line="433" selection-start-line="433" selection-end-line="433" />
-          <caret line="434" column="27" selection-start-line="434" selection-start-column="27" selection-end-line="434" selection-end-column="27" />
-          <caret line="503" selection-start-line="503" selection-end-line="503" />
-          <caret line="504" column="27" selection-start-line="504" selection-start-column="27" selection-end-line="504" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/warmer/warmer_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="65" column="6" selection-start-line="65" selection-start-column="6" selection-end-line="65" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/internal/common/clock/clock_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="344">
-          <caret line="18" selection-start-line="18" selection-end-line="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/saga/storage/dynamodb/storage_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="354">
-          <caret line="61" column="36" selection-start-line="61" selection-start-column="36" selection-end-line="61" selection-end-column="36" />
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/testdata/domain/stockitem_updated.go">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/testdata/domain/stockitem.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="77" column="25" selection-start-line="77" selection-start-column="25" selection-end-line="77" selection-end-column="25" />
+        <state relative-caret-position="1407">
+          <caret line="67" column="5" lean-forward="true" selection-start-line="67" selection-start-column="5" selection-end-line="67" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/event/event.proto">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/snapshot.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="10" lean-forward="true" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/mocks/EventStore.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1197">
+          <caret line="57" column="40" lean-forward="true" selection-start-line="57" selection-start-column="40" selection-end-line="57" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/event/event.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/mocks/Storage.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/storage.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="315">
+          <caret line="15" lean-forward="true" selection-start-line="15" selection-end-line="15" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/eventstore/eventstore_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="197">
-          <caret line="311" selection-start-line="311" selection-end-line="311" />
+        <state relative-caret-position="373">
+          <caret line="333" column="23" selection-start-line="333" selection-start-column="23" selection-end-line="333" selection-end-column="23" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/random/service_req.go">
+    <entry file="file://$PROJECT_DIR$/eventstore/storage/memory/memory.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2">
-          <caret column="8" selection-start-column="8" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/invoke_reqs.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="12" column="5" selection-start-line="12" selection-start-column="5" selection-end-line="12" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/kinesis.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="40" column="12" selection-start-line="40" selection-start-column="12" selection-end-line="40" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/event_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="21">
-          <caret line="14" column="10" selection-start-line="14" selection-start-column="10" selection-end-line="14" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/service_reqs.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="25" column="32" selection-start-line="25" selection-start-column="32" selection-end-line="25" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/setup/dynamokinesis/main_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1617">
-          <caret line="77" column="8" selection-start-line="77" selection-start-column="8" selection-end-line="77" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/dynamodb.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="756">
-          <caret line="36" column="12" selection-start-line="36" selection-start-column="12" selection-end-line="36" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/ben_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1386">
-          <caret line="18" column="24" selection-start-line="18" selection-start-column="24" selection-end-line="18" selection-end-column="24" />
-          <caret line="42" column="24" selection-start-line="42" selection-start-column="24" selection-end-line="42" selection-end-column="24" />
-          <caret line="66" column="24" selection-start-line="66" selection-start-column="24" selection-end-line="66" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/service/batch_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7161">
-          <caret line="36" column="24" selection-start-line="36" selection-start-column="24" selection-end-line="36" selection-end-column="24" />
-          <caret line="70" column="24" selection-start-line="70" selection-start-column="24" selection-end-line="70" selection-end-column="24" />
-          <caret line="115" column="24" selection-start-line="115" selection-start-column="24" selection-end-line="115" selection-end-column="24" />
-          <caret line="169" column="24" selection-start-line="169" selection-start-column="24" selection-end-line="169" selection-end-column="24" />
-          <caret line="217" column="24" selection-start-line="217" selection-start-column="24" selection-end-line="217" selection-end-column="24" />
-          <caret line="251" column="24" selection-start-line="251" selection-start-column="24" selection-end-line="251" selection-end-column="24" />
-          <caret line="296" column="24" selection-start-line="296" selection-start-column="24" selection-end-line="296" selection-end-column="24" />
-          <caret line="341" column="24" selection-start-line="341" selection-start-column="24" selection-end-line="341" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/invoke/invoke_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="8253">
-          <caret line="110" column="27" selection-start-line="110" selection-start-column="27" selection-end-line="110" selection-end-column="27" />
-          <caret line="134" column="27" selection-start-line="134" selection-start-column="27" selection-end-line="134" selection-end-column="27" />
-          <caret line="159" column="27" selection-start-line="159" selection-start-column="27" selection-end-line="159" selection-end-column="27" />
-          <caret line="189" column="27" selection-start-line="189" selection-start-column="27" selection-end-line="189" selection-end-column="27" />
-          <caret line="210" column="27" selection-start-line="210" selection-start-column="27" selection-end-line="210" selection-end-column="27" />
-          <caret line="261" column="27" selection-start-line="261" selection-start-column="27" selection-end-line="261" selection-end-column="27" />
-          <caret line="292" column="27" selection-start-line="292" selection-start-column="27" selection-end-line="292" selection-end-column="27" />
-          <caret line="316" column="27" selection-start-line="316" selection-start-column="27" selection-end-line="316" selection-end-column="27" />
-          <caret line="340" column="27" selection-start-line="340" selection-start-column="27" selection-end-line="340" selection-end-column="27" />
-          <caret line="372" column="27" selection-start-line="372" selection-start-column="27" selection-end-line="372" selection-end-column="27" />
-          <caret line="393" column="27" selection-start-line="393" selection-start-column="27" selection-end-line="393" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/service/handler_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="10311">
-          <caret line="216" column="20" selection-start-line="216" selection-start-column="20" selection-end-line="216" selection-end-column="20" />
-          <caret line="290" column="20" selection-start-line="290" selection-start-column="20" selection-end-line="290" selection-end-column="20" />
-          <caret line="305" column="24" selection-start-line="305" selection-start-column="24" selection-end-line="305" selection-end-column="24" />
-          <caret line="320" column="24" selection-start-line="320" selection-start-column="24" selection-end-line="320" selection-end-column="24" />
-          <caret line="335" column="24" selection-start-line="335" selection-start-column="24" selection-end-line="335" selection-end-column="24" />
-          <caret line="351" column="24" selection-start-line="351" selection-start-column="24" selection-end-line="351" selection-end-column="24" />
-          <caret line="369" column="24" selection-start-line="369" selection-start-column="24" selection-end-line="369" selection-end-column="24" />
-          <caret line="386" column="24" selection-start-line="386" selection-start-column="24" selection-end-line="386" selection-end-column="24" />
-          <caret line="403" column="24" selection-start-line="403" selection-start-column="24" selection-end-line="403" selection-end-column="24" />
-          <caret line="420" column="24" selection-start-line="420" selection-start-column="24" selection-end-line="420" selection-end-column="24" />
-          <caret line="440" column="24" selection-start-line="440" selection-start-column="24" selection-end-line="440" selection-end-column="24" />
-          <caret line="457" column="24" selection-start-line="457" selection-start-column="24" selection-end-line="457" selection-end-column="24" />
-          <caret line="474" column="24" selection-start-line="474" selection-start-column="24" selection-end-line="474" selection-end-column="24" />
-          <caret line="491" column="24" selection-start-line="491" selection-start-column="24" selection-end-line="491" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/service/bench_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="294">
-          <caret line="14" selection-start-line="14" selection-end-line="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/eventstore/storage/memory/memory_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="693">
-          <caret line="33" column="24" selection-start-line="33" selection-start-column="24" selection-end-line="33" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/dql/dql_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="203">
-          <caret line="49" selection-start-line="49" selection-end-line="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/event.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="434">
-          <caret line="87" column="27" selection-start-line="87" selection-start-column="27" selection-end-line="87" selection-end-column="27" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/events_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="308">
-          <caret line="21" column="23" selection-start-line="21" selection-start-column="23" selection-end-line="21" selection-end-column="23" />
+        <state relative-caret-position="2163">
+          <caret line="103" lean-forward="true" selection-start-line="103" selection-end-line="103" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/eventstore/eventstore.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3784">
-          <caret line="211" column="28" selection-start-line="211" selection-start-column="28" selection-end-line="211" selection-end-column="28" />
+        <state relative-caret-position="4515">
+          <caret line="215" column="5" selection-start-line="215" selection-start-column="5" selection-end-line="215" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup/dynamokinesis/main.go">
+    <entry file="file://$PROJECT_DIR$/eventstore/aggregate.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="287">
-          <caret line="69" column="14" lean-forward="true" selection-start-line="69" selection-start-column="14" selection-end-line="69" selection-end-column="14" />
+        <state relative-caret-position="546">
+          <caret line="26" column="1" lean-forward="true" selection-start-line="26" selection-start-column="1" selection-end-line="26" selection-end-column="1" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup/firehosetransform/main.go">
+    <entry file="file://$PROJECT_DIR$/eventstore/aggreagte_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="27" column="27" selection-start-line="27" selection-start-column="27" selection-end-line="27" selection-end-column="27" />
+        <state relative-caret-position="420">
+          <caret line="20" column="23" lean-forward="true" selection-start-line="20" selection-start-column="23" selection-end-line="20" selection-end-column="23" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/setup/firehosetransform/main_test.go">
+    <entry file="file://$PROJECT_DIR$/random/events_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="26" column="30" selection-start-line="26" selection-start-column="30" selection-end-line="26" selection-end-column="30" />
+        <state relative-caret-position="945">
+          <caret line="45" column="31" lean-forward="true" selection-start-line="45" selection-start-column="31" selection-end-line="45" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/random/invoke_req.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/record.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="25" column="33" lean-forward="true" selection-start-line="25" selection-start-column="33" selection-end-line="25" selection-end-column="33" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/kinesisstream.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="13" lean-forward="true" selection-start-line="13" selection-end-line="13" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/partition.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="189">
-          <caret line="9" column="48" selection-start-line="9" selection-start-column="48" selection-end-line="9" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/record.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="295">
-          <caret line="57" column="23" selection-start-line="57" selection-start-column="23" selection-end-line="57" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/reactor/dynamostream/record_test.go">
-      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="182">
-          <caret line="16" column="25" selection-start-line="16" selection-start-column="25" selection-end-line="16" selection-end-column="25" />
+          <caret line="142" column="30" selection-start-line="142" selection-start-column="30" selection-end-line="142" selection-end-column="30" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/shard.go">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="266">
-          <caret line="267" selection-start-line="267" selection-end-line="267" />
+          <caret line="264" lean-forward="true" selection-start-line="264" selection-end-line="264" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/simple.go">
       <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="273">
+          <caret line="152" column="47" selection-start-line="152" selection-start-column="47" selection-end-line="152" selection-end-column="47" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/dynamostream/record.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="212">
+          <caret line="53" column="19" selection-start-line="53" selection-start-column="19" selection-end-line="53" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/random/kinesis.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="417">
+          <caret line="49" column="14" selection-start-line="49" selection-start-column="14" selection-end-line="49" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/projectionapplyer/applyer.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="14" column="43" selection-start-line="14" selection-start-column="43" selection-end-line="14" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/random/dynamodb.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="287">
+          <caret line="50" column="24" selection-start-line="50" selection-start-column="24" selection-end-line="50" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/ben_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="294">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dql/dql_test.go">
+      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="182">
-          <caret line="152" column="40" selection-start-line="152" selection-start-column="40" selection-end-line="152" selection-end-column="40" />
+          <caret line="48" column="39" selection-start-line="48" selection-start-column="39" selection-end-line="48" selection-end-column="39" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/proto.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/service/handler.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1481">
+          <caret line="29" column="20" lean-forward="true" selection-start-line="29" selection-start-column="20" selection-end-line="29" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/service/identity.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/service/req.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/service/options.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/trigger/handler.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/storage/memory/memory_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="231">
+          <caret line="147" column="31" lean-forward="true" selection-start-line="147" selection-start-column="31" selection-end-line="147" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup/dynamokinesis/main_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="358">
+          <caret line="77" column="8" selection-start-line="77" selection-start-column="8" selection-end-line="77" selection-end-column="8" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1806">
-          <caret line="86" selection-start-line="86" selection-end-line="86" />
+        <state relative-caret-position="245">
+          <caret line="82" column="40" selection-start-line="82" selection-start-column="40" selection-end-line="82" selection-end-column="40" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/eventstore/aggreagte_test.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/eventstore/aggregate.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/internal/common/serialize.go">
+    <entry file="file://$PROJECT_DIR$/replay/storage.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="28" selection-start-line="28" selection-end-line="28" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/internal/common/serialize_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="42">
-          <caret line="2" selection-start-line="2" selection-end-line="2" />
+        <state relative-caret-position="147">
+          <caret line="7" column="80" selection-start-line="7" selection-start-column="80" selection-end-line="7" selection-end-column="80" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/record_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="358">
-          <caret line="87" column="21" selection-start-line="87" selection-start-column="21" selection-end-line="87" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/random/events.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-52">
-          <caret line="116" column="11" selection-start-line="116" selection-start-column="11" selection-end-line="116" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/eventstore/event.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="976">
-          <caret line="61" selection-start-line="61" selection-end-line="61" />
+        <state relative-caret-position="182">
+          <caret line="21" column="8" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1578">
-          <caret line="29" column="24" selection-start-line="29" selection-start-column="17" selection-end-line="29" selection-end-column="24" />
+        <state relative-caret-position="182">
+          <caret line="134" column="34" selection-start-line="134" selection-start-column="34" selection-end-line="134" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup/dynamokinesis/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-448">
+          <caret line="72" column="90" selection-start-line="72" selection-start-column="90" selection-end-line="72" selection-end-column="90" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup/firehosetransform/main.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="245">
+          <caret line="30" column="32" lean-forward="true" selection-start-line="30" selection-start-column="32" selection-end-line="30" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/setup/firehosetransform/main_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="378">
+          <caret line="18" column="13" selection-start-line="18" selection-start-column="13" selection-end-line="18" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/handler.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="325">
+          <caret line="21" column="59" selection-start-line="21" selection-start-column="59" selection-end-line="21" selection-end-column="59" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/middleware.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="331">
+          <caret line="18" column="45" selection-start-line="18" selection-start-column="45" selection-end-line="18" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/dynamostream/record_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1116">
+          <caret line="72" column="26" selection-start-line="72" selection-start-column="26" selection-end-line="72" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/reactor/dynamostream/dynamostream.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="9" lean-forward="true" selection-start-line="9" selection-end-line="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/random/event.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="23" column="30" selection-start-line="23" selection-start-column="23" selection-end-line="23" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/random/event_test.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/random/events.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="131">
+          <caret line="64" column="24" selection-start-line="64" selection-start-column="24" selection-end-line="64" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5052">
+          <caret line="318" column="84" selection-start-line="318" selection-start-column="84" selection-end-line="318" selection-end-column="84" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="295">
+          <caret line="237" column="8" selection-start-line="237" selection-start-column="8" selection-end-line="237" selection-end-column="8" />
         </state>
       </provider>
     </entry>

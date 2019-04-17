@@ -10,7 +10,7 @@ import (
     "github.com/aws/aws-sdk-go/aws/session"
     "github.com/onedaycat/zamus/dql"
     "github.com/onedaycat/zamus/errors"
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common/eid"
     "github.com/onedaycat/zamus/internal/common/ptr"
     "github.com/onedaycat/zamus/random"
@@ -45,8 +45,8 @@ func TestSaveAndGet(t *testing.T) {
     eid.FreezeID("123")
 
     msgs := random.EventMsgs().RandomEventMsgs(10).Build()
-    msgsList := eventstore.EventMsgList{EventMsgs: msgs}
-    msgsListByte, _ := eventstore.MarshalEventMsg(&msgsList)
+    msgsList := event.MsgList{Msgs: msgs}
+    msgsListByte, _ := event.MarshalMsg(&msgsList)
     appErr := errors.ErrUnableSaveDQLMessages.
         WithCaller().
         WithCause(errors.ErrUnknown).
@@ -77,10 +77,10 @@ func TestMultiSave(t *testing.T) {
     d := dql.New(db, 3, "srv1", "lamb1", "1.0.0")
     d.AddError(appErr)
 
-    msgList := &eventstore.EventMsgList{
-        EventMsgs: msgs,
+    msgList := &event.MsgList{
+        Msgs: msgs,
     }
-    msgListByte, _ := eventstore.MarshalEventMsg(msgList)
+    msgListByte, _ := event.MarshalMsg(msgList)
 
     err := d.Save(context.Background(), msgListByte)
     require.NoError(t, err)

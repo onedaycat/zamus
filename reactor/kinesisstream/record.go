@@ -3,7 +3,7 @@ package kinesisstream
 import (
     "encoding/base64"
 
-    "github.com/onedaycat/zamus/eventstore"
+    "github.com/onedaycat/zamus/event"
 )
 
 type Records = []*Record
@@ -23,10 +23,10 @@ func (r *Record) Add(pk, eid, etype string) {
     r.Kinesis = &KinesisPayload{
         PartitionKey: pk,
         Data: &Payload{
-            EventMsg: &EventMsg{
-                AggregateID: pk,
-                EventID:     eid,
-                EventType:   etype,
+            EventMsg: &event.Msg{
+                Id:        eid,
+                AggID:     pk,
+                EventType: etype,
             },
         },
     }
@@ -38,7 +38,7 @@ type KinesisPayload struct {
 }
 
 type Payload struct {
-    EventMsg *eventstore.EventMsg
+    EventMsg *event.Msg
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
@@ -53,8 +53,8 @@ func (p *Payload) UnmarshalJSON(b []byte) error {
         return err
     }
 
-    p.EventMsg = &eventstore.EventMsg{}
-    if err = eventstore.UnmarshalEventMsg(bdata[:n], p.EventMsg); err != nil {
+    p.EventMsg = &event.Msg{}
+    if err = event.UnmarshalMsg(bdata[:n], p.EventMsg); err != nil {
         return err
     }
 

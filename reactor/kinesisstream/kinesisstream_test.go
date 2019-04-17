@@ -7,9 +7,9 @@ import (
     "github.com/onedaycat/zamus/dql"
     "github.com/onedaycat/zamus/dql/mocks"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/random"
-    "github.com/onedaycat/zamus/reactor"
     "github.com/onedaycat/zamus/reactor/kinesisstream"
     "github.com/onedaycat/zamus/testdata/domain"
 )
@@ -27,7 +27,7 @@ const (
     Agg3 = "Agg3"
 )
 
-var EventTypes = reactor.EventTypes((*domain.StockItemCreated)(nil), (*domain.StockItemUpdated)(nil), (*domain.StockItemRemoved)(nil))
+var EventTypes = event.EventTypes((*domain.StockItemCreated)(nil), (*domain.StockItemUpdated)(nil), (*domain.StockItemRemoved)(nil))
 
 var _records kinesisstream.Records
 
@@ -132,7 +132,7 @@ func (s *StrategySuite) WithHandler(name string, mode int, eventTypes ...string)
 
         for _, msg := range msgs {
             s.spy.Called(msg.EventType)
-            s.spy.Called(msg.AggregateID)
+            s.spy.Called(msg.AggID)
         }
 
         switch mode {
