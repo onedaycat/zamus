@@ -4,60 +4,7 @@
     <option name="AUTOSCROLL_TO_SOURCE" value="true" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2171b6fe-5476-4a7d-8009-8419f4fa2d79" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dql/dql_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/dql/dql_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/dql/storage/dynamodb/storage_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/aggregate.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/aggregate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/event.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/event.proto" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/eventstore.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/eventstore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/eventstore.pb.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/eventstore_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/eventstore_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/metadata.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/mocks/EventStore.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/mocks/EventStore.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/mocks/Storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/mocks/Storage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/snapshot.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/snapshot.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/storage/memory/memory.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/memory/memory.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/eventstore/storage/memory/memory_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/eventstore/storage/memory/memory_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random/dynamodb.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/dynamodb.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random/event.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/event.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random/event_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/event_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random/events.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/events.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random/events_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/events_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/random/kinesis.go" beforeDir="false" afterPath="$PROJECT_DIR$/random/kinesis.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/dynamostream/dynamostream.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/dynamostream/dynamostream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/dynamostream/record.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/dynamostream/record.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/dynamostream/record_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/dynamostream/record_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/errors.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/handler.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/handler.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/ben_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/ben_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/kinesisstream_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/partition.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/partition.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/record.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/record.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/record_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/record_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/shard.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/shard.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/kinesisstream/simple.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/kinesisstream/simple.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/reactor/middleware.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/projectionapplyer/applyer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/projectionapplyer/mocks/ProjectionApplyer.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/reactor/proto.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/replay/storage.go" beforeDir="false" afterPath="$PROJECT_DIR$/replay/storage.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/errors.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup/dynamokinesis/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/dynamokinesis/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup/dynamokinesis/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/dynamokinesis/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup/firehosetransform/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/firehosetransform/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup/firehosetransform/main_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/setup/firehosetransform/main_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem.go" beforeDir="false" afterPath="$PROJECT_DIR$/testdata/domain/stockitem.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem_created.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem_removed.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testdata/domain/stockitem_updated.go" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/trigger/errors.go" beforeDir="false" />
-    </list>
+    <list default="true" id="2171b6fe-5476-4a7d-8009-8419f4fa2d79" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,8 +43,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="295">
-              <caret line="237" column="8" selection-start-line="237" selection-start-column="8" selection-end-line="237" selection-end-column="8" />
+            <state relative-caret-position="399">
+              <caret line="19" column="1" lean-forward="true" selection-start-line="19" selection-start-column="1" selection-end-line="19" selection-end-column="1" />
             </state>
           </provider>
         </entry>
@@ -289,71 +236,6 @@
             <path>
               <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
               <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="dql" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="dql" type="462c0819:PsiDirectoryNode" />
-              <item name="storage" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="dql" type="462c0819:PsiDirectoryNode" />
-              <item name="storage" type="462c0819:PsiDirectoryNode" />
-              <item name="dynamodb" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
-              <item name="storage" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
-              <item name="storage" type="462c0819:PsiDirectoryNode" />
-              <item name="dynamodb" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="eventstore" type="462c0819:PsiDirectoryNode" />
-              <item name="storage" type="462c0819:PsiDirectoryNode" />
-              <item name="memory" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="random" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="reactor" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="reactor" type="462c0819:PsiDirectoryNode" />
-              <item name="dynamostream" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
-              <item name="reactor" type="462c0819:PsiDirectoryNode" />
-              <item name="kinesisstream" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="zamus" type="b2602c69:ProjectViewProjectNode" />
-              <item name="zamus" type="462c0819:PsiDirectoryNode" />
               <item name="replay" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -517,12 +399,6 @@
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 56m 07s.xml">
-      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 56m 29s.xml">
-      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 22h 56m 57s.xml">
       <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -547,6 +423,12 @@
     <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 23m 38s.xml">
       <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="TestSave_Success_in_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 23m 47s.xml">
+      <configuration name="TestSave/Success in github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="go_test_github_com_onedaycat_zamus_eventstore_storage_dynamodb - 2019.04.17 at 23h 23m 56s.xml">
+      <configuration name="go test github.com/onedaycat/zamus/eventstore/storage/dynamodb" configurationId="GoTestRunConfiguration" />
+    </history-entry>
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1680" height="976" extended-state="0" />
@@ -557,13 +439,13 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.3280543" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.3280543" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3280543" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39954337" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="bottom" id="Docker" order="7" weight="0.32918552" />
-      <window_info anchor="bottom" id="Version Control" order="8" weight="0.32857144" />
+      <window_info active="true" anchor="bottom" id="Version Control" order="8" visible="true" weight="0.3280543" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
       <window_info anchor="bottom" id="Inspection Results" order="10" weight="0.3280543" />
       <window_info anchor="bottom" id="Terminal" order="11" weight="0.3280543" />
@@ -620,6 +502,7 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="update" />
     <option name="LAST_COMMIT_MESSAGE" value="update" />
+    <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -941,8 +824,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/eventstore/storage/dynamodb/dynamodb_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="295">
-          <caret line="237" column="8" selection-start-line="237" selection-start-column="8" selection-end-line="237" selection-end-column="8" />
+        <state relative-caret-position="399">
+          <caret line="19" column="1" lean-forward="true" selection-start-line="19" selection-start-column="1" selection-end-line="19" selection-end-column="1" />
         </state>
       </provider>
     </entry>

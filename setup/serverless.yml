@@ -269,10 +269,9 @@ resources:
             InputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
             OutputFormat: 'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
             Columns:
-              - { Name: eventID, Type: string }
+              - { Name: id, Type: string }
+              - { Name: aggID, Type: string }
               - { Name: eventType, Type: string }
-              - { Name: eventVersion, Type: string }
-              - { Name: aggregateID, Type: string }
               - { Name: event, Type: string }
               - { Name: time, Type: bigint }
               - { Name: seq, Type: bigint }
