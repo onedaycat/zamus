@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:0d588991d61a665fa3435cba532e1fd9fc41f64064c6683f9b413197616ac175"
+  digest = "1:cf9d6f3a349bf4175bd782ff964ffd83f65a666ecc715e1b96b936be3ca21058"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -69,8 +69,8 @@
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "cf58d169c2d60e36f54964ceb4b9baa3434dbfe7"
-  version = "v1.19.12"
+  revision = "ca6d5f771b63df153f02fe5b117434d5ebafeeda"
+  version = "v1.19.15"
 
 [[projects]]
   branch = "master"
@@ -119,11 +119,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d61d6991d29911d0e0510d1cce8ad4f19768d8575a6ea38912b149e2bcacc7b8"
+  digest = "1:e6fa20c2a73d100f0912e1817763e0c745dae1230a9d1f7af21063316bdfe102"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5c2ecc32517a6e2acf39ae7f34ad3bcc2f784bd6"
+  revision = "919484f041ea21e7e27be291cee1d6af7bc98864"
 
 [[projects]]
   branch = "master"
@@ -209,7 +209,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:dd47419cbddb6ff0728a5668a19b6e508cc4156fd842276c296f30e6cd483c7f"
+  digest = "1:84dc210cd0ac8ae91acedc2b592772dcd40790878791b56484871ff73ec971b0"
   name = "github.com/onedaycat/errors"
   packages = [
     ".",
@@ -217,7 +217,7 @@
     "sentry",
   ]
   pruneopts = "UT"
-  revision = "3c87c8ac491d16dc49bac2fc40d20844985d3b45"
+  revision = "79df9028c4dee8cab74e0c90d666f4d6836a4139"
 
 [[projects]]
   digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
@@ -261,7 +261,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e30b5c6d83a83f1369fa92f0e279ab8046e9ee7fa2d71360956e910f44072ffb"
+  digest = "1:0a83a55c8f92f7a71bb957781a3c30e7bf139030ef088964fc3468db90fd080a"
   name = "github.com/rs/zerolog"
   packages = [
     ".",
@@ -270,7 +270,7 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "651d361cfeb9d0f5b9f1d14b162c66c82509ef6d"
+  revision = "3e85c4b21c1adb254dd43a93d93263fbe7d9dc13"
 
 [[projects]]
   branch = "master"
@@ -321,11 +321,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:28d862f4f9bf2d1976d1d320481bff661b7565eb876d4df2a981f79e7f40e4cd"
+  digest = "1:dbe12489f5cb00d492e275a29528c9e336dbe5af75ce366f81c1911faf10733e"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "12500544f89f9420afe9529ba8940bf72d294972"
+  revision = "e8e3143a4f4a00f1fafef0dd82ba78223281b01b"
 
 [[projects]]
   digest = "1:c25289f43ac4a68d88b02245742347c94f1e108c534dda442188015ff80669b3"
