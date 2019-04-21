@@ -422,7 +422,7 @@ func TestSagaInvoke(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		req := invoke.NewSagaRequest().WithInput(input)
+		req := invoke.NewSagaRequest(fn).WithInput(input)
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -434,7 +434,7 @@ func TestSagaInvoke(t *testing.T) {
 			FunctionError: nil,
 		}, nil)
 
-		err := in.InvokeSaga(ctx, fn, req)
+		err := in.InvokeSaga(ctx, req)
 
 		require.NoError(t, err)
 		ld.AssertExpectations(t)
@@ -444,7 +444,7 @@ func TestSagaInvoke(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		req := invoke.NewSagaRequest().WithInput(input)
+		req := invoke.NewSagaRequest(fn).WithInput(input)
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -456,7 +456,7 @@ func TestSagaInvoke(t *testing.T) {
 			FunctionError: &errUnhandled,
 		}, nil)
 
-		err := in.InvokeSaga(ctx, fn, req)
+		err := in.InvokeSaga(ctx, req)
 
 		require.Equal(t, errors.BadRequest("Hello", "hello"), err)
 		ld.AssertExpectations(t)
@@ -466,7 +466,7 @@ func TestSagaInvoke(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		req := invoke.NewSagaRequest().WithInput(input)
+		req := invoke.NewSagaRequest(fn).WithInput(input)
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -475,7 +475,7 @@ func TestSagaInvoke(t *testing.T) {
 			Payload:      reqByte,
 		}).Return(nil, errors.DumbError)
 
-		err := in.InvokeSaga(ctx, fn, req)
+		err := in.InvokeSaga(ctx, req)
 
 		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		ld.AssertExpectations(t)
@@ -494,7 +494,7 @@ func TestInvokeSagaAsync(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		req := invoke.NewSagaRequest().WithInput(input)
+		req := invoke.NewSagaRequest(fn).WithInput(input)
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -504,7 +504,7 @@ func TestInvokeSagaAsync(t *testing.T) {
 			InvocationType: ptr.String("Event"),
 		}).Return(nil, nil)
 
-		err := in.InvokeSagaAsync(ctx, fn, req)
+		err := in.InvokeSagaAsync(ctx, req)
 
 		require.NoError(t, err)
 		ld.AssertExpectations(t)
@@ -514,7 +514,7 @@ func TestInvokeSagaAsync(t *testing.T) {
 		ld := &mocks.LambdaInvokeClient{}
 		in := invoke.NewInvoke(ld)
 
-		req := invoke.NewSagaRequest().WithInput(input)
+		req := invoke.NewSagaRequest(fn).WithInput(input)
 		reqByte, _ := req.MarshalRequest()
 
 		ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -524,7 +524,7 @@ func TestInvokeSagaAsync(t *testing.T) {
 			InvocationType: ptr.String("Event"),
 		}).Return(nil, errors.DumbError)
 
-		err := in.InvokeSagaAsync(ctx, fn, req)
+		err := in.InvokeSagaAsync(ctx, req)
 
 		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		ld.AssertExpectations(t)

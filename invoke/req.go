@@ -10,12 +10,13 @@ import (
 const defaultReqID = "zamus"
 
 type SagaRequest struct {
+	fn     string
 	Input  jsoniter.RawMessage `json:"input"`
 	Resume string              `json:"resume"`
 }
 
-func NewSagaRequest() *SagaRequest {
-	return &SagaRequest{}
+func NewSagaRequest(fn string) *SagaRequest {
+	return &SagaRequest{fn: fn}
 }
 
 func (e *SagaRequest) WithInput(input interface{}) *SagaRequest {

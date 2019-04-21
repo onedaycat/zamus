@@ -23,8 +23,8 @@ type Invoker interface {
 	InvokeAsync(ctx context.Context, fn string, req *Request) errors.Error
 	BatchInvoke(ctx context.Context, fn string, reqs []*Request) (BatchResults, errors.Error)
 	BatchInvokeAsync(ctx context.Context, fn string, reqs []*Request) errors.Error
-	InvokeSaga(ctx context.Context, fn string, req *SagaRequest) errors.Error
-	InvokeSagaAsync(ctx context.Context, fn string, req *SagaRequest) errors.Error
+	InvokeSaga(ctx context.Context, req *SagaRequest) errors.Error
+	InvokeSagaAsync(ctx context.Context, req *SagaRequest) errors.Error
 }
 
 //go:generate mockery -name=LambdaInvokeClient
@@ -159,14 +159,14 @@ func (in *Invoke) BatchInvokeAsync(ctx context.Context, fn string, reqs []*Reque
 	return nil
 }
 
-func (in *Invoke) InvokeSaga(ctx context.Context, fn string, req *SagaRequest) errors.Error {
+func (in *Invoke) InvokeSaga(ctx context.Context, req *SagaRequest) errors.Error {
 	reqByte, err := req.MarshalRequest()
 	if err != nil {
 		return err
 	}
 
 	out, xerr := in.ld.InvokeWithContext(ctx, &lambda.InvokeInput{
-		FunctionName: &fn,
+		FunctionName: &req.fn,
 		Qualifier:    &LATEST,
 		Payload:      reqByte,
 	})
@@ -190,14 +190,14 @@ func (in *Invoke) InvokeSaga(ctx context.Context, fn string, req *SagaRequest) e
 	return nil
 }
 
-func (in *Invoke) InvokeSagaAsync(ctx context.Context, fn string, req *SagaRequest) errors.Error {
+func (in *Invoke) InvokeSagaAsync(ctx context.Context, req *SagaRequest) errors.Error {
 	reqByte, err := req.MarshalRequest()
 	if err != nil {
 		return err
 	}
 
 	_, xerr := in.ld.InvokeWithContext(ctx, &lambda.InvokeInput{
-		FunctionName:   &fn,
+		FunctionName:   &req.fn,
 		Qualifier:      &LATEST,
 		Payload:        reqByte,
 		InvocationType: ptr.String(invokeTypeEvent),
