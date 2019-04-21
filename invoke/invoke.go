@@ -23,7 +23,7 @@ type Invoker interface {
 	InvokeAsync(ctx context.Context, fn string, req *Request) errors.Error
 	BatchInvoke(ctx context.Context, fn string, reqs []*Request) (BatchResults, errors.Error)
 	BatchInvokeAsync(ctx context.Context, fn string, reqs []*Request) errors.Error
-	InvokeSaga(ctx context.Context, req *SagaRequest) errors.Error
+	InvokeSaga(ctx context.Context, req *SagaRequest, result interface{}) errors.Error
 	InvokeSagaAsync(ctx context.Context, req *SagaRequest) errors.Error
 }
 
@@ -159,7 +159,7 @@ func (in *Invoke) BatchInvokeAsync(ctx context.Context, fn string, reqs []*Reque
 	return nil
 }
 
-func (in *Invoke) InvokeSaga(ctx context.Context, req *SagaRequest) errors.Error {
+func (in *Invoke) InvokeSaga(ctx context.Context, req *SagaRequest, result interface{}) errors.Error {
 	reqByte, err := req.MarshalRequest()
 	if err != nil {
 		return err
@@ -183,11 +183,11 @@ func (in *Invoke) InvokeSaga(ctx context.Context, req *SagaRequest) errors.Error
 		return resErr
 	}
 
-	if len(out.Payload) == 0 {
+	if len(out.Payload) == 0 || result == nil {
 		return nil
 	}
 
-	return nil
+	return common.UnmarshalJSON(out.Payload, result)
 }
 
 func (in *Invoke) InvokeSagaAsync(ctx context.Context, req *SagaRequest) errors.Error {

@@ -434,9 +434,12 @@ func TestSagaInvoke(t *testing.T) {
 			FunctionError: nil,
 		}, nil)
 
-		err := in.InvokeSaga(ctx, req)
+		var result string
+
+		err := in.InvokeSaga(ctx, req, &result)
 
 		require.NoError(t, err)
+		require.Equal(t, mockResult, result)
 		ld.AssertExpectations(t)
 	})
 
@@ -456,9 +459,12 @@ func TestSagaInvoke(t *testing.T) {
 			FunctionError: &errUnhandled,
 		}, nil)
 
-		err := in.InvokeSaga(ctx, req)
+		var result string
+
+		err := in.InvokeSaga(ctx, req, &result)
 
 		require.Equal(t, errors.BadRequest("Hello", "hello"), err)
+		require.Empty(t, result)
 		ld.AssertExpectations(t)
 	})
 
@@ -475,7 +481,7 @@ func TestSagaInvoke(t *testing.T) {
 			Payload:      reqByte,
 		}).Return(nil, errors.DumbError)
 
-		err := in.InvokeSaga(ctx, req)
+		err := in.InvokeSaga(ctx, req, nil)
 
 		require.Equal(t, appErr.ErrUnableInvokeFunction, err)
 		ld.AssertExpectations(t)
