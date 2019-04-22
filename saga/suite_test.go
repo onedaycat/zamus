@@ -139,6 +139,8 @@ func (h *testHandler) S1Handler(ctx context.Context, data interface{}, action St
         action.PartialCompensate(errors.DumbError, tdata)
     case "partial_error":
         action.PartialError(errors.DumbError)
+    case "stop":
+        action.Stop(tdata)
     case "end":
         action.End(tdata)
     }
@@ -188,6 +190,8 @@ func (h *testHandler) S2Handler(ctx context.Context, data interface{}, action St
         action.PartialCompensate(errors.DumbError, tdata)
     case "partial_error":
         action.PartialError(errors.DumbError)
+    case "stop":
+        action.Stop(tdata)
     case "end":
         action.End(tdata)
     }
@@ -224,6 +228,8 @@ func (h *testHandler) S3Handler(ctx context.Context, data interface{}, action St
         action.PartialCompensate(errors.DumbError, tdata)
     case "partial_error":
         action.PartialError(errors.DumbError)
+    case "stop":
+        action.Stop(tdata)
     case "end":
         action.End(tdata)
     }

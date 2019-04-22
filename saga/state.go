@@ -13,11 +13,12 @@ type Action int
 
 //noinspection ALL
 const (
-    WAIT Status = iota
+    INIT Status = iota
     SUCCESS
     ERROR
     FAILED
     COMPENSATED
+    WAIT
 )
 
 //noinspection ALL
@@ -29,6 +30,7 @@ const (
     END
     COMPENSATE
     PARTIAL_COMPENSATE
+    STOP
 )
 
 type StateDefinitions struct {
@@ -113,9 +115,9 @@ func (s *State) setupFromResume(defs *StateDefinitions, data interface{}) {
     s.step.def = s.defs.GetState(s.step.Name)
     s.step.data = data
     s.step.Action = NONE
-    s.step.Status = WAIT
+    s.step.Status = INIT
     s.Action = NONE
-    s.Status = WAIT
+    s.Status = INIT
 }
 
 func (s *State) startStep(stateName string, data interface{}) errors.Error {
@@ -131,7 +133,7 @@ func (s *State) startStep(stateName string, data interface{}) errors.Error {
     }
 
     s.Steps = append(s.Steps, step)
-    s.Status = WAIT
+    s.Status = INIT
     s.Action = NONE
     s.step = step
     s.data = data
@@ -157,7 +159,7 @@ func (s *State) nextStep() {
     }
 
     s.Steps = append(s.Steps, step)
-    s.Status = WAIT
+    s.Status = INIT
     s.Action = NONE
     s.step = step
     s.index++
@@ -184,7 +186,7 @@ func (s *State) backStep() {
     }
 
     s.Steps = append(s.Steps, step)
-    s.Status = WAIT
+    s.Status = INIT
     s.Action = NONE
     s.step = step
 }
@@ -199,7 +201,7 @@ func (s *State) updateStep() {
 
 func (s *State) Clear() {
     s.ID = emptyStr
-    s.Status = WAIT
+    s.Status = INIT
     s.Action = NONE
     s.Input = nil
     s.Data = nil

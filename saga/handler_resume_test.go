@@ -913,3 +913,93 @@ func Test_ResumePartialCompAfterComp(t *testing.T) {
 
     require.Equal(t, expStateJSON, stateJSON)
 }
+
+func Test_ResumeFromStop(t *testing.T) {
+    s := setupHandlerSuite().
+        WithS1Handler("next").
+        WithS2Handler("next").
+        WithS3Handler("end")
+
+    eid.FreezeID("state1")
+    now := time.Now().UTC()
+    clock.Freeze(now)
+
+    saveState := &State{
+        ID:         "state1",
+        Name:       "Test",
+        Status:     WAIT,
+        Action:     STOP,
+        Input:      []byte(`{"id":1}`),
+        StartTime:  now.Unix(),
+        LastTime:   now.Unix(),
+        Compensate: false,
+        Data:       []byte(`{"id":3}`),
+        Error:      nil,
+        Steps: []*Step{
+            {
+                Name:      "s1",
+                Status:    SUCCESS,
+                Action:    NEXT,
+                Retried:   0,
+                StepError: nil,
+            },
+            {
+                Name:    "s2",
+                Status:  WAIT,
+                Action:  STOP,
+                Retried: 0,
+            },
+        },
+    }
+    xerr := s.storage.Save(s.ctx, saveState)
+    require.NoError(t, xerr)
+
+    expState := &State{
+        ID:         "state1",
+        Name:       "Test",
+        Status:     SUCCESS,
+        Action:     END,
+        Input:      []byte(`{"id":1}`),
+        StartTime:  now.Unix(),
+        LastTime:   now.Unix(),
+        Compensate: false,
+        Error:      nil,
+        Data:       []byte(`{"id":5}`),
+        Steps: []*Step{
+            {
+                Name:      "s1",
+                Status:    SUCCESS,
+                Action:    NEXT,
+                Retried:   0,
+                StepError: nil,
+            },
+            {
+                Name:      "s2",
+                Status:    SUCCESS,
+                Action:    NEXT,
+                Retried:   0,
+                StepError: nil,
+            },
+            {
+                Name:      "s3",
+                Status:    SUCCESS,
+                Action:    END,
+                Retried:   0,
+                StepError: nil,
+            },
+        },
+    }
+
+    res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
+    require.NoError(t, err)
+    require.Equal(t, "state1", string(res))
+    require.Equal(t, 0, s.handle.spy.Count("start"))
+    require.Equal(t, 0, s.handle.spy.Count("s1"))
+    require.Equal(t, 1, s.handle.spy.Count("s2"))
+    require.Equal(t, 1, s.handle.spy.Count("s3"))
+
+    expStateJSON, _ := common.MarshalJSON(expState)
+    stateJSON, _ := common.MarshalJSON(s.saga.state)
+
+    require.Equal(t, expStateJSON, stateJSON)
+}
