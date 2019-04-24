@@ -1,13 +1,12 @@
 package dynamostream
 
 import (
+    "context"
     "encoding/base64"
     "fmt"
-    "sort"
     "testing"
 
     "github.com/onedaycat/zamus/event"
-    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )
@@ -15,7 +14,6 @@ import (
 func TestParseDynamoDBStreamEvent(t *testing.T) {
     evt := &domain.StockItemCreated{Id: "1"}
     p, err := event.MarshalEvent(evt)
-    require.NoError(t, err)
     p64 := base64.StdEncoding.EncodeToString(p)
 
     payload := fmt.Sprintf(`
@@ -42,7 +40,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 							"S": "a1"
 						},
 						"eventType": {
-							"S": "domain.aggregate.dyevt"
+							"S": "testdata.stock.v1.StockItemCreated"
 						},
 						"seq": {
 							"N": "10002"
@@ -74,7 +72,7 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						"S": "a1"
 					},
 					"eventType": {
-						"S": "domain.aggregate.dyevt"
+						"S": "testdata.stock.v1.StockItemCreated"
 					},
 					"seq": {
 						"N": "10001"
@@ -92,18 +90,16 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 		]
 	}`, p64, p64)
 
-    dyevt := &DynamoDBStreamEvent{}
-    err = common.UnmarshalJSON([]byte(payload), dyevt)
-    sort.Sort(dyevt.Records)
+    source := New()
+    req, err := source.GetRequest(context.Background(), []byte(payload))
     require.NoError(t, err)
-    require.Len(t, dyevt.Records, 2)
-    require.Equal(t, eventRemove, dyevt.Records[0].EventName)
-    require.Equal(t, int64(10001), dyevt.Records[0].DynamoDB.NewImage.EventMsg.Seq)
-    require.Equal(t, EventInsert, dyevt.Records[1].EventName)
-    require.Equal(t, int64(10002), dyevt.Records[1].DynamoDB.NewImage.EventMsg.Seq)
+    require.Len(t, req.Msgs, 1)
+    require.Equal(t, "a1", req.Msgs[0].AggID)
+    require.Equal(t, "testdata.stock.v1.StockItemCreated", req.Msgs[0].EventType)
+    require.Equal(t, int64(10002), req.Msgs[0].Seq)
 
     pp := &domain.StockItemCreated{}
-    err = dyevt.Records[0].DynamoDB.NewImage.EventMsg.UnmarshalEvent(pp)
+    err = req.Msgs[0].UnmarshalEvent(pp)
     require.NoError(t, err)
     require.Equal(t, evt, pp)
 }

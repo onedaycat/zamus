@@ -4,11 +4,12 @@ import (
     "github.com/aws/aws-sdk-go/service/dynamodb"
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute"
     "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
 )
 
 type Payload struct {
-    EventMsg *EventMsg
+    EventMsg *event.Msg
 }
 
 func (p *Payload) UnmarshalJSON(b []byte) error {
@@ -36,10 +37,16 @@ func (a Records) Less(i, j int) bool {
     return a[i].DynamoDB.NewImage.EventMsg.Seq < a[j].DynamoDB.NewImage.EventMsg.Seq
 }
 
-type DynamoDBStreamEvent struct {
+type EventSource struct {
     Records    Records `json:"Records"`
     Warmer     bool    `json:"warmer,omitempty"`
     Concurency int     `json:"concurency,omitempty"`
+}
+
+func (e *EventSource) Clear() {
+    e.Records = e.Records[:0]
+    e.Warmer = false
+    e.Concurency = 0
 }
 
 type Record struct {
@@ -50,7 +57,7 @@ type Record struct {
 func (r *Record) add(key, eid, etype string) {
     r.DynamoDB = &DynamoDBRecord{
         NewImage: &Payload{
-            EventMsg: &EventMsg{
+            EventMsg: &event.Msg{
                 Id:        eid,
                 AggID:     key,
                 EventType: etype,

@@ -1,143 +1,163 @@
 package reactor
 
 import (
-	"context"
+    "context"
 
-	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/aws/aws-lambda-go/lambdacontext"
-	"github.com/aws/aws-sdk-go/aws/session"
-	ldService "github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/onedaycat/errors"
-	"github.com/onedaycat/errors/sentry"
-	"github.com/onedaycat/zamus/dql"
-	appErr "github.com/onedaycat/zamus/errors"
-	"github.com/onedaycat/zamus/internal/common"
-	"github.com/onedaycat/zamus/reactor/kinesisstream"
-	"github.com/onedaycat/zamus/tracer"
-	"github.com/onedaycat/zamus/warmer"
-	"github.com/onedaycat/zamus/zamuscontext"
+    "github.com/aws/aws-lambda-go/lambda"
+    "github.com/aws/aws-lambda-go/lambdacontext"
+    "github.com/aws/aws-sdk-go/aws/session"
+    ldService "github.com/aws/aws-sdk-go/service/lambda"
+    "github.com/onedaycat/errors"
+    "github.com/onedaycat/errors/sentry"
+    "github.com/onedaycat/zamus/dql"
+    appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
+    "github.com/onedaycat/zamus/tracer"
+    "github.com/onedaycat/zamus/warmer"
+    "github.com/onedaycat/zamus/zamuscontext"
 )
 
-type EventHandler = kinesisstream.EventMessagesHandler
-type ErrorHandler = kinesisstream.EventMessagesErrorHandler
-type LambdaEvent = kinesisstream.KinesisStreamEvent
+type EventHandler = func(ctx context.Context, msgs event.Msgs) errors.Error
+type ErrorHandler = func(ctx context.Context, msgs event.Msgs, err errors.Error)
+type LambdaHandler func(ctx context.Context, event event.Msgs)
+
+type Strategy interface {
+    ErrorHandlers(handlers ...ErrorHandler)
+    PreHandlers(handlers ...EventHandler)
+    PostHandlers(handlers ...EventHandler)
+    RegisterHandler(handlers EventHandler, filterEvents []string)
+    Process(ctx context.Context, msgs event.Msgs) errors.Error
+    SetDQL(dql dql.DQL)
+}
+
+type EventSource interface {
+    GetRequest(ctx context.Context, payload []byte) (*Request, errors.Error)
+}
+
+type Request struct {
+    Msgs       event.Msgs
+    Warmer     bool
+    Concurency int
+}
 
 type Config struct {
-	AppStage            string
-	Service             string
-	Version             string
-	SentryDNS           string
-	DisableReponseError bool
-	EnableTrace         bool
-	DQLMaxRetry         int
-	DQLStorage          dql.Storage
+    AppStage            string
+    Service             string
+    Version             string
+    SentryDNS           string
+    DisableReponseError bool
+    EnableTrace         bool
+    DQLMaxRetry         int
+    DQLStorage          dql.Storage
 }
 
 type Handler struct {
-	streamer            kinesisstream.KinesisHandlerStrategy
-	zcctx               *zamuscontext.ZamusContext
-	warmer              *warmer.Warmer
-	disableReponseError bool
+    streamer            Strategy
+    source              EventSource
+    zcctx               *zamuscontext.ZamusContext
+    warmer              *warmer.Warmer
+    disableReponseError bool
 }
 
 //noinspection GoUnusedExportedFunction
-func NewHandler(streamer kinesisstream.KinesisHandlerStrategy, config *Config) *Handler {
-	h := &Handler{
-		zcctx: &zamuscontext.ZamusContext{
-			AppStage:       config.AppStage,
-			Service:        config.Service,
-			LambdaFunction: lambdacontext.FunctionName,
-			LambdaVersion:  lambdacontext.FunctionVersion,
-			Version:        config.Version,
-		},
-		streamer:            streamer,
-		disableReponseError: config.DisableReponseError,
-	}
+func NewHandler(source EventSource, streamer Strategy, config *Config) *Handler {
+    h := &Handler{
+        zcctx: &zamuscontext.ZamusContext{
+            AppStage:       config.AppStage,
+            Service:        config.Service,
+            LambdaFunction: lambdacontext.FunctionName,
+            LambdaVersion:  lambdacontext.FunctionVersion,
+            Version:        config.Version,
+        },
+        streamer:            streamer,
+        source:              source,
+        disableReponseError: config.DisableReponseError,
+    }
 
-	if config.DQLMaxRetry > 0 && config.DQLStorage != nil {
-		h.streamer.SetDQL(dql.New(config.DQLStorage, config.DQLMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
-	}
+    if config.DQLMaxRetry > 0 && config.DQLStorage != nil {
+        h.streamer.SetDQL(dql.New(config.DQLStorage, config.DQLMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
+    }
 
-	if config.EnableTrace {
-		tracer.Enable = config.EnableTrace
-		h.ErrorHandlers(TraceError)
-	}
+    if config.EnableTrace {
+        tracer.Enable = config.EnableTrace
+        h.ErrorHandlers(TraceError)
+    }
 
-	if config.SentryDNS != "" {
-		sentry.SetDSN(config.SentryDNS)
-		sentry.SetOptions(
-			sentry.WithEnv(config.AppStage),
-			sentry.WithServerName(lambdacontext.FunctionName),
-			sentry.WithServiceName(config.Service),
-			sentry.WithRelease(config.Service+"@"+config.Version),
-			sentry.WithVersion(config.Version),
-			sentry.WithTags(sentry.Tags{
-				{Key: "lambdaVersion", Value: lambdacontext.FunctionVersion},
-			}),
-		)
-		h.ErrorHandlers(Sentry)
-	}
+    if config.SentryDNS != "" {
+        sentry.SetDSN(config.SentryDNS)
+        sentry.SetOptions(
+            sentry.WithEnv(config.AppStage),
+            sentry.WithServerName(lambdacontext.FunctionName),
+            sentry.WithServiceName(config.Service),
+            sentry.WithRelease(config.Service+"@"+config.Version),
+            sentry.WithVersion(config.Version),
+            sentry.WithTags(sentry.Tags{
+                {Key: "lambdaVersion", Value: lambdacontext.FunctionVersion},
+            }),
+        )
+        h.ErrorHandlers(Sentry)
+    }
 
-	return h
+    return h
 }
 
-func (h *Handler) StreamStrategy(streamStrategy kinesisstream.KinesisHandlerStrategy) {
-	h.streamer = streamStrategy
+func (h *Handler) StreamStrategy(streamStrategy Strategy) {
+    h.streamer = streamStrategy
 }
 
 func (h *Handler) PreHandlers(handlers ...EventHandler) {
-	h.streamer.PreHandlers(handlers...)
+    h.streamer.PreHandlers(handlers...)
 }
 
 func (h *Handler) PostHandlers(handlers ...EventHandler) {
-	h.streamer.PostHandlers(handlers...)
+    h.streamer.PostHandlers(handlers...)
 }
 
 func (h *Handler) ErrorHandlers(handlers ...ErrorHandler) {
-	h.streamer.ErrorHandlers(handlers...)
+    h.streamer.ErrorHandlers(handlers...)
 }
 
 func (h *Handler) RegisterHandler(handler EventHandler, filterEvents []string) {
-	h.streamer.RegisterHandler(handler, filterEvents)
+    h.streamer.RegisterHandler(handler, filterEvents)
 }
 
-func (h *Handler) Handle(ctx context.Context, event *LambdaEvent) errors.Error {
-	if event.Warmer {
-		return h.runWarmer(ctx, event)
-	}
-	zmctx := zamuscontext.NewContext(ctx, h.zcctx)
+func (h *Handler) Handle(ctx context.Context, req *Request) errors.Error {
+    if req.Warmer {
+        return h.runWarmer(ctx, req)
+    }
+    zmctx := zamuscontext.NewContext(ctx, h.zcctx)
 
-	return h.streamer.Process(zmctx, event.Records)
+    return h.streamer.Process(zmctx, req.Msgs)
 }
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
-	req := &LambdaEvent{}
-	if err := common.UnmarshalJSON(payload, req); err != nil {
-		return nil, appErr.ToLambdaError(err)
-	}
+    req, err := h.source.GetRequest(ctx, payload)
+    if err != nil {
+        return nil, appErr.ToLambdaError(err)
+    }
 
-	if h.disableReponseError {
-		_ = h.Handle(ctx, req)
-		return nil, nil
-	}
+    if h.disableReponseError {
+        _ = h.Handle(ctx, req)
+        return nil, nil
+    }
 
-	return nil, appErr.ToLambdaError(h.Handle(ctx, req))
+    return nil, appErr.ToLambdaError(h.Handle(ctx, req))
 }
 
 func (h *Handler) StartLambda() {
-	lambda.StartHandler(h)
+    lambda.StartHandler(h)
 }
 
-func (h *Handler) runWarmer(ctx context.Context, event *LambdaEvent) errors.Error {
-	if h.warmer == nil {
-		sess, serr := session.NewSession()
-		if serr != nil {
-			panic(serr)
-		}
+func (h *Handler) runWarmer(ctx context.Context, req *Request) errors.Error {
+    if h.warmer == nil {
+        sess, serr := session.NewSession()
+        if serr != nil {
+            panic(serr)
+        }
 
-		h.warmer = warmer.New(ldService.New(sess))
-	}
-	h.warmer.Run(ctx, event.Concurency)
+        h.warmer = warmer.New(ldService.New(sess))
+    }
+    h.warmer.Run(ctx, req.Concurency)
 
-	return nil
+    return nil
 }

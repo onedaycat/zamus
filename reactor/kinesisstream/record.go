@@ -8,11 +8,16 @@ import (
 
 type Records = []*Record
 
-//noinspection GoNameStartsWithPackageName
-type KinesisStreamEvent struct {
+type EventSource struct {
     Records    Records `json:"Records"`
     Warmer     bool    `json:"warmer,omitempty"`
     Concurency int     `json:"concurency,omitempty"`
+}
+
+func (e *EventSource) Clear() {
+    e.Records = e.Records[:0]
+    e.Warmer = false
+    e.Concurency = 0
 }
 
 type Record struct {

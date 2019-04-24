@@ -1,4 +1,4 @@
-package kinesisstream_test
+package strategy_test
 
 import (
     "context"

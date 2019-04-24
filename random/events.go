@@ -106,11 +106,11 @@ func (b *eventsBuilder) BuildJSON() []byte {
     return data
 }
 
-func (b *eventsBuilder) BuildKinesis() *kinesisstream.KinesisStreamEvent {
+func (b *eventsBuilder) BuildKinesis() *kinesisstream.EventSource {
     return KinesisEvents().Add(b.msgs...).Build()
 }
 
-func (b *eventsBuilder) BuildKinesisWithEventTypes() (*kinesisstream.KinesisStreamEvent, []string) {
+func (b *eventsBuilder) BuildKinesisWithEventTypes() (*kinesisstream.EventSource, []string) {
     return KinesisEvents().Add(b.msgs...).BuildWithEventTypes()
 }
 

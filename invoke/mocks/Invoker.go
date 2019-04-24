@@ -85,6 +85,38 @@ func (_m *Invoker) InvokeAsync(ctx context.Context, fn string, req *invoke.Reque
 	return r0
 }
 
+// InvokeReactor provides a mock function with given fields: ctx, req
+func (_m *Invoker) InvokeReactor(ctx context.Context, req *invoke.ReactorRequest) errors.Error {
+	ret := _m.Called(ctx, req)
+
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, *invoke.ReactorRequest) errors.Error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
+	}
+
+	return r0
+}
+
+// InvokeReactorAsync provides a mock function with given fields: ctx, req
+func (_m *Invoker) InvokeReactorAsync(ctx context.Context, req *invoke.ReactorRequest) errors.Error {
+	ret := _m.Called(ctx, req)
+
+	var r0 errors.Error
+	if rf, ok := ret.Get(0).(func(context.Context, *invoke.ReactorRequest) errors.Error); ok {
+		r0 = rf(ctx, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(errors.Error)
+		}
+	}
+
+	return r0
+}
+
 // InvokeSaga provides a mock function with given fields: ctx, req, result
 func (_m *Invoker) InvokeSaga(ctx context.Context, req *invoke.SagaRequest, result interface{}) errors.Error {
 	ret := _m.Called(ctx, req, result)

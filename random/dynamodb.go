@@ -7,20 +7,20 @@ import (
 )
 
 type dynamodbBuilder struct {
-    event      *dynamostream.DynamoDBStreamEvent
+    event      *dynamostream.EventSource
     eventTypes common.Set
 }
 
 func DynamoDB() *dynamodbBuilder {
     return &dynamodbBuilder{
-        event: &dynamostream.DynamoDBStreamEvent{
+        event: &dynamostream.EventSource{
             Records: make([]*dynamostream.Record, 0, 100),
         },
         eventTypes: common.NewSet(),
     }
 }
 
-func (b *dynamodbBuilder) Build() *dynamostream.DynamoDBStreamEvent {
+func (b *dynamodbBuilder) Build() *dynamostream.EventSource {
     return b.event
 }
 

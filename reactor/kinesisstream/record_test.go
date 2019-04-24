@@ -1,13 +1,13 @@
 package kinesisstream
 
 import (
+    "context"
     "encoding/base64"
     "fmt"
     "testing"
 
     "github.com/gogo/protobuf/proto"
     "github.com/onedaycat/zamus/event"
-    "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )
@@ -76,15 +76,16 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 
     bpayload := []byte(payload)
 
-    kinevt := &KinesisStreamEvent{}
-    err = common.UnmarshalJSON(bpayload, kinevt)
+    source := New()
+
+    req, err := source.GetRequest(context.Background(), bpayload)
     require.NoError(t, err)
-    require.Len(t, kinevt.Records, 2)
-    require.Equal(t, msg1, kinevt.Records[0].Kinesis.Data.EventMsg)
-    require.Equal(t, msg2, kinevt.Records[1].Kinesis.Data.EventMsg)
+    require.Len(t, req.Msgs, 2)
+    require.Equal(t, msg1, req.Msgs[0])
+    require.Equal(t, msg2, req.Msgs[1])
 
     pp := &domain.StockItemCreated{}
-    err = event.UnmarshalEvent(kinevt.Records[0].Kinesis.Data.EventMsg.Event, pp)
+    err = event.UnmarshalEvent(req.Msgs[0].Event, pp)
     require.NoError(t, err)
     require.Equal(t, evt, pp)
 }

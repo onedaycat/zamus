@@ -7,24 +7,24 @@ import (
 )
 
 type kinesisBuilder struct {
-    event      *kinesisstream.KinesisStreamEvent
+    event      *kinesisstream.EventSource
     eventTypes common.Set
 }
 
 func KinesisEvents() *kinesisBuilder {
     return &kinesisBuilder{
-        event: &kinesisstream.KinesisStreamEvent{
+        event: &kinesisstream.EventSource{
             Records: make([]*kinesisstream.Record, 0, 100),
         },
         eventTypes: common.NewSet(),
     }
 }
 
-func (b *kinesisBuilder) Build() *kinesisstream.KinesisStreamEvent {
+func (b *kinesisBuilder) Build() *kinesisstream.EventSource {
     return b.event
 }
 
-func (b *kinesisBuilder) BuildWithEventTypes() (*kinesisstream.KinesisStreamEvent, []string) {
+func (b *kinesisBuilder) BuildWithEventTypes() (*kinesisstream.EventSource, []string) {
     return b.event, b.eventTypes.List()
 }
 

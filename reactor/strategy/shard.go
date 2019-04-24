@@ -1,4 +1,4 @@
-package kinesisstream
+package strategy
 
 import (
     "context"
@@ -11,6 +11,7 @@ import (
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/reactor"
 )
 
 type shardinfoList []*shardinfo
@@ -56,7 +57,7 @@ type shardinfo struct {
     c           *shardStrategy
 }
 
-func (s *shardinfo) AddEventMsg(msg *EventMsg) {
+func (s *shardinfo) AddEventMsg(msg *event.Msg) {
     for _, handler := range s.handlers {
         if handler.AddEventMsg(msg) {
             s.eventLength++
@@ -64,11 +65,11 @@ func (s *shardinfo) AddEventMsg(msg *EventMsg) {
     }
 }
 
-func (s *shardinfo) AddHandler(handler EventMessagesHandler, sl common.SetList) {
+func (s *shardinfo) AddHandler(handler reactor.EventHandler, sl common.SetList) {
     s.handlers = append(s.handlers, &shardhandler{
         Handler:      handler,
         FilterEvents: sl,
-        EventMsgs:    make([]EventMsgs, 100),
+        EventMsgs:    make([]event.Msgs, 100),
         pk:           make([]string, 0, 100),
     })
 }
@@ -84,9 +85,9 @@ func (s *shardinfo) Clear() {
 }
 
 type shardhandler struct {
-    Handler      EventMessagesHandler
+    Handler      reactor.EventHandler
     FilterEvents common.SetList
-    EventMsgs    []EventMsgs
+    EventMsgs    []event.Msgs
     pk           []string
 }
 
@@ -111,7 +112,7 @@ func (s *shardhandler) AddPK(pk string) int {
     return len(s.pk) - 1
 }
 
-func (s *shardhandler) AddEventMsg(msg *EventMsg) bool {
+func (s *shardhandler) AddEventMsg(msg *event.Msg) bool {
     if s.FilterEvents == nil {
         index, ok := s.GetPK(msg.AggID)
         if !ok {
@@ -136,15 +137,15 @@ func (s *shardhandler) AddEventMsg(msg *EventMsg) bool {
 type shardStrategy struct {
     wg            errgroup.Group
     nShard        int
-    errorHandlers []EventMessagesErrorHandler
+    errorHandlers []reactor.ErrorHandler
     shardinfoList shardinfoList
     eventTypes    common.Set
-    preHandlers   []EventMessagesHandler
-    postHandlers  []EventMessagesHandler
+    preHandlers   []reactor.EventHandler
+    postHandlers  []reactor.EventHandler
     dql           dql.DQL
 }
 
-func NewShardStrategy(numShard ...int) KinesisHandlerStrategy {
+func NewShard(numShard ...int) *shardStrategy {
     var shard int
     if len(numShard) == 0 {
         shard = runtime.NumCPU()
@@ -162,7 +163,7 @@ func NewShardStrategy(numShard ...int) KinesisHandlerStrategy {
     return s
 }
 
-func (c *shardStrategy) ErrorHandlers(handlers ...EventMessagesErrorHandler) {
+func (c *shardStrategy) ErrorHandlers(handlers ...reactor.ErrorHandler) {
     c.errorHandlers = append(c.errorHandlers, handlers...)
 }
 
@@ -170,15 +171,15 @@ func (c *shardStrategy) SetDQL(dql dql.DQL) {
     c.dql = dql
 }
 
-func (c *shardStrategy) PreHandlers(handlers ...EventMessagesHandler) {
+func (c *shardStrategy) PreHandlers(handlers ...reactor.EventHandler) {
     c.preHandlers = append(c.preHandlers, handlers...)
 }
 
-func (c *shardStrategy) PostHandlers(handlers ...EventMessagesHandler) {
+func (c *shardStrategy) PostHandlers(handlers ...reactor.EventHandler) {
     c.postHandlers = append(c.postHandlers, handlers...)
 }
 
-func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEvents []string) {
+func (c *shardStrategy) RegisterHandler(handler reactor.EventHandler, filterEvents []string) {
     var sl common.SetList
     if filterEvents != nil {
         sl = common.NewSetListFromList(filterEvents)
@@ -190,40 +191,35 @@ func (c *shardStrategy) RegisterHandler(handler EventMessagesHandler, filterEven
     }
 }
 
-func (c *shardStrategy) Process(ctx context.Context, records Records) errors.Error {
-    var eventType string
-    var pk string
+func (c *shardStrategy) Process(ctx context.Context, msgs event.Msgs) errors.Error {
     var pos int
     var ok bool
 
     c.shardinfoList.Clear()
 
     if len(c.eventTypes) > 0 {
-        for i, record := range records {
-            eventType = record.Kinesis.Data.EventMsg.EventType
-            if !c.eventTypes.Has(eventType) {
+        for i, msg := range msgs {
+            if !c.eventTypes.Has(msg.EventType) {
                 continue
             }
 
-            pk = record.Kinesis.PartitionKey
-            pos, ok = c.shardinfoList.GetPK(pk)
+            pos, ok = c.shardinfoList.GetPK(msg.AggID)
             if !ok {
                 pos = i % c.nShard
-                c.shardinfoList.AddPK(pos, pk)
+                c.shardinfoList.AddPK(pos, msg.AggID)
             }
 
-            c.shardinfoList[pos].AddEventMsg(record.Kinesis.Data.EventMsg)
+            c.shardinfoList[pos].AddEventMsg(msg)
         }
     } else {
-        for i, record := range records {
-            pk = record.Kinesis.PartitionKey
-            pos, ok = c.shardinfoList.GetPK(pk)
+        for i, msg := range msgs {
+            pos, ok = c.shardinfoList.GetPK(msg.AggID)
             if !ok {
                 pos = i % c.nShard
-                c.shardinfoList.AddPK(pos, pk)
+                c.shardinfoList.AddPK(pos, msg.AggID)
             }
 
-            c.shardinfoList[pos].AddEventMsg(record.Kinesis.Data.EventMsg)
+            c.shardinfoList[pos].AddEventMsg(msg)
         }
     }
 DQLRetry:
@@ -242,19 +238,18 @@ DQLRetry:
                 goto DQLRetry
             }
 
-            msgs := make(EventMsgs, 0, len(records))
+            msgs := make(event.Msgs, 0, len(msgs))
             if len(c.eventTypes) > 0 {
-                for _, record := range records {
-                    eventType = record.Kinesis.Data.EventMsg.EventType
-                    if !c.eventTypes.Has(eventType) {
+                for _, msg := range msgs {
+                    if !c.eventTypes.Has(msg.EventType) {
                         continue
                     }
 
-                    msgs = append(msgs, record.Kinesis.Data.EventMsg)
+                    msgs = append(msgs, msg)
                 }
             } else {
-                for _, record := range records {
-                    msgs = append(msgs, record.Kinesis.Data.EventMsg)
+                for _, msg := range msgs {
+                    msgs = append(msgs, msg)
                 }
             }
 
@@ -272,7 +267,7 @@ DQLRetry:
     return nil
 }
 
-func (c *shardStrategy) doPreHandlers(ctx context.Context, msgs EventMsgs) (err errors.Error) {
+func (c *shardStrategy) doPreHandlers(ctx context.Context, msgs event.Msgs) (err errors.Error) {
     defer c.recover(ctx, msgs, &err)
     for _, ph := range c.preHandlers {
         if err = ph(ctx, msgs); err != nil {
@@ -290,7 +285,7 @@ func (c *shardStrategy) doPreHandlers(ctx context.Context, msgs EventMsgs) (err 
     return
 }
 
-func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err errors.Error) {
+func (c *shardStrategy) doPostHandler(ctx context.Context, msgs event.Msgs) (err errors.Error) {
     defer c.recover(ctx, msgs, &err)
     for _, ph := range c.postHandlers {
         if err = ph(ctx, msgs); err != nil {
@@ -308,7 +303,7 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs EventMsgs) (err 
     return
 }
 
-func (c *shardStrategy) doHandlers(ctx context.Context, msgs EventMsgs, handler EventMessagesHandler) (err errors.Error) {
+func (c *shardStrategy) doHandlers(ctx context.Context, msgs event.Msgs, handler reactor.EventHandler) (err errors.Error) {
     defer c.recover(ctx, msgs, &err)
     if err = handler(ctx, msgs); err != nil {
         if c.dql != nil {
@@ -357,7 +352,7 @@ func (c *shardStrategy) handle(ctx context.Context, shard *shardinfo) errors.Err
     return nil
 }
 
-func (c *shardStrategy) recover(ctx context.Context, msgs EventMsgs, err *errors.Error) {
+func (c *shardStrategy) recover(ctx context.Context, msgs event.Msgs, err *errors.Error) {
     if r := recover(); r != nil {
         switch cause := r.(type) {
         case error:
