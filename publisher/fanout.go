@@ -11,6 +11,7 @@ import (
 
 func (h *Handler) processInvoke(ctx context.Context, stream *dynamostream.EventSource) errors.Error {
     if err := h.createInvokeRecords(ctx, stream); err != nil {
+        Sentry(ctx, stream, err)
         return err
     }
 

@@ -34,38 +34,6 @@ resources:
       Type: AWS::Logs::LogGroup
       Properties:
         RetentionInDays: '30'
-    DQLstore:
-      Type: 'AWS::DynamoDB::Table'
-      # DeletionPolicy: Retain
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: hk
-            AttributeType: S
-          - AttributeName: rk
-            AttributeType: S
-        KeySchema:
-          - AttributeName: hk
-            KeyType: HASH
-          - AttributeName: rk
-            KeyType: RANGE
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:service}-dql-${self:provider.stage}
-    SagaStore:
-      Type: 'AWS::DynamoDB::Table'
-      # DeletionPolicy: Retain
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: hk
-            AttributeType: S
-          - AttributeName: rk
-            AttributeType: S
-        KeySchema:
-          - AttributeName: hk
-            KeyType: HASH
-          - AttributeName: rk
-            KeyType: RANGE
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:service}-saga-${self:provider.stage}
     S3Event:
       Type: AWS::S3::Bucket
       DeletionPolicy: Retain
@@ -123,26 +91,26 @@ resources:
                   Action:
                     - glue:GetTableVersions
                   Resource: '*'
-    KinesisOne:
+    KinesisEventSource:
       Type: AWS::Kinesis::Stream
       # DeletionPolicy: Retain
       Properties:
-        Name: ${self:service}-stream-1-${self:provider.stage}
-        RetentionPeriodHours: ${file(./setting.yml):kinesis-1.retentionPeriodHours}
-        ShardCount: ${file(./setting.yml):kinesis-1.shardCount}
+        Name: ${self:service}-${self:provider.stage}
+        RetentionPeriodHours: ${file(./setting.yml):kinesis.retentionPeriodHours}
+        ShardCount: ${file(./setting.yml):kinesis.shardCount}
     Firehose:
       Type: AWS::KinesisFirehose::DeliveryStream
       DependsOn:
         - S3Event
         - FirehoseToS3Role
-        - KinesisOne
+        - KinesisEventSource
         - GlueCreateTable
       # DeletionPolicy: Retain
       Properties:
         DeliveryStreamName: ${self:service}-firehose-${self:provider.stage}
         DeliveryStreamType: KinesisStreamAsSource
         KinesisStreamSourceConfiguration:
-          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-stream-1-${self:provider.stage}
+          KinesisStreamARN: arn:aws:kinesis:${self:provider.region}:${file(./setting.yml):account}:stream/${self:service}-${self:provider.stage}
           RoleARN: { Fn::GetAtt: [FirehoseToS3Role, Arn] }
         ExtendedS3DestinationConfiguration:
           BucketARN:

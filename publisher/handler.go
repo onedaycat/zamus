@@ -102,10 +102,7 @@ func (h *Handler) Handle(ctx context.Context, stream *dynamostream.EventSource) 
 
     if h.config.Fanout != nil {
         h.wghandle.Go(func() errors.Error {
-            if err := h.processInvoke(ctx, stream); err != nil {
-                Sentry(ctx, stream, err)
-            }
-
+            _ = h.processInvoke(ctx, stream)
             return nil
         })
     }
