@@ -9,7 +9,7 @@ import (
     ldService "github.com/aws/aws-sdk-go/service/lambda"
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/sentry"
-    "github.com/onedaycat/zamus/dql"
+    "github.com/onedaycat/zamus/dlq"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/tracer"
@@ -27,7 +27,7 @@ type Strategy interface {
     PostHandlers(handlers ...EventHandler)
     RegisterHandler(handlers EventHandler, filterEvents []string)
     Process(ctx context.Context, msgs event.Msgs) errors.Error
-    SetDQL(dql dql.DQL)
+    SetDLQ(dlq dlq.DLQ)
 }
 
 type EventSource interface {
@@ -44,11 +44,11 @@ type Config struct {
     AppStage            string
     Service             string
     Version             string
-    SentryDNS           string
+    SentryDSN           string
     DisableReponseError bool
     EnableTrace         bool
-    DQLMaxRetry         int
-    DQLStorage          dql.Storage
+    DLQMaxRetry         int
+    DLQStorage          dlq.Storage
 }
 
 type Handler struct {
@@ -74,8 +74,8 @@ func NewHandler(source EventSource, streamer Strategy, config *Config) *Handler 
         disableReponseError: config.DisableReponseError,
     }
 
-    if config.DQLMaxRetry > 0 && config.DQLStorage != nil {
-        h.streamer.SetDQL(dql.New(config.DQLStorage, config.DQLMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
+    if config.DLQMaxRetry > 0 && config.DLQStorage != nil {
+        h.streamer.SetDLQ(dlq.New(config.DLQStorage, config.DLQMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
     }
 
     if config.EnableTrace {
@@ -83,8 +83,8 @@ func NewHandler(source EventSource, streamer Strategy, config *Config) *Handler 
         h.ErrorHandlers(TraceError)
     }
 
-    if config.SentryDNS != "" {
-        sentry.SetDSN(config.SentryDNS)
+    if config.SentryDSN != "" {
+        sentry.SetDSN(config.SentryDSN)
         sentry.SetOptions(
             sentry.WithEnv(config.AppStage),
             sentry.WithServerName(lambdacontext.FunctionName),

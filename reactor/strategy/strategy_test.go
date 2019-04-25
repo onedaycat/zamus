@@ -4,8 +4,8 @@ import (
     "context"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/dql"
-    "github.com/onedaycat/zamus/dql/mocks"
+    "github.com/onedaycat/zamus/dlq"
+    "github.com/onedaycat/zamus/dlq/mocks"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
@@ -36,8 +36,8 @@ type StrategySuite struct {
     strategy reactor.Strategy
     spy      *common.SpyTest
     records  event.Msgs
-    dqlMock  *mocks.Storage
-    dql      dql.DQL
+    dlqMock  *mocks.Storage
+    dlq      dlq.DLQ
 }
 
 func setupShard() *StrategySuite {
@@ -60,7 +60,7 @@ func setupSimple() *StrategySuite {
 func setupSuite(strategy reactor.Strategy) *StrategySuite {
     s := &StrategySuite{
         spy:     common.Spy(),
-        dqlMock: &mocks.Storage{},
+        dlqMock: &mocks.Storage{},
     }
 
     s.strategy = strategy
@@ -159,9 +159,9 @@ func (s *StrategySuite) WithError(name string) *StrategySuite {
     return s
 }
 
-func (s *StrategySuite) WithDQL(retry int) *StrategySuite {
-    s.dql = dql.New(s.dqlMock, retry, "service", "lambdaFunc", "1.0.0")
-    s.strategy.SetDQL(s.dql)
+func (s *StrategySuite) WithDLQ(retry int) *StrategySuite {
+    s.dlq = dlq.New(s.dlqMock, retry, "service", "lambdaFunc", "1.0.0")
+    s.strategy.SetDLQ(s.dlq)
 
     return s
 }

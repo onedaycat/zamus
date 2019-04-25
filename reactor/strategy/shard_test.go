@@ -242,17 +242,17 @@ func TestShardPostPanic(t *testing.T) {
     })
 }
 
-func TestShardDQL(t *testing.T) {
+func TestShardDLQ(t *testing.T) {
     t.Run("Retry 3", func(t *testing.T) {
         s := setupShard().
             WithHandler("h1", ModeError, EventTypes[0], EventTypes[1]).
             WithPreHandler("pre1", ModeNormal).
             WithPostHandler("post1", ModeNormal).
             WithError("err").
-            WithDQL(3)
+            WithDLQ(3)
 
-        s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-            require.Len(t, s.dql.GetDQLErrors(), 3)
+        s.dlqMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+            require.Len(t, s.dlq.GetDLQErrors(), 3)
         }).Return(nil)
 
         err := s.strategy.Process(context.Background(), s.records)
@@ -265,7 +265,7 @@ func TestShardDQL(t *testing.T) {
         require.Equal(t, 3, s.spy.Count("h1"))
         require.Equal(t, 3, s.spy.Count("pre1"))
         require.Equal(t, 0, s.spy.Count("post1"))
-        s.dqlMock.AssertExpectations(t)
+        s.dlqMock.AssertExpectations(t)
     })
 
     t.Run("Retry 1", func(t *testing.T) {
@@ -274,10 +274,10 @@ func TestShardDQL(t *testing.T) {
             WithPreHandler("pre1", ModeNormal).
             WithPostHandler("post1", ModeNormal).
             WithError("err").
-            WithDQL(1)
+            WithDLQ(1)
 
-        s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-            require.Len(t, s.dql.GetDQLErrors(), 1)
+        s.dlqMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+            require.Len(t, s.dlq.GetDLQErrors(), 1)
         }).Return(nil)
 
         err := s.strategy.Process(context.Background(), s.records)
@@ -290,7 +290,7 @@ func TestShardDQL(t *testing.T) {
         require.Equal(t, 1, s.spy.Count("h1"))
         require.Equal(t, 1, s.spy.Count("pre1"))
         require.Equal(t, 0, s.spy.Count("post1"))
-        s.dqlMock.AssertExpectations(t)
+        s.dlqMock.AssertExpectations(t)
     })
 
     t.Run("Retry 3 on Panic", func(t *testing.T) {
@@ -299,10 +299,10 @@ func TestShardDQL(t *testing.T) {
             WithPreHandler("pre1", ModeNormal).
             WithPostHandler("post1", ModeNormal).
             WithError("err").
-            WithDQL(3)
+            WithDLQ(3)
 
-        s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-            require.Len(t, s.dql.GetDQLErrors(), 3)
+        s.dlqMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+            require.Len(t, s.dlq.GetDLQErrors(), 3)
         }).Return(nil)
 
         err := s.strategy.Process(context.Background(), s.records)
@@ -315,7 +315,7 @@ func TestShardDQL(t *testing.T) {
         require.Equal(t, 3, s.spy.Count("h1"))
         require.Equal(t, 3, s.spy.Count("pre1"))
         require.Equal(t, 0, s.spy.Count("post1"))
-        s.dqlMock.AssertExpectations(t)
+        s.dlqMock.AssertExpectations(t)
     })
 
     t.Run("Retry 3 on Panic String", func(t *testing.T) {
@@ -324,10 +324,10 @@ func TestShardDQL(t *testing.T) {
             WithPreHandler("pre1", ModeNormal).
             WithPostHandler("post1", ModeNormal).
             WithError("err").
-            WithDQL(3)
+            WithDLQ(3)
 
-        s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-            require.Len(t, s.dql.GetDQLErrors(), 3)
+        s.dlqMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+            require.Len(t, s.dlq.GetDLQErrors(), 3)
         }).Return(nil)
 
         err := s.strategy.Process(context.Background(), s.records)
@@ -340,21 +340,21 @@ func TestShardDQL(t *testing.T) {
         require.Equal(t, 3, s.spy.Count("h1"))
         require.Equal(t, 3, s.spy.Count("pre1"))
         require.Equal(t, 0, s.spy.Count("post1"))
-        s.dqlMock.AssertExpectations(t)
+        s.dlqMock.AssertExpectations(t)
     })
 }
 
-func TestShardPredDQL(t *testing.T) {
+func TestShardPredDLQ(t *testing.T) {
     t.Run("Retry 3", func(t *testing.T) {
         s := setupShard().
             WithHandler("h1", ModeNormal, EventTypes[0], EventTypes[1]).
             WithPreHandler("pre1", ModeError).
             WithPostHandler("post1", ModeNormal).
             WithError("err").
-            WithDQL(3)
+            WithDLQ(3)
 
-        s.dqlMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
-            require.Len(t, s.dql.GetDQLErrors(), 3)
+        s.dlqMock.On("Save", mock.Anything, mock.Anything).Run(func(ars mock.Arguments) {
+            require.Len(t, s.dlq.GetDLQErrors(), 3)
         }).Return(nil)
 
         err := s.strategy.Process(context.Background(), s.records)
@@ -367,7 +367,7 @@ func TestShardPredDQL(t *testing.T) {
         require.Equal(t, 0, s.spy.Count("h1"))
         require.Equal(t, 3, s.spy.Count("pre1"))
         require.Equal(t, 0, s.spy.Count("post1"))
-        s.dqlMock.AssertExpectations(t)
+        s.dlqMock.AssertExpectations(t)
     })
 }
 

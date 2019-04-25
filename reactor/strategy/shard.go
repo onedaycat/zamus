@@ -7,7 +7,7 @@ import (
 
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/errgroup"
-    "github.com/onedaycat/zamus/dql"
+    "github.com/onedaycat/zamus/dlq"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
@@ -142,7 +142,7 @@ type shardStrategy struct {
     eventTypes    common.Set
     preHandlers   []reactor.EventHandler
     postHandlers  []reactor.EventHandler
-    dql           dql.DQL
+    dlq           dlq.DLQ
 }
 
 func NewShard(numShard ...int) *shardStrategy {
@@ -167,8 +167,8 @@ func (c *shardStrategy) ErrorHandlers(handlers ...reactor.ErrorHandler) {
     c.errorHandlers = append(c.errorHandlers, handlers...)
 }
 
-func (c *shardStrategy) SetDQL(dql dql.DQL) {
-    c.dql = dql
+func (c *shardStrategy) SetDLQ(dlq dlq.DLQ) {
+    c.dlq = dlq
 }
 
 func (c *shardStrategy) PreHandlers(handlers ...reactor.EventHandler) {
@@ -222,7 +222,7 @@ func (c *shardStrategy) Process(ctx context.Context, msgs event.Msgs) errors.Err
             c.shardinfoList[pos].AddEventMsg(msg)
         }
     }
-DQLRetry:
+DLQRetry:
     for _, shard := range c.shardinfoList {
         if shard.eventLength == 0 {
             continue
@@ -233,9 +233,9 @@ DQLRetry:
     }
 
     if err := c.wg.Wait(); err != nil {
-        if c.dql != nil {
-            if ok := c.dql.Retry(); ok {
-                goto DQLRetry
+        if c.dlq != nil {
+            if ok := c.dlq.Retry(); ok {
+                goto DLQRetry
             }
 
             msgs := make(event.Msgs, 0, len(msgs))
@@ -258,7 +258,7 @@ DQLRetry:
             }
             msgListByte, _ := event.MarshalMsg(msgList)
 
-            return c.dql.Save(ctx, msgListByte)
+            return c.dlq.Save(ctx, msgListByte)
         }
 
         return err
@@ -271,8 +271,8 @@ func (c *shardStrategy) doPreHandlers(ctx context.Context, msgs event.Msgs) (err
     defer c.recover(ctx, msgs, &err)
     for _, ph := range c.preHandlers {
         if err = ph(ctx, msgs); err != nil {
-            if c.dql != nil {
-                c.dql.AddError(err)
+            if c.dlq != nil {
+                c.dlq.AddError(err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, err)
@@ -289,8 +289,8 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs event.Msgs) (err
     defer c.recover(ctx, msgs, &err)
     for _, ph := range c.postHandlers {
         if err = ph(ctx, msgs); err != nil {
-            if c.dql != nil {
-                c.dql.AddError(err)
+            if c.dlq != nil {
+                c.dlq.AddError(err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, err)
@@ -306,8 +306,8 @@ func (c *shardStrategy) doPostHandler(ctx context.Context, msgs event.Msgs) (err
 func (c *shardStrategy) doHandlers(ctx context.Context, msgs event.Msgs, handler reactor.EventHandler) (err errors.Error) {
     defer c.recover(ctx, msgs, &err)
     if err = handler(ctx, msgs); err != nil {
-        if c.dql != nil {
-            c.dql.AddError(err)
+        if c.dlq != nil {
+            c.dlq.AddError(err)
         }
         for _, errhandler := range c.errorHandlers {
             errhandler(ctx, msgs, err)
@@ -357,16 +357,16 @@ func (c *shardStrategy) recover(ctx context.Context, msgs event.Msgs, err *error
         switch cause := r.(type) {
         case error:
             *err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(msgs)
-            if c.dql != nil {
-                c.dql.AddError(*err)
+            if c.dlq != nil {
+                c.dlq.AddError(*err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, *err)
             }
         default:
             *err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
-            if c.dql != nil {
-                c.dql.AddError(*err)
+            if c.dlq != nil {
+                c.dlq.AddError(*err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, *err)

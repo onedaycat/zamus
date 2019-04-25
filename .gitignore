@@ -5,6 +5,7 @@
 *.so
 *.dylib
 
+
 # Test binary, build with `go test -c`
 *.test
 
@@ -23,3 +24,6 @@ jack
 jack2
 /zamus.yml
 /lastcommit
+.DS_Store
+.idea
+

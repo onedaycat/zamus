@@ -19,10 +19,8 @@ func main() {
 		Version: "v0.53.0",
 	}
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./zamus.yml)")
-	rootCmd.AddCommand(cmd.MigrateUpCmd)
-	rootCmd.AddCommand(cmd.MigrateDownCmd)
 	rootCmd.AddCommand(cmd.DeployCmd)
-	rootCmd.Execute()
+	_ = rootCmd.Execute()
 }
 
 func initConfig() {

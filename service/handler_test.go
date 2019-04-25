@@ -32,7 +32,7 @@ type HandlerSuite struct {
 func setupHandlerSuite() *HandlerSuite {
     s := &HandlerSuite{}
     s.h = service.NewHandler(&service.Config{
-        SentryDNS:   "test",
+        SentryDSN:   "test",
         EnableTrace: true,
     })
     s.h.ErrorHandlers(service.PrintPanic)

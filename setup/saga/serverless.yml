@@ -35,7 +35,7 @@ functions:
 
 resources:
   Resources:
-    DQLstore:
+    SAGAStore:
       Type: 'AWS::DynamoDB::Table'
       # DeletionPolicy: Retain
       Properties:

@@ -52,7 +52,7 @@ type Config struct {
     Service       string
     Version       string
     SentryRelease string
-    SentryDNS     string
+    SentryDSN     string
     EnableTrace   bool
 }
 
@@ -81,8 +81,8 @@ func New(handle SagaHandle, storage Storage, config *Config) *Saga {
         s.ErrorHandlers(TraceError)
     }
 
-    if config.SentryDNS != "" {
-        sentry.SetDSN(config.SentryDNS)
+    if config.SentryDSN != "" {
+        sentry.SetDSN(config.SentryDSN)
         sentry.SetOptions(
             sentry.WithEnv(config.AppStage),
             sentry.WithServerName(lambdacontext.FunctionName),

@@ -8,6 +8,8 @@ provider:
   runtime: go1.x
   region: ${file(./setting.yml):region}
   stage: ${file(./setting.yml):stage}
+  tags:
+    service: zamus
   iamRoleStatements:
     - Effect: 'Allow'
       Resource: '*'
@@ -18,7 +20,7 @@ provider:
 
 functions:
   firehose-transform:
-    handler: firehosetransform/bin/app
+    handler: bin/app
     environment:
       APP_STAGE: ${self:provider.stage}
       APP_SENTRY_DSN: ${file(./setting.yml):firehosetransform.sentry}
@@ -26,7 +28,7 @@ functions:
     timeout: ${file(./setting.yml):firehosetransform.timeout}
     package:
       include:
-        - ./firehosetransform/bin/app
+        - ./bin/app
 
 resources:
   Resources:

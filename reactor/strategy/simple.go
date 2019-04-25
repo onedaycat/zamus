@@ -5,7 +5,7 @@ import (
     "fmt"
 
     "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/dql"
+    "github.com/onedaycat/zamus/dlq"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
@@ -42,7 +42,7 @@ type simpleStrategy struct {
     eventTypes    common.Set
     preHandlers   []reactor.EventHandler
     postHandlers  []reactor.EventHandler
-    dql           dql.DQL
+    dlq           dlq.DLQ
 }
 
 func NewSimple() *simpleStrategy {
@@ -58,8 +58,8 @@ func (c *simpleStrategy) ErrorHandlers(handlers ...reactor.ErrorHandler) {
     c.errorHandlers = append(c.errorHandlers, handlers...)
 }
 
-func (c *simpleStrategy) SetDQL(dql dql.DQL) {
-    c.dql = dql
+func (c *simpleStrategy) SetDLQ(dlq dlq.DLQ) {
+    c.dlq = dlq
 }
 
 func (c *simpleStrategy) PreHandlers(handlers ...reactor.EventHandler) {
@@ -110,7 +110,7 @@ func (c *simpleStrategy) Process(ctx context.Context, msgs event.Msgs) errors.Er
             }
         }
     }
-DQLRetry:
+DLQRetry:
 
     var err errors.Error
     for i := 0; i < len(c.handlers); i++ {
@@ -124,9 +124,9 @@ DQLRetry:
     }
 
     if err != nil {
-        if c.dql != nil {
-            if ok := c.dql.Retry(); ok {
-                goto DQLRetry
+        if c.dlq != nil {
+            if ok := c.dlq.Retry(); ok {
+                goto DLQRetry
             }
 
             msgs := make(event.Msgs, 0, len(msgs))
@@ -149,7 +149,7 @@ DQLRetry:
 
             msgListByte, _ := event.MarshalMsg(msgList)
 
-            return c.dql.Save(ctx, msgListByte)
+            return c.dlq.Save(ctx, msgListByte)
         }
         return err
     }
@@ -160,8 +160,8 @@ DQLRetry:
 func (c *simpleStrategy) doHandlers(ctx context.Context, handler reactor.EventHandler, msgs event.Msgs) (err errors.Error) {
     defer c.recover(ctx, msgs, &err)
     if err = handler(ctx, msgs); err != nil {
-        if c.dql != nil {
-            c.dql.AddError(err)
+        if c.dlq != nil {
+            c.dlq.AddError(err)
         }
         for _, errhandler := range c.errorHandlers {
             errhandler(ctx, msgs, err)
@@ -180,8 +180,8 @@ func (c *simpleStrategy) handle(ctx context.Context, handler reactor.EventHandle
     defer c.recover(ctx, msgs, &err)
     for _, ph := range c.preHandlers {
         if err = ph(ctx, msgs); err != nil {
-            if c.dql != nil {
-                c.dql.AddError(err)
+            if c.dlq != nil {
+                c.dlq.AddError(err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, err)
@@ -197,8 +197,8 @@ func (c *simpleStrategy) handle(ctx context.Context, handler reactor.EventHandle
 
     for _, ph := range c.postHandlers {
         if err = ph(ctx, msgs); err != nil {
-            if c.dql != nil {
-                c.dql.AddError(err)
+            if c.dlq != nil {
+                c.dlq.AddError(err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, err)
@@ -215,16 +215,16 @@ func (c *simpleStrategy) recover(ctx context.Context, msgs event.Msgs, err *erro
         switch cause := r.(type) {
         case error:
             *err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(msgs)
-            if c.dql != nil {
-                c.dql.AddError(*err)
+            if c.dlq != nil {
+                c.dlq.AddError(*err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, *err)
             }
         default:
             *err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(msgs)
-            if c.dql != nil {
-                c.dql.AddError(*err)
+            if c.dlq != nil {
+                c.dlq.AddError(*err)
             }
             for _, errhandler := range c.errorHandlers {
                 errhandler(ctx, msgs, *err)
