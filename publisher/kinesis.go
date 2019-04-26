@@ -1,74 +1,80 @@
 package publisher
 
 import (
-    "context"
+	"context"
 
-    "github.com/aws/aws-sdk-go/service/kinesis"
-    "github.com/onedaycat/errors"
-    "github.com/onedaycat/zamus/event"
-    "github.com/onedaycat/zamus/reactor/dynamostream"
+	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/event"
 )
 
-func (h *Handler) processKinesis(ctx context.Context, stream *dynamostream.EventSource) errors.Error {
-    h.config.Kinesis.records = h.config.Kinesis.records[:0]
-    if err := h.createKinesisRecords(ctx, stream); err != nil {
-        return err
-    }
-
-    records := h.config.Kinesis.records
-
-    if len(records) == 0 {
-        return nil
-    }
-
-    for _, streamArn := range h.config.Kinesis.StreamARNs {
-        streamArn := streamArn
-        h.wgkin.Go(func() errors.Error {
-            if err := h.publishKinesis(ctx, streamArn); err != nil {
-                return err
-            }
-
-            return nil
-        })
-    }
-
-    return h.wgkin.Wait()
+type KinesisConfig struct {
+	StreamARN    string
+	FilterEvents []string
+	records      []*kinesis.PutRecordsRequestEntry
+	eventTypes   map[string]struct{}
+	isAll        bool
+	client       KinesisPublisher
+	ctx          context.Context
 }
 
-func (h *Handler) createKinesisRecords(ctx context.Context, stream *dynamostream.EventSource) errors.Error {
-    dyrecords := stream.Records
-    kinrecs := h.config.Kinesis
-
-    for i := 0; i < len(dyrecords); i++ {
-        if dyrecords[i].EventName != dynamostream.EventInsert || dyrecords[i].DynamoDB.NewImage == nil {
-            continue
-        }
-
-        data, _ := event.MarshalMsg(dyrecords[i].DynamoDB.NewImage.EventMsg)
-        kinrecs.records = append(kinrecs.records, &kinesis.PutRecordsRequestEntry{
-            Data:         data,
-            PartitionKey: &dyrecords[i].DynamoDB.NewImage.EventMsg.AggID,
-        })
-    }
-
-    return nil
+func (c *KinesisConfig) init() {
+	if len(c.FilterEvents) > 0 {
+		c.eventTypes = make(map[string]struct{})
+		for _, eventType := range c.FilterEvents {
+			c.eventTypes[eventType] = struct{}{}
+		}
+	} else {
+		c.isAll = true
+	}
+	c.records = make([]*kinesis.PutRecordsRequestEntry, 0, 100)
 }
 
-func (h *Handler) publishKinesis(ctx context.Context, streamName string) errors.Error {
-    input := &kinesis.PutRecordsInput{
-        Records:    h.config.Kinesis.records,
-        StreamName: &streamName,
-    }
+func (c *KinesisConfig) filter(msg *event.Msg) {
+	if c.isAll {
+		data, _ := event.MarshalMsg(msg)
+		c.records = append(c.records, &kinesis.PutRecordsRequestEntry{
+			Data:         data,
+			PartitionKey: &msg.AggID,
+		})
+	} else {
+		_, ok := c.eventTypes[msg.EventType]
+		if ok {
+			data, _ := event.MarshalMsg(msg)
+			c.records = append(c.records, &kinesis.PutRecordsRequestEntry{
+				Data:         data,
+				PartitionKey: &msg.AggID,
+			})
+		}
+	}
+}
 
-    out, err := h.config.Kinesis.Client.PutRecordsWithContext(ctx, input)
+func (c *KinesisConfig) clear() {
+	c.records = c.records[:0]
+}
 
-    if err != nil {
-        return ErrUnablePublishKinesis.WithCaller().WithCause(err)
-    }
+func (c *KinesisConfig) hasEvents() bool {
+	return len(c.records) > 0 || c.isAll
+}
 
-    if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
-        return ErrUnablePublishKinesis.WithCaller().WithCause(errors.Simple("One or more events published failed"))
-    }
+func (c *KinesisConfig) publish() errors.Error {
+	input := &kinesis.PutRecordsInput{
+		Records:    c.records,
+		StreamName: &c.StreamARN,
+	}
 
-    return nil
+	out, err := c.client.PutRecordsWithContext(c.ctx, input)
+	if err != nil {
+		return ErrUnablePublishKinesis.WithCaller().WithCause(err)
+	}
+
+	if out.FailedRecordCount != nil && *out.FailedRecordCount > 0 {
+		return ErrUnablePublishKinesis.WithCaller().WithCause(errors.Simple("One or more events published failed"))
+	}
+
+	return nil
+}
+
+func (c *KinesisConfig) setContext(ctx context.Context) {
+	c.ctx = ctx
 }

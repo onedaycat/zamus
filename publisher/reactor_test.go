@@ -4,18 +4,18 @@ import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/onedaycat/errors"
 	"github.com/onedaycat/zamus/event"
-	"github.com/onedaycat/zamus/publisher/mocks"
+	"github.com/onedaycat/zamus/invoke"
+	"github.com/onedaycat/zamus/invoke/mocks"
 	"github.com/onedaycat/zamus/random"
 	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/require"
 )
 
-func TestKinesisFilterAndPublish(t *testing.T) {
-	config := &KinesisConfig{
-		StreamARN: "arn1",
+func TestReactorFilterAndPublish(t *testing.T) {
+	config := &ReactorConfig{
+		Fn: "arn1",
 		FilterEvents: event.EventTypes(
 			(*domain.StockItemCreated)(nil),
 			(*domain.StockItemRemoved)(nil),
@@ -39,45 +39,29 @@ func TestKinesisFilterAndPublish(t *testing.T) {
 		config.filter(msg)
 	}
 
-	require.Len(t, config.records, 5)
-	for i, record := range config.records {
-		data, _ := event.MarshalMsg(msgs[i])
-		require.Equal(t, &kinesis.PutRecordsRequestEntry{
-			Data:         data,
-			PartitionKey: &msgs[i].AggID,
-		}, record)
+	require.Len(t, config.records.Msgs, 5)
+	for i, msg := range config.records.Msgs {
+		require.Equal(t, msgs[i], msg)
 	}
 
-	mockClient := &mocks.KinesisPublisher{}
+	mockClient := &mocks.Invoker{}
 	config.client = mockClient
 	config.setContext(context.Background())
 
-	input := &kinesis.PutRecordsInput{
-		Records:    config.records,
-		StreamName: &config.StreamARN,
-	}
+	req := invoke.NewReactorRequest(config.Fn).WithEventList(config.records)
 
-	mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{}, nil).Once()
+	mockClient.On("InvokeReactor", config.ctx, req).Return(nil).Once()
 	err := config.publish()
 	require.NoError(t, err)
 
-	mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{}, errors.DumbError).Once()
+	mockClient.On("InvokeReactor", config.ctx, req).Return(errors.DumbError).Once()
 	err = config.publish()
-	require.True(t, ErrUnablePublishKinesis.Is(err))
-
-	failedCount := int64(10)
-	mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{
-		FailedRecordCount: &failedCount,
-	}, nil).Once()
-	err = config.publish()
-	require.True(t, ErrUnablePublishKinesis.Is(err))
-
-	mockClient.AssertExpectations(t)
+	require.NoError(t, err)
 }
 
-func TestKinesisAllEvents(t *testing.T) {
-	config := &KinesisConfig{
-		StreamARN: "arn1",
+func TestReactorAllEvents(t *testing.T) {
+	config := &ReactorConfig{
+		Fn: "arn1",
 	}
 	config.init()
 	require.True(t, config.isAll)
@@ -98,12 +82,12 @@ func TestKinesisAllEvents(t *testing.T) {
 		config.filter(msg)
 	}
 
-	require.Len(t, config.records, 9)
+	require.Len(t, config.records.Msgs, 9)
 }
 
-func TestKinesisClearAndHasEvent(t *testing.T) {
-	config := &KinesisConfig{
-		StreamARN: "arn1",
+func TestReactorClearAndHasEvent(t *testing.T) {
+	config := &ReactorConfig{
+		Fn: "arn1",
 	}
 	config.init()
 	require.True(t, config.isAll)
