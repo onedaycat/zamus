@@ -2,6 +2,7 @@ package publisher
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
@@ -74,7 +75,8 @@ func (h *Handler) Kinesis(config *KinesisConfig) {
 	h.config = append(h.config, config)
 }
 
-func (h *Handler) Handle(ctx context.Context, stream *dynamostream.EventSource) errors.Error {
+func (h *Handler) Handle(ctx context.Context, stream *dynamostream.EventSource) (err errors.Error) {
+	defer h.recovery(ctx, &err)
 	for _, conf := range h.config {
 		conf.clear()
 		conf.setContext(ctx)
@@ -109,6 +111,7 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 
 	if err := h.Handle(ctx, h.recs); err != nil {
 		Sentry(ctx, h.recs, err)
+		TraceError(ctx, err)
 		return nil, appErr.ToLambdaError(err)
 	}
 
@@ -117,4 +120,15 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
 
 func (h *Handler) StartLambda() {
 	lambda.StartHandler(h)
+}
+
+func (h *Handler) recovery(ctx context.Context, err *errors.Error) {
+	if r := recover(); r != nil {
+		switch cause := r.(type) {
+		case error:
+			*err = appErr.ErrPanic.WithCause(cause).WithCaller().WithInput(h.recs)
+		default:
+			*err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(h.recs)
+		}
+	}
 }

@@ -23,11 +23,10 @@ type Handler func(ctx context.Context, req *Request) (interface{}, errors.Error)
 type MergeBatchHandler func(ctx context.Context, req *Request, results BatchResults) errors.Error
 
 type Config struct {
-	AppStage    string
-	Service     string
-	Version     string
-	SentryDSN   string
-	EnableTrace bool
+	AppStage  string
+	Service   string
+	Version   string
+	SentryDSN string
 }
 
 //noinspection GoNameStartsWithPackageName
@@ -62,8 +61,7 @@ func NewHandler(config *Config) *ServiceHandler {
 		h.req.batchResult = append(h.req.batchResult, &BatchResult{})
 	}
 
-	if config.EnableTrace {
-		tracer.Enable = config.EnableTrace
+	if tracer.Enable {
 		h.ErrorHandlers(TraceError)
 	}
 
