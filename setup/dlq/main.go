@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	dlqService "github.com/onedaycat/zamus/dlq/service"
 	dlqDynamoDB "github.com/onedaycat/zamus/dlq/storage/dynamodb"
 	"github.com/onedaycat/zamus/service"
@@ -20,7 +21,7 @@ func main() {
 
 	sess := session.Must(session.NewSession())
 
-	storage := dlqDynamoDB.New(sess, os.Getenv("APP_TABLE"))
+	storage := dlqDynamoDB.New(dynamodb.New(sess), os.Getenv("APP_TABLE"))
 
 	dh := dlqService.NewHandler(storage)
 	h := service.NewHandler(config)

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sagaService "github.com/onedaycat/zamus/saga/service"
 	sagaDynamoDB "github.com/onedaycat/zamus/saga/storage/dynamodb"
 	"github.com/onedaycat/zamus/service"
@@ -20,7 +21,7 @@ func main() {
 
 	sess := session.Must(session.NewSession())
 
-	storage := sagaDynamoDB.New(sess, os.Getenv("APP_TABLE"))
+	storage := sagaDynamoDB.New(dynamodb.New(sess), os.Getenv("APP_TABLE"))
 
 	dh := sagaService.NewHandler(storage)
 	h := service.NewHandler(config)
