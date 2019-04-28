@@ -1,13 +1,13 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	kinMock "github.com/onedaycat/zamus/dispatcher/mocks"
 	"github.com/onedaycat/zamus/event"
 	invokeMock "github.com/onedaycat/zamus/invoke/mocks"
-	kinMock "github.com/onedaycat/zamus/publisher/mocks"
 	"github.com/onedaycat/zamus/random"
 	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/mock"

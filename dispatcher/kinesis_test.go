@@ -1,4 +1,4 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/onedaycat/errors"
+	"github.com/onedaycat/zamus/dispatcher/mocks"
 	"github.com/onedaycat/zamus/event"
-	"github.com/onedaycat/zamus/publisher/mocks"
 	"github.com/onedaycat/zamus/random"
 	"github.com/onedaycat/zamus/testdata/domain"
 	"github.com/stretchr/testify/require"

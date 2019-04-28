@@ -1,4 +1,4 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
@@ -11,11 +11,12 @@ import (
 type KinesisConfig struct {
 	StreamARN    string
 	FilterEvents []string
-	records      []*kinesis.PutRecordsRequestEntry
-	eventTypes   map[string]struct{}
-	isAll        bool
-	client       KinesisPublisher
-	ctx          context.Context
+
+	records    []*kinesis.PutRecordsRequestEntry
+	eventTypes map[string]struct{}
+	isAll      bool
+	client     KinesisPublisher
+	ctx        context.Context
 }
 
 func (c *KinesisConfig) init() {

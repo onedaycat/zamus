@@ -1,4 +1,4 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
@@ -20,6 +20,8 @@ import (
 var (
 	ErrUnableUnmarshal      = errors.DefInternalError("ErrUnableUnmarshal", "Unable unmarshal json")
 	ErrUnablePublishKinesis = errors.DefInternalError("ErrUnablePublishKinesis", "Unable to publish kinesis")
+	ErrUnablePublishSNS     = errors.DefInternalError("ErrUnablePublishSNS", "Unable to publish sns")
+	ErrUnablePublishSQS     = errors.DefInternalError("ErrUnablePublishSQS", "Unable to publish sqs")
 )
 
 //go:generate mockery -name=KinesisPublisher

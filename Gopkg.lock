@@ -24,7 +24,7 @@
   revision = "08d251dc58f204411d79012fd6f1beefb7107fea"
 
 [[projects]]
-  digest = "1:cf9d6f3a349bf4175bd782ff964ffd83f65a666ecc715e1b96b936be3ca21058"
+  digest = "1:4969ac666af354c8a75cd4810a905664d1c6c6cabb2ceb983454dbb4fbd2ab00"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -65,12 +65,15 @@
     "service/dynamodb/dynamodbattribute",
     "service/kinesis",
     "service/lambda",
+    "service/ses",
+    "service/sns",
+    "service/sqs",
     "service/sts",
     "service/xray",
   ]
   pruneopts = "UT"
-  revision = "ca6d5f771b63df153f02fe5b117434d5ebafeeda"
-  version = "v1.19.15"
+  revision = "7e9cd5af6d09680b0f9b3d983432e880425d42e7"
+  version = "v1.19.19"
 
 [[projects]]
   branch = "master"
@@ -253,7 +256,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0a83a55c8f92f7a71bb957781a3c30e7bf139030ef088964fc3468db90fd080a"
+  digest = "1:fb63fb6cb9cf7310c6bd83998cc430ee5af1ec52612572ecb42c7aad74bd3598"
   name = "github.com/rs/zerolog"
   packages = [
     ".",
@@ -262,7 +265,7 @@
     "log",
   ]
   pruneopts = "UT"
-  revision = "3e85c4b21c1adb254dd43a93d93263fbe7d9dc13"
+  revision = "acf3980132bfcdc48638724e6e3d9e5749b85999"
 
 [[projects]]
   branch = "master"
@@ -302,11 +305,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a99e8ede9458d3cbd5d32811fc3963e488c57029a3fb5000b692a336150ea8a2"
+  digest = "1:157e5158a7f29d6633eed502880463aa43de3c36d451c7051591efd12f455ac8"
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "4347357a82bcaabf9afd9ab1ff230b5c31f54961"
+  revision = "a129542de9ae0895210abff9c95d67a1f33cb93d"
 
 [[projects]]
   digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
@@ -333,6 +336,9 @@
     "github.com/aws/aws-sdk-go/service/dynamodb/dynamodbattribute",
     "github.com/aws/aws-sdk-go/service/kinesis",
     "github.com/aws/aws-sdk-go/service/lambda",
+    "github.com/aws/aws-sdk-go/service/ses",
+    "github.com/aws/aws-sdk-go/service/sns",
+    "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/aws/aws-xray-sdk-go/xray",
     "github.com/aws/aws-xray-sdk-go/xraylog",
     "github.com/gogo/protobuf/proto",

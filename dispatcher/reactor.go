@@ -1,9 +1,10 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
 
 	"github.com/onedaycat/errors"
+	appErr "github.com/onedaycat/zamus/errors"
 	"github.com/onedaycat/zamus/event"
 	"github.com/onedaycat/zamus/invoke"
 )
@@ -11,11 +12,13 @@ import (
 type ReactorConfig struct {
 	Fn           string
 	FilterEvents []string
-	records      *event.MsgList
-	eventTypes   map[string]struct{}
-	isAll        bool
-	client       invoke.Invoker
-	ctx          context.Context
+	Async        bool
+
+	records    *event.MsgList
+	eventTypes map[string]struct{}
+	isAll      bool
+	client     invoke.Invoker
+	ctx        context.Context
 }
 
 func (c *ReactorConfig) init() {
@@ -56,8 +59,19 @@ func (c *ReactorConfig) setContext(ctx context.Context) {
 }
 
 func (c *ReactorConfig) publish() errors.Error {
-	req := invoke.NewReactorRequest(c.Fn).WithEventList(c.records)
-	_ = c.client.InvokeReactor(c.ctx, req)
+	if c.Async {
+		req := invoke.NewReactorRequest(c.Fn).WithEventList(c.records)
+		err := c.client.InvokeReactorAsync(c.ctx, req)
+		if err != nil && appErr.ErrUnableInvokeFunction.GetCode() == err.GetCode() {
+			return err
+		}
+	} else {
+		req := invoke.NewReactorRequest(c.Fn).WithEventList(c.records)
+		err := c.client.InvokeReactor(c.ctx, req)
+		if err != nil && appErr.ErrUnableInvokeFunction.GetCode() == err.GetCode() {
+			return err
+		}
+	}
 
 	return nil
 }

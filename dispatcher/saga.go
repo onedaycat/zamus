@@ -1,4 +1,4 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
@@ -12,12 +12,13 @@ import (
 type SagaConfig struct {
 	Fn           string
 	FilterEvents []string
-	records      map[string]event.Msgs
-	eventTypes   map[string]struct{}
-	isAll        bool
-	client       invoke.Invoker
-	ctx          context.Context
-	wgSaga       *errgroup.Group
+
+	records    map[string]event.Msgs
+	eventTypes map[string]struct{}
+	isAll      bool
+	client     invoke.Invoker
+	ctx        context.Context
+	wgSaga     *errgroup.Group
 }
 
 func (c *SagaConfig) init() {

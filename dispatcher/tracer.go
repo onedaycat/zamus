@@ -1,4 +1,4 @@
-package publisher
+package dispatcher
 
 import (
 	"context"
