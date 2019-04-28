@@ -32,6 +32,10 @@ functions:
 
 resources:
   Resources:
+    SNSEvents:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: ${self:service}-${self:provider.stage}
     FirehoseDashTransformLogGroup:
       Type: AWS::Logs::LogGroup
       Properties:
