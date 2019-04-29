@@ -48,7 +48,7 @@ func TestSagaFilterAndPublish(t *testing.T) {
 	}, config.records["2"])
 
 	mockClient := &mocks.Invoker{}
-	config.client = mockClient
+	config.Client = mockClient
 	config.setContext(context.Background())
 
 	mockClient.On("InvokeSaga", config.ctx,

@@ -25,7 +25,7 @@ func TestInvokeSuccess(t *testing.T) {
 			(*domain.StockItemRemoved)(nil),
 		),
 	})
-	h.Reactor(&ReactorConfig{
+	h.Lambda(&LambdaConfig{
 		Fn: "arn1",
 		FilterEvents: event.EventTypes(
 			(*domain.StockItemCreated)(nil),

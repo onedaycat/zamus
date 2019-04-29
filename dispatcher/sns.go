@@ -18,11 +18,11 @@ var (
 type SNSConfig struct {
 	TopicArn     string
 	FilterEvents []string
+	Client       *sns.SNS
 
 	records    event.Msgs
 	eventTypes map[string]struct{}
 	isAll      bool
-	client     *sns.SNS
 	ctx        context.Context
 }
 
@@ -64,7 +64,7 @@ func (c *SNSConfig) setContext(ctx context.Context) {
 func (c *SNSConfig) publish() errors.Error {
 	for _, msg := range c.records {
 		data, _ := event.MarshalMsg(msg)
-		_, err := c.client.PublishWithContext(c.ctx, &sns.PublishInput{
+		_, err := c.Client.PublishWithContext(c.ctx, &sns.PublishInput{
 			TopicArn: &c.TopicArn,
 			Message:  &msg.Id,
 			MessageAttributes: map[string]*sns.MessageAttributeValue{

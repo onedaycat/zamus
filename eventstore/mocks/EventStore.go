@@ -3,9 +3,10 @@
 package mocks
 
 import context "context"
+import ddd "github.com/onedaycat/zamus/ddd"
 import errors "github.com/onedaycat/errors"
 import event "github.com/onedaycat/zamus/event"
-import eventstore "github.com/onedaycat/zamus/eventstore"
+
 import mock "github.com/stretchr/testify/mock"
 import proto "github.com/gogo/protobuf/proto"
 
@@ -15,11 +16,11 @@ type EventStore struct {
 }
 
 // GetAggregate provides a mock function with given fields: ctx, aggID, agg
-func (_m *EventStore) GetAggregate(ctx context.Context, aggID string, agg eventstore.AggregateRoot) errors.Error {
+func (_m *EventStore) GetAggregate(ctx context.Context, aggID string, agg ddd.AggregateRoot) errors.Error {
 	ret := _m.Called(ctx, aggID, agg)
 
 	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, string, eventstore.AggregateRoot) errors.Error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, ddd.AggregateRoot) errors.Error); ok {
 		r0 = rf(ctx, aggID, agg)
 	} else {
 		if ret.Get(0) != nil {
@@ -31,11 +32,11 @@ func (_m *EventStore) GetAggregate(ctx context.Context, aggID string, agg events
 }
 
 // GetAggregateBySeq provides a mock function with given fields: ctx, aggID, agg, seq
-func (_m *EventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg eventstore.AggregateRoot, seq int64) errors.Error {
+func (_m *EventStore) GetAggregateBySeq(ctx context.Context, aggID string, agg ddd.AggregateRoot, seq int64) errors.Error {
 	ret := _m.Called(ctx, aggID, agg, seq)
 
 	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, string, eventstore.AggregateRoot, int64) errors.Error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string, ddd.AggregateRoot, int64) errors.Error); ok {
 		r0 = rf(ctx, aggID, agg, seq)
 	} else {
 		if ret.Get(0) != nil {
@@ -118,11 +119,11 @@ func (_m *EventStore) PublishEventsWithMetadata(ctx context.Context, metadata ma
 }
 
 // Save provides a mock function with given fields: ctx, agg
-func (_m *EventStore) Save(ctx context.Context, agg eventstore.AggregateRoot) errors.Error {
+func (_m *EventStore) Save(ctx context.Context, agg ddd.AggregateRoot) errors.Error {
 	ret := _m.Called(ctx, agg)
 
 	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot) errors.Error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, ddd.AggregateRoot) errors.Error); ok {
 		r0 = rf(ctx, agg)
 	} else {
 		if ret.Get(0) != nil {
@@ -134,11 +135,11 @@ func (_m *EventStore) Save(ctx context.Context, agg eventstore.AggregateRoot) er
 }
 
 // SaveWithMetadata provides a mock function with given fields: ctx, agg, metadata
-func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg eventstore.AggregateRoot, metadata map[string]string) errors.Error {
+func (_m *EventStore) SaveWithMetadata(ctx context.Context, agg ddd.AggregateRoot, metadata map[string]string) errors.Error {
 	ret := _m.Called(ctx, agg, metadata)
 
 	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, eventstore.AggregateRoot, map[string]string) errors.Error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, ddd.AggregateRoot, map[string]string) errors.Error); ok {
 		r0 = rf(ctx, agg, metadata)
 	} else {
 		if ret.Get(0) != nil {

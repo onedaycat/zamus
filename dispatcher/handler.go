@@ -59,21 +59,21 @@ func New(invoker invoke.Invoker, kinClient KinesisPublisher) *Handler {
 	return h
 }
 
-func (h *Handler) Reactor(config *ReactorConfig) {
+func (h *Handler) Lambda(config *LambdaConfig) {
 	config.init()
-	config.client = h.invoker
+	config.Client = h.invoker
 	h.config = append(h.config, config)
 }
 
 func (h *Handler) Saga(config *SagaConfig) {
 	config.init()
-	config.client = h.invoker
+	config.Client = h.invoker
 	h.config = append(h.config, config)
 }
 
 func (h *Handler) Kinesis(config *KinesisConfig) {
 	config.init()
-	config.client = h.kinClient
+	config.Client = h.kinClient
 	h.config = append(h.config, config)
 }
 

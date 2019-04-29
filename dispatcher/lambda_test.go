@@ -14,7 +14,7 @@ import (
 )
 
 func TestReactorFilterAndPublish(t *testing.T) {
-	config := &ReactorConfig{
+	config := &LambdaConfig{
 		Fn: "arn1",
 		FilterEvents: event.EventTypes(
 			(*domain.StockItemCreated)(nil),
@@ -45,7 +45,7 @@ func TestReactorFilterAndPublish(t *testing.T) {
 	}
 
 	mockClient := &mocks.Invoker{}
-	config.client = mockClient
+	config.Client = mockClient
 	config.setContext(context.Background())
 
 	req := invoke.NewReactorRequest(config.Fn).WithEventList(config.records)
@@ -60,7 +60,7 @@ func TestReactorFilterAndPublish(t *testing.T) {
 }
 
 func TestReactorAsync(t *testing.T) {
-	config := &ReactorConfig{
+	config := &LambdaConfig{
 		Fn:    "arn1",
 		Async: true,
 		FilterEvents: event.EventTypes(
@@ -92,7 +92,7 @@ func TestReactorAsync(t *testing.T) {
 	}
 
 	mockClient := &mocks.Invoker{}
-	config.client = mockClient
+	config.Client = mockClient
 	config.setContext(context.Background())
 
 	req := invoke.NewReactorRequest(config.Fn).WithEventList(config.records)
@@ -107,7 +107,7 @@ func TestReactorAsync(t *testing.T) {
 }
 
 func TestReactorAllEvents(t *testing.T) {
-	config := &ReactorConfig{
+	config := &LambdaConfig{
 		Fn: "arn1",
 	}
 	config.init()
@@ -133,7 +133,7 @@ func TestReactorAllEvents(t *testing.T) {
 }
 
 func TestReactorClearAndHasEvent(t *testing.T) {
-	config := &ReactorConfig{
+	config := &LambdaConfig{
 		Fn: "arn1",
 	}
 	config.init()

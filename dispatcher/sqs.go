@@ -16,11 +16,11 @@ var (
 type SQSConfig struct {
 	QueueUrl     string
 	FilterEvents []string
+	Client       *sqs.SQS
 
 	records    []*sqs.SendMessageBatchRequestEntry
 	eventTypes map[string]struct{}
 	isAll      bool
-	client     *sqs.SQS
 	ctx        context.Context
 }
 
@@ -88,7 +88,7 @@ func (c *SQSConfig) setContext(ctx context.Context) {
 }
 
 func (c *SQSConfig) publish() errors.Error {
-	_, err := c.client.SendMessageBatchWithContext(c.ctx, &sqs.SendMessageBatchInput{
+	_, err := c.Client.SendMessageBatchWithContext(c.ctx, &sqs.SendMessageBatchInput{
 		QueueUrl: &c.QueueUrl,
 		Entries:  c.records,
 	})

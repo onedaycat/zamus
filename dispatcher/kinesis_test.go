@@ -49,7 +49,7 @@ func TestKinesisFilterAndPublish(t *testing.T) {
 	}
 
 	mockClient := &mocks.KinesisPublisher{}
-	config.client = mockClient
+	config.Client = mockClient
 	config.setContext(context.Background())
 
 	input := &kinesis.PutRecordsInput{

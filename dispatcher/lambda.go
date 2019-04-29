@@ -9,19 +9,19 @@ import (
 	"github.com/onedaycat/zamus/invoke"
 )
 
-type ReactorConfig struct {
+type LambdaConfig struct {
 	Fn           string
 	FilterEvents []string
 	Async        bool
+	Client       invoke.Invoker
 
 	records    *event.MsgList
 	eventTypes map[string]struct{}
 	isAll      bool
-	client     invoke.Invoker
 	ctx        context.Context
 }
 
-func (c *ReactorConfig) init() {
+func (c *LambdaConfig) init() {
 	if len(c.FilterEvents) > 0 {
 		c.eventTypes = make(map[string]struct{})
 		for _, eventType := range c.FilterEvents {
@@ -35,7 +35,7 @@ func (c *ReactorConfig) init() {
 	}
 }
 
-func (c *ReactorConfig) filter(msg *event.Msg) {
+func (c *LambdaConfig) filter(msg *event.Msg) {
 	if c.isAll {
 		c.records.Msgs = append(c.records.Msgs, msg)
 	} else {
@@ -46,28 +46,28 @@ func (c *ReactorConfig) filter(msg *event.Msg) {
 	}
 }
 
-func (c *ReactorConfig) clear() {
+func (c *LambdaConfig) clear() {
 	c.records.Msgs = c.records.Msgs[:0]
 }
 
-func (c *ReactorConfig) hasEvents() bool {
+func (c *LambdaConfig) hasEvents() bool {
 	return len(c.records.Msgs) > 0 || c.isAll
 }
 
-func (c *ReactorConfig) setContext(ctx context.Context) {
+func (c *LambdaConfig) setContext(ctx context.Context) {
 	c.ctx = ctx
 }
 
-func (c *ReactorConfig) publish() errors.Error {
+func (c *LambdaConfig) publish() errors.Error {
 	if c.Async {
 		req := invoke.NewReactorRequest(c.Fn).WithEventList(c.records)
-		err := c.client.InvokeReactorAsync(c.ctx, req)
+		err := c.Client.InvokeReactorAsync(c.ctx, req)
 		if err != nil && appErr.ErrUnableInvokeFunction.GetCode() == err.GetCode() {
 			return err
 		}
 	} else {
 		req := invoke.NewReactorRequest(c.Fn).WithEventList(c.records)
-		err := c.client.InvokeReactor(c.ctx, req)
+		err := c.Client.InvokeReactor(c.ctx, req)
 		if err != nil && appErr.ErrUnableInvokeFunction.GetCode() == err.GetCode() {
 			return err
 		}

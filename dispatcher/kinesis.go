@@ -11,11 +11,11 @@ import (
 type KinesisConfig struct {
 	StreamARN    string
 	FilterEvents []string
+	Client       KinesisPublisher
 
 	records    []*kinesis.PutRecordsRequestEntry
 	eventTypes map[string]struct{}
 	isAll      bool
-	client     KinesisPublisher
 	ctx        context.Context
 }
 
@@ -64,7 +64,7 @@ func (c *KinesisConfig) publish() errors.Error {
 		StreamName: &c.StreamARN,
 	}
 
-	out, err := c.client.PutRecordsWithContext(c.ctx, input)
+	out, err := c.Client.PutRecordsWithContext(c.ctx, input)
 	if err != nil {
 		return ErrUnablePublishKinesis.WithCaller().WithCause(err)
 	}

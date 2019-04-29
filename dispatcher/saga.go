@@ -12,11 +12,11 @@ import (
 type SagaConfig struct {
 	Fn           string
 	FilterEvents []string
+	Client       invoke.Invoker
 
 	records    map[string]event.Msgs
 	eventTypes map[string]struct{}
 	isAll      bool
-	client     invoke.Invoker
 	ctx        context.Context
 	wgSaga     *errgroup.Group
 }
@@ -70,7 +70,7 @@ func (c *SagaConfig) publish() errors.Error {
 		c.wgSaga.Go(func() errors.Error {
 			for _, msg := range msgs {
 				req := invoke.NewSagaRequest(c.Fn).WithInput(msg)
-				_ = c.client.InvokeSaga(c.ctx, req, nil)
+				_ = c.Client.InvokeSaga(c.ctx, req, nil)
 			}
 
 			return nil
