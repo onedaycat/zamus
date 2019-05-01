@@ -17,7 +17,7 @@ import (
 func TestInvokeSuccess(t *testing.T) {
     mockKin := &kinMock.KinesisPublisher{}
     mockInvoke := &invokeMock.Invoker{}
-    h := New()
+    h := New(&Config{})
     h.Kinesis(&KinesisConfig{
         StreamARN: "arn1",
         FilterEvents: event.EventTypes(

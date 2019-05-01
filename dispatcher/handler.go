@@ -5,16 +5,19 @@ import (
     "fmt"
 
     "github.com/aws/aws-lambda-go/lambda"
+    "github.com/aws/aws-lambda-go/lambdacontext"
     "github.com/aws/aws-sdk-go/aws"
     "github.com/aws/aws-sdk-go/aws/request"
     "github.com/aws/aws-sdk-go/service/kinesis"
     "github.com/onedaycat/errors"
     "github.com/onedaycat/errors/errgroup"
+    "github.com/onedaycat/errors/sentry"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/invoke"
     "github.com/onedaycat/zamus/reactor/dynamostream"
+    "github.com/onedaycat/zamus/zamuscontext"
 )
 
 var (
@@ -37,21 +40,52 @@ type desConfig interface {
     setContext(ctx context.Context)
 }
 
+type Config struct {
+    AppStage  string
+    Service   string
+    Version   string
+    SentryDSN string
+    //DLQMaxRetry         int
+    //DLQStorage          dlq.Storage
+}
+
 type Handler struct {
-    config    []desConfig
+    desconfig []desConfig
     wgPublish *errgroup.Group
     invoker   invoke.Invoker
     kinClient KinesisPublisher
     recs      *dynamostream.EventSource
+    zcctx     *zamuscontext.ZamusContext
 }
 
-func New() *Handler {
+func New(config *Config) *Handler {
     h := &Handler{
-        config:    make([]desConfig, 0, 20),
+        desconfig: make([]desConfig, 0, 20),
         wgPublish: &errgroup.Group{},
         recs: &dynamostream.EventSource{
             Records: make(dynamostream.Records, 0, 100),
         },
+        zcctx: &zamuscontext.ZamusContext{
+            AppStage:       config.AppStage,
+            Service:        config.Service,
+            LambdaFunction: lambdacontext.FunctionName,
+            LambdaVersion:  lambdacontext.FunctionVersion,
+            Version:        config.Version,
+        },
+    }
+
+    if config.SentryDSN != "" {
+        sentry.SetDSN(config.SentryDSN)
+        sentry.SetOptions(
+            sentry.WithEnv(config.AppStage),
+            sentry.WithServerName(lambdacontext.FunctionName),
+            sentry.WithServiceName(config.Service),
+            sentry.WithRelease(config.Service+"@"+config.Version),
+            sentry.WithVersion(config.Version),
+            sentry.WithTags(sentry.Tags{
+                {Key: "lambdaVersion", Value: lambdacontext.FunctionVersion},
+            }),
+        )
     }
 
     return h
@@ -59,32 +93,32 @@ func New() *Handler {
 
 func (h *Handler) Lambda(config *LambdaConfig) {
     config.init()
-    h.config = append(h.config, config)
+    h.desconfig = append(h.desconfig, config)
 }
 
 func (h *Handler) Saga(config *SagaConfig) {
     config.init()
-    h.config = append(h.config, config)
+    h.desconfig = append(h.desconfig, config)
 }
 
 func (h *Handler) Kinesis(config *KinesisConfig) {
     config.init()
-    h.config = append(h.config, config)
+    h.desconfig = append(h.desconfig, config)
 }
 
 func (h *Handler) SNS(config *SNSConfig) {
     config.init()
-    h.config = append(h.config, config)
+    h.desconfig = append(h.desconfig, config)
 }
 
 func (h *Handler) SQS(config *SQSConfig) {
     config.init()
-    h.config = append(h.config, config)
+    h.desconfig = append(h.desconfig, config)
 }
 
 func (h *Handler) Handle(ctx context.Context, stream *dynamostream.EventSource) (err errors.Error) {
     defer h.recovery(ctx, &err)
-    for _, conf := range h.config {
+    for _, conf := range h.desconfig {
         conf.clear()
         conf.setContext(ctx)
     }
@@ -94,12 +128,12 @@ func (h *Handler) Handle(ctx context.Context, stream *dynamostream.EventSource) 
             continue
         }
 
-        for _, conf := range h.config {
+        for _, conf := range h.desconfig {
             conf.filter(rec.DynamoDB.NewImage.EventMsg)
         }
     }
 
-    for _, conf := range h.config {
+    for _, conf := range h.desconfig {
         conf := conf
         if conf.hasEvents() {
             h.wgPublish.Go(conf.publish)
@@ -116,7 +150,8 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
         return nil, appErr.ToLambdaError(err)
     }
 
-    if err := h.Handle(ctx, h.recs); err != nil {
+    zmctx := zamuscontext.NewContext(ctx, h.zcctx)
+    if err := h.Handle(zmctx, h.recs); err != nil {
         Sentry(ctx, h.recs, err)
         TraceError(ctx, err)
         return nil, appErr.ToLambdaError(err)

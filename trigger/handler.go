@@ -34,7 +34,6 @@ type Config struct {
     Service     string
     Version     string
     SentryDSN   string
-    EnableTrace bool
     DLQMaxRetry int
     DLQStorage  dlq.Storage
 }
@@ -63,8 +62,7 @@ func NewHandler(handler TriggerHandler, config *Config) *Handler {
         h.dlq = dlq.New(config.DLQStorage, config.DLQMaxRetry, config.Service, lambdacontext.FunctionName, config.Version)
     }
 
-    if config.EnableTrace {
-        tracer.Enable = config.EnableTrace
+    if tracer.Enable {
         h.ErrorHandlers(TraceError)
     }
 
