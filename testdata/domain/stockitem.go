@@ -14,6 +14,7 @@ type CreateStockCmd struct {
 
 type StockItem struct {
 	*ddd.AggregateBase
+	ID        string
 	ProductID string
 	Qty       Qty
 	RemovedAt int64
@@ -25,8 +26,16 @@ func NewStockItem() *StockItem {
 	}
 }
 
+func (st *StockItem) GetAggregateID() string {
+	return st.ID
+}
+
+func (st *StockItem) SetAggregateID(id string) {
+	st.ID = id
+}
+
 func (st *StockItem) Create(id, productID string, qty Qty) {
-	st.SetAggregateID(id)
+	st.ID = id
 	st.ProductID = productID
 	st.Qty = qty
 	st.Publish(&StockItemCreated{

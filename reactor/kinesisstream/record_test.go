@@ -1,43 +1,43 @@
 package kinesisstream
 
 import (
-    "context"
-    "encoding/base64"
-    "fmt"
-    "testing"
+	"context"
+	"encoding/base64"
+	"fmt"
+	"testing"
 
-    "github.com/gogo/protobuf/proto"
-    "github.com/onedaycat/zamus/event"
-    "github.com/onedaycat/zamus/testdata/domain"
-    "github.com/stretchr/testify/require"
+	"github.com/gogo/protobuf/proto"
+	"github.com/onedaycat/zamus/event"
+	"github.com/onedaycat/zamus/testdata/domain"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseKinesisStreamEvent(t *testing.T) {
-    var err error
+	var err error
 
-    evt := &domain.StockItemCreated{Id: "1"}
-    evtByte, _ := event.MarshalEvent(evt)
-    msg1 := &event.Msg{
-        AggID:     "a1",
-        Seq:       10,
-        Event:     evtByte,
-        EventType: proto.MessageName(evt),
-    }
+	evt := &domain.StockItemCreated{Id: "1"}
+	evtByte, _ := event.MarshalEvent(evt)
+	msg1 := &event.Msg{
+		Id:        "a1",
+		Event:     evtByte,
+		EventType: proto.MessageName(evt),
+		Time:      1,
+	}
 
-    msg1Byte, _ := event.MarshalMsg(msg1)
-    data1 := base64.StdEncoding.EncodeToString(msg1Byte)
+	msg1Byte, _ := event.MarshalMsg(msg1)
+	data1 := base64.StdEncoding.EncodeToString(msg1Byte)
 
-    msg2 := &event.Msg{
-        AggID:     "a1",
-        Seq:       11,
-        Event:     evtByte,
-        EventType: proto.MessageName(evt),
-    }
+	msg2 := &event.Msg{
+		Id:        "a1",
+		Event:     evtByte,
+		EventType: proto.MessageName(evt),
+		Time:      2,
+	}
 
-    msg1Byte, _ = event.MarshalMsg(msg2)
-    data2 := base64.StdEncoding.EncodeToString(msg1Byte)
+	msg1Byte, _ = event.MarshalMsg(msg2)
+	data2 := base64.StdEncoding.EncodeToString(msg1Byte)
 
-    payload := fmt.Sprintf(`{
+	payload := fmt.Sprintf(`{
 		"Records": [
 			{
 				"kinesis": {
@@ -74,18 +74,18 @@ func TestParseKinesisStreamEvent(t *testing.T) {
 		]
 	}`, data1, data2)
 
-    bpayload := []byte(payload)
+	bpayload := []byte(payload)
 
-    source := New()
+	source := New()
 
-    req, err := source.GetRequest(context.Background(), bpayload)
-    require.NoError(t, err)
-    require.Len(t, req.Msgs, 2)
-    require.Equal(t, msg1, req.Msgs[0])
-    require.Equal(t, msg2, req.Msgs[1])
+	req, err := source.GetRequest(context.Background(), bpayload)
+	require.NoError(t, err)
+	require.Len(t, req.Msgs, 2)
+	require.Equal(t, msg1, req.Msgs[0])
+	require.Equal(t, msg2, req.Msgs[1])
 
-    pp := &domain.StockItemCreated{}
-    err = event.UnmarshalEvent(req.Msgs[0].Event, pp)
-    require.NoError(t, err)
-    require.Equal(t, evt, pp)
+	pp := &domain.StockItemCreated{}
+	err = event.UnmarshalEvent(req.Msgs[0].Event, pp)
+	require.NoError(t, err)
+	require.Equal(t, evt, pp)
 }

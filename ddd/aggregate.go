@@ -28,9 +28,6 @@ type AggregateBase struct {
 	events     []event.Event
 	eventTypes []string
 	seq        int64
-	time       int64
-	eventid    string
-	id         string
 }
 
 // InitAggregate if id is empty, id will be generated
@@ -42,17 +39,10 @@ func InitAggregate() *AggregateBase {
 	}
 }
 
-func (a *AggregateBase) GetAggregateID() string {
-	return a.id
-}
-
-func (a *AggregateBase) SetAggregateID(id string) {
-	a.id = id
-}
-
 func (a *AggregateBase) Publish(eventData event.Event) {
 	a.events = append(a.events, eventData)
 	a.eventTypes = append(a.eventTypes, event.EventType(eventData))
+
 }
 
 func (a *AggregateBase) GetEvents() []event.Event {
@@ -81,7 +71,7 @@ func (a *AggregateBase) GetSequence() int64 {
 }
 
 func (a *AggregateBase) IsNew() bool {
-	if a.id == emptyStr || a.seq == 0 && len(a.events) == 0 {
+	if a.seq == 0 && len(a.events) == 0 {
 		return true
 	}
 

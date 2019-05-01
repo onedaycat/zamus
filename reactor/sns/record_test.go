@@ -18,20 +18,20 @@ func TestParseSNSEvent(t *testing.T) {
 	evt := &domain.StockItemCreated{Id: "1"}
 	evtByte, _ := event.MarshalEvent(evt)
 	msg1 := &event.Msg{
-		AggID:     "a1",
-		Seq:       10,
+		Id:        "a1",
 		Event:     evtByte,
 		EventType: proto.MessageName(evt),
+		Time:      1,
 	}
 
 	msg1Byte, _ := event.MarshalMsg(msg1)
 	data1 := base64.StdEncoding.EncodeToString(msg1Byte)
 
 	msg2 := &event.Msg{
-		AggID:     "a1",
-		Seq:       11,
+		Id:        "a1",
 		Event:     evtByte,
 		EventType: proto.MessageName(evt),
+		Time:      1,
 	}
 
 	msg1Byte, _ = event.MarshalMsg(msg2)

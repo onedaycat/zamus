@@ -1,22 +1,22 @@
 package dynamostream
 
 import (
-    "context"
-    "encoding/base64"
-    "fmt"
-    "testing"
+	"context"
+	"encoding/base64"
+	"fmt"
+	"testing"
 
-    "github.com/onedaycat/zamus/event"
-    "github.com/onedaycat/zamus/testdata/domain"
-    "github.com/stretchr/testify/require"
+	"github.com/onedaycat/zamus/event"
+	"github.com/onedaycat/zamus/testdata/domain"
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseDynamoDBStreamEvent(t *testing.T) {
-    evt := &domain.StockItemCreated{Id: "1"}
-    p, err := event.MarshalEvent(evt)
-    p64 := base64.StdEncoding.EncodeToString(p)
+	evt := &domain.StockItemCreated{Id: "1"}
+	p, err := event.MarshalEvent(evt)
+	p64 := base64.StdEncoding.EncodeToString(p)
 
-    payload := fmt.Sprintf(`
+	payload := fmt.Sprintf(`
 	{
 		"Records": [
 			{
@@ -36,14 +36,11 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 						}
 					},
 					"NewImage": {
-						"aggID": {
+						"id": {
 							"S": "a1"
 						},
 						"eventType": {
 							"S": "testdata.stock.v1.StockItemCreated"
-						},
-						"seq": {
-							"N": "10002"
 						},
 						"event": {
 							"B": "%s"
@@ -68,14 +65,11 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 					  }
 				   },
 				   "NewImage": {
-					"aggID": {
+					"id": {
 						"S": "a1"
 					},
 					"eventType": {
 						"S": "testdata.stock.v1.StockItemCreated"
-					},
-					"seq": {
-						"N": "10001"
 					},
 					"event": {
 						"B": "%s"
@@ -90,16 +84,15 @@ func TestParseDynamoDBStreamEvent(t *testing.T) {
 		]
 	}`, p64, p64)
 
-    source := New()
-    req, err := source.GetRequest(context.Background(), []byte(payload))
-    require.NoError(t, err)
-    require.Len(t, req.Msgs, 1)
-    require.Equal(t, "a1", req.Msgs[0].AggID)
-    require.Equal(t, "testdata.stock.v1.StockItemCreated", req.Msgs[0].EventType)
-    require.Equal(t, int64(10002), req.Msgs[0].Seq)
+	source := New()
+	req, err := source.GetRequest(context.Background(), []byte(payload))
+	require.NoError(t, err)
+	require.Len(t, req.Msgs, 1)
+	require.Equal(t, "a1", req.Msgs[0].Id)
+	require.Equal(t, "testdata.stock.v1.StockItemCreated", req.Msgs[0].EventType)
 
-    pp := &domain.StockItemCreated{}
-    err = req.Msgs[0].UnmarshalEvent(pp)
-    require.NoError(t, err)
-    require.Equal(t, evt, pp)
+	pp := &domain.StockItemCreated{}
+	err = req.Msgs[0].UnmarshalEvent(pp)
+	require.NoError(t, err)
+	require.Equal(t, evt, pp)
 }

@@ -30,13 +30,6 @@ func TestAggregateIsNew(t *testing.T) {
 		require.True(t, st.IsNew())
 	})
 
-	t.Run("NoIDAndHasSeq", func(t *testing.T) {
-		st := domain.NewStockItem()
-		st.SetSequence(10)
-
-		require.True(t, st.IsNew())
-	})
-
 	t.Run("NoID", func(t *testing.T) {
 		st := domain.NewStockItem()
 		st.ProductID = "p1"

@@ -9,7 +9,6 @@ import (
 	appErr "github.com/onedaycat/zamus/errors"
 )
 
-type Metadata = map[string]string
 type Event = proto.Message
 type Msgs = []*Msg
 
