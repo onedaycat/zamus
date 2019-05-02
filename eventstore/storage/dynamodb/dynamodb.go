@@ -92,13 +92,15 @@ func (d *EventStoreStorage) CreateSchema() error {
     }
 
     for i := 0; i < 2; i++ {
-        if _, err := d.db.UpdateTimeToLive(&dynamodb.UpdateTimeToLiveInput{
+        _, err := d.db.UpdateTimeToLive(&dynamodb.UpdateTimeToLiveInput{
             TableName: &d.eventstoreTable,
             TimeToLiveSpecification: &dynamodb.TimeToLiveSpecification{
                 AttributeName: ptr.String("exp"),
                 Enabled:       ptr.Bool(true),
             },
-        }); err != nil {
+        })
+
+        if err != nil {
             aerr, _ := err.(awserr.Error)
             if aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
                 time.Sleep(time.Second * 60)
@@ -109,6 +111,8 @@ func (d *EventStoreStorage) CreateSchema() error {
             }
 
             return err
+        } else {
+            break
         }
     }
 

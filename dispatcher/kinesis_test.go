@@ -75,6 +75,69 @@ func TestKinesisFilterAndPublish(t *testing.T) {
     mockClient.AssertExpectations(t)
 }
 
+func TestKinesisFilterOutAndPublish(t *testing.T) {
+    config := &KinesisConfig{
+        StreamARN: "arn1",
+        FilterEvents: event.EventTypes(
+            (*domain.StockItemCreated)(nil),
+            (*domain.StockItemRemoved)(nil),
+        ),
+        FilterOutEvents: true,
+    }
+    config.init()
+
+    msgs := random.EventMsgs().
+        Add(random.WithEvent(&domain.StockItemCreated{ProductID: "1"})).
+        Add(random.WithEvent(&domain.StockItemCreated{ProductID: "2"})).
+        Add(random.WithEvent(&domain.StockItemCreated{ProductID: "3"})).
+        Add(random.WithEvent(&domain.StockItemRemoved{ProductID: "4"})).
+        Add(random.WithEvent(&domain.StockItemRemoved{ProductID: "5"})).
+        Add(random.WithEvent(&domain.StockItemUpdated{ProductID: "6"})).
+        Add(random.WithEvent(&domain.StockItemUpdated{ProductID: "7"})).
+        Add(random.WithEvent(&domain.StockItemUpdated{ProductID: "8"})).
+        Add(random.WithEvent(&domain.StockItemUpdated{ProductID: "9"})).
+        Build()
+
+    for _, msg := range msgs {
+        config.filter(msg)
+    }
+
+    require.Len(t, config.records, 4)
+    for i, record := range config.records {
+        data, _ := event.MarshalMsg(msgs[i+5])
+        require.Equal(t, &kinesis.PutRecordsRequestEntry{
+            Data:         data,
+            PartitionKey: &msgs[i+5].AggID,
+        }, record)
+    }
+
+    mockClient := &mocks.KinesisPublisher{}
+    config.Client = mockClient
+    config.setContext(context.Background())
+
+    input := &kinesis.PutRecordsInput{
+        Records:    config.records,
+        StreamName: &config.StreamARN,
+    }
+
+    mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{}, nil).Once()
+    err := config.publish()
+    require.NoError(t, err)
+
+    mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{}, errors.DumbError).Once()
+    err = config.publish()
+    require.True(t, ErrUnablePublishKinesis.Is(err))
+
+    failedCount := int64(10)
+    mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{
+        FailedRecordCount: &failedCount,
+    }, nil).Once()
+    err = config.publish()
+    require.True(t, ErrUnablePublishKinesis.Is(err))
+
+    mockClient.AssertExpectations(t)
+}
+
 func TestKinesisAllEvents(t *testing.T) {
     config := &KinesisConfig{
         StreamARN: "arn1",

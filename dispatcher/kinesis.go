@@ -9,9 +9,10 @@ import (
 )
 
 type KinesisConfig struct {
-    StreamARN    string
-    FilterEvents []string
-    Client       KinesisPublisher
+    StreamARN       string
+    FilterEvents    []string
+    Client          KinesisPublisher
+    FilterOutEvents bool
 
     records    []*kinesis.PutRecordsRequestEntry
     eventTypes map[string]struct{}
@@ -39,14 +40,26 @@ func (c *KinesisConfig) filter(msg *event.Msg) {
             PartitionKey: &msg.AggID,
         })
     } else {
-        _, ok := c.eventTypes[msg.EventType]
-        if ok {
-            data, _ := event.MarshalMsg(msg)
-            c.records = append(c.records, &kinesis.PutRecordsRequestEntry{
-                Data:         data,
-                PartitionKey: &msg.AggID,
-            })
+        if c.FilterOutEvents {
+            _, ok := c.eventTypes[msg.EventType]
+            if !ok {
+                data, _ := event.MarshalMsg(msg)
+                c.records = append(c.records, &kinesis.PutRecordsRequestEntry{
+                    Data:         data,
+                    PartitionKey: &msg.AggID,
+                })
+            }
+        } else {
+            _, ok := c.eventTypes[msg.EventType]
+            if ok {
+                data, _ := event.MarshalMsg(msg)
+                c.records = append(c.records, &kinesis.PutRecordsRequestEntry{
+                    Data:         data,
+                    PartitionKey: &msg.AggID,
+                })
+            }
         }
+
     }
 }
 
