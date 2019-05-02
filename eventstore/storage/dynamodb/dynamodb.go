@@ -91,7 +91,7 @@ func (d *EventStoreStorage) CreateSchema() error {
         }
     }
 
-    for i := 0; i < 10; i++ {
+    for i := 0; i < 2; i++ {
         if _, err := d.db.UpdateTimeToLive(&dynamodb.UpdateTimeToLiveInput{
             TableName: &d.eventstoreTable,
             TimeToLiveSpecification: &dynamodb.TimeToLiveSpecification{
@@ -101,7 +101,7 @@ func (d *EventStoreStorage) CreateSchema() error {
         }); err != nil {
             aerr, _ := err.(awserr.Error)
             if aerr.Code() == dynamodb.ErrCodeResourceNotFoundException {
-                time.Sleep(time.Second * 5)
+                time.Sleep(time.Second * 60)
                 continue
             }
             if aerr.Code() == "ValidationException" && aerr.Message() == "TimeToLive is already enabled" {
