@@ -19,7 +19,7 @@ func TestInvokeSuccess(t *testing.T) {
     mockInvoke := &invokeMock.Invoker{}
     h := New(&Config{})
     h.Kinesis(&KinesisConfig{
-        StreamARN: "arn1",
+        StreamName: "arn1",
         FilterEvents: event.EventTypes(
             (*domain.StockItemCreated)(nil),
             (*domain.StockItemRemoved)(nil),

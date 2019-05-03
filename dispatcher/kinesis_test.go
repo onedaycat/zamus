@@ -15,7 +15,7 @@ import (
 
 func TestKinesisFilterAndPublish(t *testing.T) {
     config := &KinesisConfig{
-        StreamARN: "arn1",
+        StreamName: "arn1",
         FilterEvents: event.EventTypes(
             (*domain.StockItemCreated)(nil),
             (*domain.StockItemRemoved)(nil),
@@ -54,7 +54,7 @@ func TestKinesisFilterAndPublish(t *testing.T) {
 
     input := &kinesis.PutRecordsInput{
         Records:    config.records,
-        StreamName: &config.StreamARN,
+        StreamName: &config.StreamName,
     }
 
     mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{}, nil).Once()
@@ -77,7 +77,7 @@ func TestKinesisFilterAndPublish(t *testing.T) {
 
 func TestKinesisFilterOutAndPublish(t *testing.T) {
     config := &KinesisConfig{
-        StreamARN: "arn1",
+        StreamName: "arn1",
         FilterEvents: event.EventTypes(
             (*domain.StockItemCreated)(nil),
             (*domain.StockItemRemoved)(nil),
@@ -117,7 +117,7 @@ func TestKinesisFilterOutAndPublish(t *testing.T) {
 
     input := &kinesis.PutRecordsInput{
         Records:    config.records,
-        StreamName: &config.StreamARN,
+        StreamName: &config.StreamName,
     }
 
     mockClient.On("PutRecordsWithContext", config.ctx, input).Return(&kinesis.PutRecordsOutput{}, nil).Once()
@@ -140,7 +140,7 @@ func TestKinesisFilterOutAndPublish(t *testing.T) {
 
 func TestKinesisAllEvents(t *testing.T) {
     config := &KinesisConfig{
-        StreamARN: "arn1",
+        StreamName: "arn1",
     }
     config.init()
     require.True(t, config.isAll)
@@ -166,7 +166,7 @@ func TestKinesisAllEvents(t *testing.T) {
 
 func TestKinesisClearAndHasEvent(t *testing.T) {
     config := &KinesisConfig{
-        StreamARN: "arn1",
+        StreamName: "arn1",
     }
     config.init()
     require.True(t, config.isAll)

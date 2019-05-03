@@ -9,7 +9,7 @@ import (
 )
 
 type KinesisConfig struct {
-    StreamARN       string
+    StreamName      string
     FilterEvents    []string
     Client          KinesisPublisher
     FilterOutEvents bool
@@ -74,7 +74,7 @@ func (c *KinesisConfig) hasEvents() bool {
 func (c *KinesisConfig) publish() errors.Error {
     input := &kinesis.PutRecordsInput{
         Records:    c.records,
-        StreamName: &c.StreamARN,
+        StreamName: &c.StreamName,
     }
 
     out, err := c.Client.PutRecordsWithContext(c.ctx, input)
