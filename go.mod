@@ -9,7 +9,6 @@ require (
 	github.com/aws/aws-sdk-go v1.19.24
 	github.com/aws/aws-xray-sdk-go v0.0.0-20190409205920-5ffa743a8b8d
 	github.com/certifi/gocertifi v0.0.0-20190415143156-92f724a62f3e // indirect
-	github.com/getsentry/raven-go v0.0.0-20190419175539-919484f041ea // indirect
 	github.com/gogo/protobuf v1.2.2-0.20190415061611-67e450fba694
 	github.com/golang/snappy v0.0.1
 	github.com/json-iterator/go v1.1.6
@@ -18,7 +17,7 @@ require (
 	github.com/magefile/mage v1.8.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/onedaycat/errors v0.0.0-20190420140508-79df9028c4de
+	github.com/onedaycat/errors v0.0.0-20190503231853-7e2ab4b0340c
 	github.com/plimble/goconf v1.0.1-0.20190226004239-723c5ebb3b87
 	github.com/plimble/mage v0.0.0-20190324110514-f4bb144cd59b
 	github.com/rs/xid v1.2.2-0.20190429192642-ba6f703301d6
