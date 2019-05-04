@@ -47,6 +47,8 @@ type Config struct {
     SentryDSN           string
     DisableReponseError bool
     DLQMaxRetry         int
+    DLQSource           string
+    DLQSourceType       dlq.SourceType
     DLQStorage          dlq.Storage
 }
 
@@ -74,7 +76,13 @@ func NewHandler(source EventSource, streamer Strategy, config *Config) *Handler 
     }
 
     if config.DLQMaxRetry > 0 && config.DLQStorage != nil {
-        h.streamer.SetDLQ(dlq.New(config.DLQStorage, config.DLQMaxRetry, config.Service, lambdacontext.FunctionName, config.Version))
+        h.streamer.SetDLQ(dlq.New(config.DLQStorage, &dlq.Config{
+            Service:    config.Service,
+            Source:     config.DLQSource,
+            SourceType: config.DLQSourceType,
+            MaxRetry:   config.DLQMaxRetry,
+            Version:    config.Version,
+        }))
     }
 
     if tracer.Enable {

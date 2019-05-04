@@ -22,7 +22,13 @@ func TestDLQ(t *testing.T) {
         WithCause(errors.ErrUnknown).
         WithInput(map[string]interface{}{"input": "1"})
 
-    d := dlq.New(storage, 3, "srv1", "fn1", "1.0.0")
+    d := dlq.New(storage, &dlq.Config{
+        Service:    "srv1",
+        SourceType: dlq.Lambda,
+        Source:     "fn1",
+        Version:    "1.0.0",
+        MaxRetry:   3,
+    })
 
     msgs := random.EventMsgs().RandomEventMsgs(10).Build()
     msgList := &event.MsgList{Msgs: msgs}
@@ -49,13 +55,14 @@ func TestDLQ(t *testing.T) {
     msgListByte, _ := event.MarshalMsg(msgList)
 
     dlqMsg := &dlq.DLQMsg{
-        ID:             "1",
-        Service:        "srv1",
-        Time:           now.Unix(),
-        Version:        "1.0.0",
-        LambdaFunction: "fn1",
-        EventMsgs:      msgListByte,
-        Errors:         d.Errors,
+        ID:         "1",
+        Service:    "srv1",
+        Time:       now.Unix(),
+        Version:    "1.0.0",
+        SourceType: dlq.Lambda,
+        Source:     "fn1",
+        EventMsgs:  msgListByte,
+        Errors:     d.Errors,
     }
 
     ctx := context.Background()
@@ -71,7 +78,13 @@ func TestDLQ(t *testing.T) {
 func TestDLQOnlyOne(t *testing.T) {
     storage := &mocks.Storage{}
 
-    d := dlq.New(storage, 1, "srv1", "fn1", "1.0.0")
+    d := dlq.New(storage, &dlq.Config{
+        Service:    "srv1",
+        SourceType: dlq.Lambda,
+        Source:     "fn1",
+        Version:    "1.0.0",
+        MaxRetry:   1,
+    })
 
     ok := d.Retry()
     require.False(t, ok)
@@ -81,7 +94,13 @@ func TestDLQOnlyOne(t *testing.T) {
 func TestDLQZero(t *testing.T) {
     storage := &mocks.Storage{}
 
-    d := dlq.New(storage, 0, "srv1", "fn1", "1.0.0")
+    d := dlq.New(storage, &dlq.Config{
+        Service:    "srv1",
+        SourceType: dlq.Lambda,
+        Source:     "fn1",
+        Version:    "1.0.0",
+        MaxRetry:   0,
+    })
 
     ok := d.Retry()
     require.False(t, ok)

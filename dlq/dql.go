@@ -16,36 +16,43 @@ type DLQ interface {
     GetDLQErrors() DLQErrors
 }
 
-type dlq struct {
-    Storage        Storage
-    MaxRetry       int
-    Remain         int
-    Errors         DLQErrors
-    Service        string
-    LambdaFunction string
-    Version        string
+type Config struct {
+    Service    string
+    MaxRetry   int
+    SourceType SourceType
+    Source     string
+    Version    string
 }
 
-func New(storage Storage, maxRetry int, service, lambdaFunc, version string) *dlq {
-    return &dlq{storage, maxRetry, maxRetry, nil, service, lambdaFunc, version}
+type dlq struct {
+    Storage  Storage
+    config   *Config
+    Errors   DLQErrors
+    Remain   int
+    MaxRetry int
+}
+
+func New(storage Storage, config *Config) *dlq {
+    return &dlq{storage, config, nil, config.MaxRetry, config.MaxRetry}
 }
 
 func (d *dlq) Save(ctx context.Context, data []byte) errors.Error {
     dlqMsg := &DLQMsg{
-        ID:             eid.GenerateID(),
-        Service:        d.Service,
-        Time:           clock.Now().Unix(),
-        Version:        d.Version,
-        LambdaFunction: d.LambdaFunction,
-        EventMsgs:      data,
-        Errors:         d.Errors,
+        ID:         eid.GenerateID(),
+        Service:    d.config.Service,
+        Time:       clock.Now().Unix(),
+        Version:    d.config.Version,
+        EventMsgs:  data,
+        Errors:     d.Errors,
+        SourceType: d.config.SourceType,
+        Source:     d.config.Source,
     }
 
     if err := d.Storage.Save(ctx, dlqMsg); err != nil {
         return err
     }
 
-    d.Remain = d.MaxRetry
+    d.Remain = d.config.MaxRetry
     d.Errors = nil
 
     return nil
