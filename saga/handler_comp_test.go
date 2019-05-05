@@ -1,11 +1,11 @@
 package saga
 
 import (
-    "fmt"
     "testing"
     "time"
 
     "github.com/onedaycat/errors"
+    "github.com/onedaycat/zamus/dlq"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/clock"
@@ -15,6 +15,7 @@ import (
 
 func Test_CompensateSuccess(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("compensate").
@@ -30,11 +31,11 @@ func Test_CompensateSuccess(t *testing.T) {
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
-        Data:       []byte(`{"id":6}`),
+        Data:       []byte(`{"id":"6"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -74,9 +75,9 @@ func Test_CompensateSuccess(t *testing.T) {
         },
     }
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -94,6 +95,7 @@ func Test_CompensateSuccess(t *testing.T) {
 
 func Test_CompensateFail(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("compensate").
@@ -109,12 +111,12 @@ func Test_CompensateFail(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":6}`),
+        Data:       []byte(`{"id":"6"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -154,7 +156,7 @@ func Test_CompensateFail(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Equal(t, errors.DumbError, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -166,20 +168,22 @@ func Test_CompensateFail(t *testing.T) {
 
     expStateJSON, _ := common.MarshalJSON(expState)
     stateJSON, _ := common.MarshalJSON(s.saga.state)
-    fmt.Println(string(stateJSON))
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":6}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, errors.DumbError, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"6"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, errors.DumbError, getState.Error)
 }
 
 func Test_CompensateError(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("compensate").
@@ -195,12 +199,12 @@ func Test_CompensateError(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":8}`),
+        Data:       []byte(`{"id":"8"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -240,7 +244,7 @@ func Test_CompensateError(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Equal(t, errors.DumbError, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -255,16 +259,19 @@ func Test_CompensateError(t *testing.T) {
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":8}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, errors.DumbError, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"8"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, errors.DumbError, getState.Error)
 }
 
 func Test_PartialError(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("partial_error").
@@ -281,12 +288,12 @@ func Test_PartialError(t *testing.T) {
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":9}`),
+        Data:       []byte(`{"id":"9"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -333,7 +340,7 @@ func Test_PartialError(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Nil(t, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -351,6 +358,7 @@ func Test_PartialError(t *testing.T) {
 
 func Test_PartialCompensateError(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("partial_compensate").
@@ -367,12 +375,12 @@ func Test_PartialCompensateError(t *testing.T) {
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":7}`),
+        Data:       []byte(`{"id":"7"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -419,7 +427,7 @@ func Test_PartialCompensateError(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Nil(t, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -437,6 +445,7 @@ func Test_PartialCompensateError(t *testing.T) {
 
 func Test_CompensateNoAction(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("compensate").
@@ -451,12 +460,12 @@ func Test_CompensateNoAction(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      appErr.ErrNoStateAction,
-        Data:       []byte(`{"id":5}`),
+        Data:       []byte(`{"id":"5"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -489,7 +498,7 @@ func Test_CompensateNoAction(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Equal(t, appErr.ErrNoStateAction, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -504,10 +513,12 @@ func Test_CompensateNoAction(t *testing.T) {
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":5}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, appErr.ErrNoStateAction, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"5"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, appErr.ErrNoStateAction, getState.Error)
 }

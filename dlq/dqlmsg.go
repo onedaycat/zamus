@@ -3,14 +3,12 @@ package dlq
 //noinspection GoNameStartsWithPackageName
 type DLQErrors = []*DLQError
 
-type SourceType string
+type LambdaType string
 
 const (
-    SQS            SourceType = "sqs"
-    SNS            SourceType = "sns"
-    Lambda         SourceType = "lambda"
-    Kinesis        SourceType = "kinesis"
-    DynamoDBStream SourceType = "dynamodb"
+    Reactor LambdaType = "reactor"
+    Saga    LambdaType = "saga"
+    Trigger LambdaType = "trigger"
 )
 
 //noinspection GoNameStartsWithPackageName
@@ -27,8 +25,8 @@ type DLQMsg struct {
     Service    string      `json:"service"`
     Time       int64       `json:"time"`
     Version    string      `json:"version"`
-    EventMsgs  []byte      `json:"eventMsgs"`
+    Data       []byte      `json:"data"`
     Errors     []*DLQError `json:"errors"`
-    SourceType SourceType  `json:"sourceType"`
-    Source     string      `json:"source"`
+    Fn         string      `json:"fn"`
+    LambdaType LambdaType  `json:"lambdaType"`
 }

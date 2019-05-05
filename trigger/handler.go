@@ -30,14 +30,12 @@ func (p Payload) Unmarshal(v interface{}) errors.Error {
 }
 
 type Config struct {
-    AppStage      string
-    Service       string
-    Version       string
-    SentryDSN     string
-    DLQMaxRetry   int
-    DLQSource     string
-    DLQSourceType dlq.SourceType
-    DLQStorage    dlq.Storage
+    AppStage    string
+    Service     string
+    Version     string
+    SentryDSN   string
+    DLQMaxRetry int
+    DLQStorage  dlq.Storage
 }
 
 type Handler struct {
@@ -63,10 +61,10 @@ func NewHandler(handler TriggerHandler, config *Config) *Handler {
     if config.DLQMaxRetry > 0 && config.DLQStorage != nil {
         h.dlq = dlq.New(config.DLQStorage, &dlq.Config{
             Service:    config.Service,
-            Source:     config.DLQSource,
-            SourceType: config.DLQSourceType,
+            LambdaType: dlq.Trigger,
             MaxRetry:   config.DLQMaxRetry,
             Version:    config.Version,
+            Fn:         lambdacontext.FunctionName,
         })
     }
 

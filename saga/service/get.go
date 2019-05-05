@@ -27,7 +27,8 @@ func (h *handler) GetState(ctx context.Context, req *service.Request) (interface
         return nil, ErrInvalidRequest.New()
     }
 
-    state, err := h.storage.Get(ctx, input.StateName, input.ID)
+    state := &saga.State{}
+    err := h.storage.Get(ctx, input.ID, state)
     if err != nil {
         return nil, ErrInternalError.WithCaller().WithInput(input).WithCause(err)
     }

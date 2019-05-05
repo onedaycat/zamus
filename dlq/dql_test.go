@@ -24,8 +24,7 @@ func TestDLQ(t *testing.T) {
 
     d := dlq.New(storage, &dlq.Config{
         Service:    "srv1",
-        SourceType: dlq.Lambda,
-        Source:     "fn1",
+        LambdaType: dlq.Reactor,
         Version:    "1.0.0",
         MaxRetry:   3,
     })
@@ -59,9 +58,8 @@ func TestDLQ(t *testing.T) {
         Service:    "srv1",
         Time:       now.Unix(),
         Version:    "1.0.0",
-        SourceType: dlq.Lambda,
-        Source:     "fn1",
-        EventMsgs:  msgListByte,
+        LambdaType: dlq.Reactor,
+        Data:       msgListByte,
         Errors:     d.Errors,
     }
 
@@ -80,8 +78,7 @@ func TestDLQOnlyOne(t *testing.T) {
 
     d := dlq.New(storage, &dlq.Config{
         Service:    "srv1",
-        SourceType: dlq.Lambda,
-        Source:     "fn1",
+        LambdaType: dlq.Reactor,
         Version:    "1.0.0",
         MaxRetry:   1,
     })
@@ -96,8 +93,7 @@ func TestDLQZero(t *testing.T) {
 
     d := dlq.New(storage, &dlq.Config{
         Service:    "srv1",
-        SourceType: dlq.Lambda,
-        Source:     "fn1",
+        LambdaType: dlq.Reactor,
         Version:    "1.0.0",
         MaxRetry:   0,
     })

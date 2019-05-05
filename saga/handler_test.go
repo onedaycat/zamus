@@ -5,6 +5,7 @@ import (
     "time"
 
     "github.com/onedaycat/errors"
+    "github.com/onedaycat/zamus/dlq"
     appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/clock"
@@ -14,11 +15,12 @@ import (
 
 func Test_InvalidPayload(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("next")
 
-    _, err := s.saga.Invoke(s.ctx, []byte(`{"id":1}`))
+    _, err := s.saga.Invoke(s.ctx, s.msgByte[:len(s.msgByte)-1])
     require.Equal(t, appErr.ToLambdaError(appErr.ErrInvalidRequest), err)
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
@@ -26,15 +28,17 @@ func Test_InvalidPayload(t *testing.T) {
 
 func Test_StartError(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithStartError()
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.Equal(t, appErr.ToLambdaError(errors.DumbError), err)
     require.Nil(t, res)
 }
 
 func Test_HandlerEnd(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("end")
@@ -48,11 +52,11 @@ func Test_HandlerEnd(t *testing.T) {
         Name:       "Test",
         Status:     SUCCESS,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":4}`),
+        Data:       []byte(`{"id":"4"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -80,9 +84,9 @@ func Test_HandlerEnd(t *testing.T) {
 
     expState.step = expState.Steps[2]
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -97,9 +101,9 @@ func Test_HandlerEnd(t *testing.T) {
     require.Equal(t, expStateJSON, stateJSON)
 
     s.handle.spy.Reset()
-    res, err = s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err = s.saga.Invoke(s.ctx, s.msgByte)
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -116,6 +120,7 @@ func Test_HandlerEnd(t *testing.T) {
 
 func Test_HandlerError(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("error").
@@ -131,11 +136,11 @@ func Test_HandlerError(t *testing.T) {
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
-        Data:       []byte(`{"id":8}`),
+        Data:       []byte(`{"id":"8"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -175,7 +180,7 @@ func Test_HandlerError(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.NoError(t, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -194,6 +199,7 @@ func Test_HandlerError(t *testing.T) {
 
 func Test_HandlerFail(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("fail")
@@ -207,11 +213,11 @@ func Test_HandlerFail(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":4}`),
+        Data:       []byte(`{"id":"4"}`),
         Error:      errors.DumbError,
         Steps: []*Step{
             {
@@ -238,7 +244,7 @@ func Test_HandlerFail(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Equal(t, errors.DumbError, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -253,16 +259,19 @@ func Test_HandlerFail(t *testing.T) {
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":4}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, errors.DumbError, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"4"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, errors.DumbError, getState.Error)
 }
 
 func Test_HandlerFailWithReturnResponse(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("fail").
@@ -277,11 +286,11 @@ func Test_HandlerFailWithReturnResponse(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":4}`),
+        Data:       []byte(`{"id":"4"}`),
         Error:      errors.DumbError,
         Steps: []*Step{
             {
@@ -308,7 +317,7 @@ func Test_HandlerFailWithReturnResponse(t *testing.T) {
         },
     }
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.Equal(t, appErr.ToLambdaError(errors.DumbError), err)
     require.Nil(t, res)
     require.Equal(t, 1, s.handle.spy.Count("start"))
@@ -324,77 +333,92 @@ func Test_HandlerFailWithReturnResponse(t *testing.T) {
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":4}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, errors.DumbError, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"4"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, errors.DumbError, getState.Error)
 }
 
 func Test_StartStepNotFound(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithStartStep("s00")
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.Equal(t, appErr.ToLambdaError(appErr.ErrNextStateNotFound("s00")), err)
     require.Nil(t, res)
 }
 
 func Test_NextStepNotFound(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS2NextStepNotfound()
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.NoError(t, err)
     require.NotNil(t, res)
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":3}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, appErr.ErrNextStateNotFound("s00").Error(), state.Error.Error())
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"3"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, appErr.ErrNextStateNotFound("s00").Error(), getState.Error.Error())
 }
 
 func Test_Panic(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS2Panic()
 
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    eid.FreezeID("1")
+
+    res, err := s.saga.Invoke(s.ctx, s.msgByte)
     require.NoError(t, err)
     require.NotNil(t, res)
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":3}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, appErr.ErrPanic, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"3"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, appErr.ErrPanic, getState.Error)
 
     s = setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS2PanicString()
 
-    res, err = s.saga.Invoke(s.ctx, []byte(`{"input":{"id":1}}`))
+    res, err = s.saga.Invoke(s.ctx, s.msgByte)
     require.NoError(t, err)
     require.NotNil(t, res)
 
-    state, err = s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err = s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":3}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, appErr.ErrPanic, state.Error)
+    getState, err = ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"3"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, appErr.ErrPanic, getState.Error)
 }
 
 func Test_HandlerNoAction(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next")
 
     eid.FreezeID("state1")
@@ -406,11 +430,11 @@ func Test_HandlerNoAction(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
         Error:      appErr.ErrNoStateAction,
         Steps: []*Step{
             {
@@ -430,7 +454,7 @@ func Test_HandlerNoAction(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.Equal(t, appErr.ErrNoStateAction, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -445,16 +469,19 @@ func Test_HandlerNoAction(t *testing.T) {
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":3}`, string(state.Data))
-    require.Equal(t, FAILED, state.Status)
-    require.Equal(t, END, state.Action)
-    require.Equal(t, appErr.ErrNoStateAction, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"3"}`, string(getState.Data))
+    require.Equal(t, FAILED, getState.Status)
+    require.Equal(t, END, getState.Action)
+    require.Equal(t, appErr.ErrNoStateAction, getState.Error)
 }
 
 func Test_HandlerStop(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("stop")
 
@@ -467,11 +494,11 @@ func Test_HandlerStop(t *testing.T) {
         Name:       "Test",
         Status:     WAIT,
         Action:     STOP,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
         Error:      nil,
         Steps: []*Step{
             {
@@ -490,7 +517,7 @@ func Test_HandlerStop(t *testing.T) {
         },
     }
 
-    err := s.saga.Handle(s.ctx, &Request{Input: []byte(`{"id":1}`)})
+    err := s.saga.Handle(s.ctx, s.req)
     require.NoError(t, err)
     require.Equal(t, 1, s.handle.spy.Count("start"))
     require.Equal(t, 1, s.handle.spy.Count("s1"))
@@ -505,10 +532,12 @@ func Test_HandlerStop(t *testing.T) {
 
     require.Equal(t, string(expStateJSON), string(stateJSON))
 
-    state, err := s.storage.Get(s.ctx, s.saga.state.Name, s.saga.state.ID)
+    dlqMsg, err := s.storage.Get(s.ctx, dlq.Saga, s.saga.state.ID)
     require.NoError(t, err)
-    require.Equal(t, `{"id":3}`, string(state.Data))
-    require.Equal(t, WAIT, state.Status)
-    require.Equal(t, STOP, state.Action)
-    require.Nil(t, state.Error)
+    getState, err := ParseStateFromDLQMsg(dlqMsg)
+    require.NoError(t, err)
+    require.Equal(t, `{"id":"3"}`, string(getState.Data))
+    require.Equal(t, WAIT, getState.Status)
+    require.Equal(t, STOP, getState.Action)
+    require.Nil(t, getState.Error)
 }

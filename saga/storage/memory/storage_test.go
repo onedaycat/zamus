@@ -7,7 +7,9 @@ import (
 
     "github.com/onedaycat/errors"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/random"
     "github.com/onedaycat/zamus/saga"
+    "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/require"
 )
 
@@ -24,7 +26,7 @@ func TestSaveAndGet(t *testing.T) {
     state.Name = "Test"
     state.Status = saga.SUCCESS
     state.Action = saga.COMPENSATE
-    state.Input = []byte(`{"id":1}`)
+    state.EventMsg = random.EventMsg().Event(&domain.StockItemCreated{Id: "1"}).Build()
     state.StartTime = now.Unix()
     state.LastTime = now.Unix()
     state.Compensate = true
@@ -70,13 +72,15 @@ func TestSaveAndGet(t *testing.T) {
     err := db.Save(context.Background(), state)
     require.NoError(t, err)
 
-    getState, err := db.Get(context.Background(), state.Name, state.ID)
+    getState := &saga.State{}
+    err = db.Get(context.Background(), state.Name, state.ID, getState)
     require.NoError(t, err)
     require.Equal(t, state, getState)
 
     // NotFound
-    getState, err = db.Get(context.Background(), state.Name, "xxxx")
+    getState = &saga.State{}
+    err = db.Get(context.Background(), state.Name, "xxxx", getState)
     //noinspection GoNilness
     require.Equal(t, appErr.ErrStateNotFound.Error(), err.Error())
-    require.Nil(t, getState)
+    require.Empty(t, getState.ID)
 }

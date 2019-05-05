@@ -12,6 +12,31 @@ type Storage struct {
 	mock.Mock
 }
 
+// Get provides a mock function with given fields: ctx, lambdaType, id
+func (_m *Storage) Get(ctx context.Context, lambdaType dlq.LambdaType, id string) (*dlq.DLQMsg, errors.Error) {
+	ret := _m.Called(ctx, lambdaType, id)
+
+	var r0 *dlq.DLQMsg
+	if rf, ok := ret.Get(0).(func(context.Context, dlq.LambdaType, string) *dlq.DLQMsg); ok {
+		r0 = rf(ctx, lambdaType, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*dlq.DLQMsg)
+		}
+	}
+
+	var r1 errors.Error
+	if rf, ok := ret.Get(1).(func(context.Context, dlq.LambdaType, string) errors.Error); ok {
+		r1 = rf(ctx, lambdaType, id)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(errors.Error)
+		}
+	}
+
+	return r0, r1
+}
+
 // Save provides a mock function with given fields: ctx, _a1
 func (_m *Storage) Save(ctx context.Context, _a1 *dlq.DLQMsg) errors.Error {
 	ret := _m.Called(ctx, _a1)

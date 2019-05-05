@@ -175,8 +175,8 @@ func (s *StrategySuite) WithError(name string) *StrategySuite {
 func (s *StrategySuite) WithDLQ(retry int) *StrategySuite {
     s.dlq = dlq.New(s.dlqMock, &dlq.Config{
         Service:    "service",
-        SourceType: dlq.Lambda,
-        Source:     "lambdaFunc",
+        LambdaType: dlq.Reactor,
+        Fn:         "lambdaFunc",
         Version:    "1.0.0",
         MaxRetry:   retry,
     })

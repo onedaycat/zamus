@@ -19,8 +19,8 @@ type DLQ interface {
 type Config struct {
     Service    string
     MaxRetry   int
-    SourceType SourceType
-    Source     string
+    LambdaType LambdaType
+    Fn         string
     Version    string
 }
 
@@ -42,10 +42,10 @@ func (d *dlq) Save(ctx context.Context, data []byte) errors.Error {
         Service:    d.config.Service,
         Time:       clock.Now().Unix(),
         Version:    d.config.Version,
-        EventMsgs:  data,
+        Data:       data,
         Errors:     d.Errors,
-        SourceType: d.config.SourceType,
-        Source:     d.config.Source,
+        LambdaType: d.config.LambdaType,
+        Fn:         d.config.Fn,
     }
 
     if err := d.Storage.Save(ctx, dlqMsg); err != nil {

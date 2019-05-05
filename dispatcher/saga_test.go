@@ -55,26 +55,26 @@ func TestSagaFilterAndPublish(t *testing.T) {
     config.setContext(context.Background())
 
     mockClient.On("InvokeSaga", config.ctx,
-        invoke.NewSagaRequest(config.Fn).WithInput("1"),
+        invoke.NewSagaRequest(config.Fn).WithEventMsg(msgs[0]),
         nil).Return(nil).Once()
     mockClient.On("InvokeSaga", config.ctx,
-        invoke.NewSagaRequest(config.Fn).WithInput("2"),
+        invoke.NewSagaRequest(config.Fn).WithEventMsg(msgs[1]),
         nil).Return(nil).Once()
     mockClient.On("InvokeSaga", config.ctx,
-        invoke.NewSagaRequest(config.Fn).WithInput("3"),
+        invoke.NewSagaRequest(config.Fn).WithEventMsg(msgs[2]),
         nil).Return(nil).Once()
     err := config.publish()
     require.NoError(t, err)
     mockClient.AssertExpectations(t)
 
     mockClient.On("InvokeSaga", config.ctx,
-        invoke.NewSagaRequest(config.Fn).WithInput("1"),
+        invoke.NewSagaRequest(config.Fn).WithEventMsg(msgs[0]),
         nil).Return(nil).Once()
     mockClient.On("InvokeSaga", config.ctx,
-        invoke.NewSagaRequest(config.Fn).WithInput("2"),
+        invoke.NewSagaRequest(config.Fn).WithEventMsg(msgs[1]),
         nil).Return(nil).Once()
     mockClient.On("InvokeSaga", config.ctx,
-        invoke.NewSagaRequest(config.Fn).WithInput("3"),
+        invoke.NewSagaRequest(config.Fn).WithEventMsg(msgs[2]),
         nil).Return(nil).Once()
 
     err = config.publish()

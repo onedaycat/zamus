@@ -8,6 +8,6 @@ import (
 
 //go:generate mockery -name=Storage
 type Storage interface {
-    Get(ctx context.Context, stateName, id string) (*State, errors.Error)
+    Get(ctx context.Context, id string, state *State) errors.Error
     Save(ctx context.Context, state *State) errors.Error
 }

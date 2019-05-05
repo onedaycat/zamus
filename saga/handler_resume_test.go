@@ -16,21 +16,22 @@ func Test_ResumeNotFound(t *testing.T) {
     s := setupHandlerSuite()
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
-    require.Equal(t, appErr.ToLambdaError(appErr.ErrStateNotFound), err)
+    require.Equal(t, appErr.ToLambdaError(appErr.ErrDLQMsgNotFound), err)
     require.Nil(t, res)
 }
 
-func Test_ResumeGetError(t *testing.T) {
-    s := setupHandlerSuite().
-        WithGetResumeError()
-
-    res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
-    require.Equal(t, appErr.ToLambdaError(errors.DumbError), err)
-    require.Nil(t, res)
-}
+//func Test_ResumeGetError(t *testing.T) {
+//   s := setupHandlerSuite().
+//       WithGetResumeError()
+//
+//   res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
+//   require.Equal(t, appErr.ToLambdaError(errors.DumbError), err)
+//   require.Nil(t, res)
+//}
 
 func Test_ResumeParseError(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithGetResumeParseError()
 
     eid.FreezeID("state1")
@@ -42,12 +43,12 @@ func Test_ResumeParseError(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -65,8 +66,8 @@ func Test_ResumeParseError(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+
+    s.saga.save(s.ctx, saveState)
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.Equal(t, appErr.ToLambdaError(errors.DumbError), err)
@@ -75,6 +76,7 @@ func Test_ResumeParseError(t *testing.T) {
 
 func Test_ResumeOnHandler(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("end")
@@ -88,12 +90,15 @@ func Test_ResumeOnHandler(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
+        data: map[string]interface{}{
+            "id": "3",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -111,19 +116,18 @@ func Test_ResumeOnHandler(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     SUCCESS,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":5}`),
+        Data:       []byte(`{"id":"5"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -151,7 +155,7 @@ func Test_ResumeOnHandler(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -168,6 +172,7 @@ func Test_ResumeOnHandler(t *testing.T) {
 
 func Test_ResumeBeforeCompensate(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("compensate").
@@ -183,12 +188,15 @@ func Test_ResumeBeforeCompensate(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
+        data: map[string]interface{}{
+            "id": "3",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -206,20 +214,19 @@ func Test_ResumeBeforeCompensate(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":7}`),
+        Data:       []byte(`{"id":"7"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -261,7 +268,7 @@ func Test_ResumeBeforeCompensate(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -278,6 +285,7 @@ func Test_ResumeBeforeCompensate(t *testing.T) {
 
 func Test_ResumeAfterCompensate(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("compensate").
@@ -293,12 +301,15 @@ func Test_ResumeAfterCompensate(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
+        data: map[string]interface{}{
+            "id": "3",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -330,20 +341,19 @@ func Test_ResumeAfterCompensate(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":5}`),
+        Data:       []byte(`{"id":"5"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -385,7 +395,7 @@ func Test_ResumeAfterCompensate(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 0, s.handle.spy.Count("s2"))
@@ -402,6 +412,7 @@ func Test_ResumeAfterCompensate(t *testing.T) {
 
 func Test_ResumePartialErrorBeforeComp(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("partial_error").
@@ -418,12 +429,15 @@ func Test_ResumePartialErrorBeforeComp(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
+        data: map[string]interface{}{
+            "id": "3",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -441,20 +455,19 @@ func Test_ResumePartialErrorBeforeComp(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":10}`),
+        Data:       []byte(`{"id":"10"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -503,7 +516,7 @@ func Test_ResumePartialErrorBeforeComp(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -520,6 +533,7 @@ func Test_ResumePartialErrorBeforeComp(t *testing.T) {
 
 func Test_ResumePartialErrorAfterComp(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("partial_error").
@@ -536,12 +550,15 @@ func Test_ResumePartialErrorAfterComp(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":8}`),
+        Data:       []byte(`{"id":"8"}`),
+        data: map[string]interface{}{
+            "id": "8",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -580,20 +597,19 @@ func Test_ResumePartialErrorAfterComp(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":10}`),
+        Data:       []byte(`{"id":"10"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -642,7 +658,7 @@ func Test_ResumePartialErrorAfterComp(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 0, s.handle.spy.Count("s2"))
@@ -659,6 +675,7 @@ func Test_ResumePartialErrorAfterComp(t *testing.T) {
 
 func Test_ResumePartialCompBeforeComp(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("partial_compensate").
@@ -675,12 +692,15 @@ func Test_ResumePartialCompBeforeComp(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":3}`),
+        Data:       []byte(`{"id":"3"}`),
+        data: map[string]interface{}{
+            "id": "3",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -698,20 +718,19 @@ func Test_ResumePartialCompBeforeComp(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":8}`),
+        Data:       []byte(`{"id":"8"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -760,7 +779,7 @@ func Test_ResumePartialCompBeforeComp(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))
@@ -777,6 +796,7 @@ func Test_ResumePartialCompBeforeComp(t *testing.T) {
 
 func Test_ResumePartialCompAfterComp(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("partial_compensate").
@@ -793,12 +813,15 @@ func Test_ResumePartialCompAfterComp(t *testing.T) {
         Name:       "Test",
         Status:     FAILED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      errors.DumbError,
-        Data:       []byte(`{"id":6}`),
+        Data:       []byte(`{"id":"6"}`),
+        data: map[string]interface{}{
+            "id": "6",
+        },
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -837,20 +860,19 @@ func Test_ResumePartialCompAfterComp(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     COMPENSATED,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: true,
         Error:      nil,
-        Data:       []byte(`{"id":8}`),
+        Data:       []byte(`{"id":"8"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -899,7 +921,7 @@ func Test_ResumePartialCompAfterComp(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 0, s.handle.spy.Count("s2"))
@@ -916,6 +938,7 @@ func Test_ResumePartialCompAfterComp(t *testing.T) {
 
 func Test_ResumeFromStop(t *testing.T) {
     s := setupHandlerSuite().
+        WithEventMsg("1").
         WithS1Handler("next").
         WithS2Handler("next").
         WithS3Handler("end")
@@ -929,12 +952,15 @@ func Test_ResumeFromStop(t *testing.T) {
         Name:       "Test",
         Status:     WAIT,
         Action:     STOP,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
-        Data:       []byte(`{"id":3}`),
-        Error:      nil,
+        Data:       []byte(`{"id":"3"}`),
+        data: map[string]interface{}{
+            "id": "3",
+        },
+        Error: nil,
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -951,20 +977,19 @@ func Test_ResumeFromStop(t *testing.T) {
             },
         },
     }
-    xerr := s.storage.Save(s.ctx, saveState)
-    require.NoError(t, xerr)
+    s.saga.save(s.ctx, saveState)
 
     expState := &State{
         ID:         "state1",
         Name:       "Test",
         Status:     SUCCESS,
         Action:     END,
-        Input:      []byte(`{"id":1}`),
+        EventMsg:   s.msg,
         StartTime:  now.Unix(),
         LastTime:   now.Unix(),
         Compensate: false,
         Error:      nil,
-        Data:       []byte(`{"id":5}`),
+        Data:       []byte(`{"id":"5"}`),
         Steps: []*Step{
             {
                 Name:      "s1",
@@ -992,7 +1017,7 @@ func Test_ResumeFromStop(t *testing.T) {
 
     res, err := s.saga.Invoke(s.ctx, []byte(`{"resume":"state1"}`))
     require.NoError(t, err)
-    require.Equal(t, "state1", string(res))
+    require.Equal(t, "success", string(res))
     require.Equal(t, 0, s.handle.spy.Count("start"))
     require.Equal(t, 0, s.handle.spy.Count("s1"))
     require.Equal(t, 1, s.handle.spy.Count("s2"))

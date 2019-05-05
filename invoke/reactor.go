@@ -3,11 +3,12 @@ package invoke
 import (
     "github.com/onedaycat/errors"
     "github.com/onedaycat/zamus/event"
+    "github.com/onedaycat/zamus/internal/common"
 )
 
 type ReactorRequest struct {
-    MsgList *event.MsgList `json:"msgList,omitempty"`
-    fn      string
+    Msgs []byte `json:"msgs"`
+    fn   string
 }
 
 func NewReactorRequest(fn string) *ReactorRequest {
@@ -17,11 +18,11 @@ func NewReactorRequest(fn string) *ReactorRequest {
 }
 
 func (e *ReactorRequest) WithEventList(msgList *event.MsgList) *ReactorRequest {
-    e.MsgList = msgList
+    e.Msgs, _ = event.MarshalMsg(msgList)
 
     return e
 }
 
 func (e *ReactorRequest) MarshalRequest() ([]byte, errors.Error) {
-    return event.MarshalMsg(e.MsgList)
+    return common.MarshalJSON(e)
 }

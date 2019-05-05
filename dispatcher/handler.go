@@ -16,7 +16,7 @@ import (
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/invoke"
-    "github.com/onedaycat/zamus/reactor/dynamostream"
+    "github.com/onedaycat/zamus/reactor/source/dynamostream"
     "github.com/onedaycat/zamus/zamuscontext"
 )
 
@@ -54,7 +54,7 @@ type Handler struct {
     wgPublish *errgroup.Group
     invoker   invoke.Invoker
     kinClient KinesisPublisher
-    recs      *dynamostream.EventSource
+    recs      *dynamostream.Source
     zcctx     *zamuscontext.ZamusContext
 }
 
@@ -62,7 +62,7 @@ func New(config *Config) *Handler {
     h := &Handler{
         desconfig: make([]desConfig, 0, 20),
         wgPublish: &errgroup.Group{},
-        recs: &dynamostream.EventSource{
+        recs: &dynamostream.Source{
             Records: make(dynamostream.Records, 0, 100),
         },
         zcctx: &zamuscontext.ZamusContext{
@@ -116,7 +116,7 @@ func (h *Handler) SQS(config *SQSConfig) {
     h.desconfig = append(h.desconfig, config)
 }
 
-func (h *Handler) Handle(ctx context.Context, stream *dynamostream.EventSource) (err errors.Error) {
+func (h *Handler) Handle(ctx context.Context, stream *dynamostream.Source) (err errors.Error) {
     defer h.recovery(ctx, &err)
     for _, conf := range h.desconfig {
         conf.clear()

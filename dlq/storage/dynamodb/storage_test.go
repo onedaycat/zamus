@@ -55,8 +55,8 @@ func TestSaveAndGet(t *testing.T) {
 
     d := dlq.New(db, &dlq.Config{
         Service:    "srv1",
-        Source:     "lamb1",
-        SourceType: dlq.Lambda,
+        Fn:         "lamb1",
+        LambdaType: dlq.Reactor,
         MaxRetry:   3,
         Version:    "1.0.0",
     })
@@ -65,7 +65,7 @@ func TestSaveAndGet(t *testing.T) {
     err := d.Save(context.Background(), msgsListByte)
     require.NoError(t, err)
 
-    dlqMsg, err := db.Get(context.Background(), "srv1", "123")
+    dlqMsg, err := db.Get(context.Background(), dlq.Reactor, "123")
     require.NoError(t, err)
     require.NotNil(t, dlqMsg)
     require.Equal(t, "srv1", dlqMsg.Service)
@@ -83,8 +83,8 @@ func TestMultiSave(t *testing.T) {
 
     d := dlq.New(db, &dlq.Config{
         Service:    "srv1",
-        Source:     "lamb1",
-        SourceType: dlq.Lambda,
+        Fn:         "lamb1",
+        LambdaType: dlq.Reactor,
         MaxRetry:   3,
         Version:    "1.0.0",
     })

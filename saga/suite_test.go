@@ -2,47 +2,57 @@ package saga
 
 import (
     "context"
+    "strconv"
 
     "github.com/onedaycat/errors"
-    appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/dlq"
+    "github.com/onedaycat/zamus/dlq/storage/memory"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
+    "github.com/onedaycat/zamus/invoke"
+    "github.com/onedaycat/zamus/testdata/domain"
 )
 
-type stubStorage struct {
-    data      map[string]*State
-    getError  bool
-    saveError bool
-}
+type stubSource struct{}
 
-func (s *stubStorage) Clear() {
-    s.data = make(map[string]*State)
-}
-
-func (s *stubStorage) Get(ctx context.Context, stateName, id string) (*State, errors.Error) {
-    if s.getError {
-        return nil, errors.DumbError
+func (s *stubSource) GetRequest(ctx context.Context, payload []byte) ([]*Request, errors.Error) {
+    rec := &invoke.SagaRequest{}
+    if err := common.UnmarshalJSON(payload, rec); err != nil {
+        return nil, err
     }
 
-    state, ok := s.data[stateName+id]
-    if !ok {
-        return nil, appErr.ErrStateNotFound
+    reqs := make([]*Request, 0, 1)
+
+    if rec.Resume != "" {
+        reqs = append(reqs, &Request{
+            Resume: rec.Resume,
+        })
+
+        return reqs, nil
     }
 
-    return state, nil
-}
+    if rec.EventMsg != nil {
+        msg := &event.Msg{}
+        _ = event.UnmarshalMsg(rec.EventMsg, msg)
 
-func (s *stubStorage) Save(ctx context.Context, state *State) errors.Error {
-    if s.saveError {
-        return errors.DumbError
+        reqs = append(reqs, &Request{
+            EventMsg: msg,
+        })
+
+        return reqs, nil
     }
 
-    s.data[state.Name+state.ID] = state
-
-    return nil
+    return reqs, nil
 }
 
 type testdata struct {
-    ID int `json:"id"`
+    ID string `json:"id"`
+}
+
+func (s *testdata) Inc() {
+    i, _ := strconv.Atoi(s.ID)
+    i++
+    s.ID = strconv.Itoa(i)
 }
 
 type testHandler struct {
@@ -64,6 +74,7 @@ type testHandler struct {
 func (h *testHandler) StateDefinitions() *StateDefinitions {
     return &StateDefinitions{
         Name:                "Test",
+        Event:               event.EventType((*domain.StockItemCreated)(nil)),
         ReturnFailedOnError: false,
         Definitions: []*StateDefinition{
             {
@@ -94,13 +105,16 @@ func (h *testHandler) StateDefinitions() *StateDefinitions {
     }
 }
 
-func (h *testHandler) Start(ctx context.Context, input Payload) (string, interface{}, errors.Error) {
+func (h *testHandler) Start(ctx context.Context, msg *event.Msg) (string, interface{}, errors.Error) {
     h.spy.Called("start")
     data := &testdata{}
-    if err := input.Unmarshal(data); err != nil {
+    evt := &domain.StockItemCreated{}
+    err := msg.UnmarshalEvent(evt)
+    if err != nil {
         return "", nil, err
     }
 
+    data = &testdata{ID: evt.Id}
     if h.startError {
         return h.startStep, data, errors.DumbError
     }
@@ -108,7 +122,7 @@ func (h *testHandler) Start(ctx context.Context, input Payload) (string, interfa
     return h.startStep, data, nil
 }
 
-func (h *testHandler) ParseData(dataPayload Payload) (interface{}, errors.Error) {
+func (h *testHandler) ParseResume(dataPayload Payload) (interface{}, errors.Error) {
     h.spy.Called("resume")
     if h.parseError {
         return nil, errors.DumbError
@@ -125,7 +139,7 @@ func (h *testHandler) ParseData(dataPayload Payload) (interface{}, errors.Error)
 func (h *testHandler) S1Handler(ctx context.Context, data interface{}, action StepAction) {
     h.spy.Called("s1")
     tdata := data.(*testdata)
-    tdata.ID++
+    tdata.Inc()
     switch h.s1handlerMode {
     case "next":
         action.Next("s2", tdata)
@@ -149,7 +163,7 @@ func (h *testHandler) S1Handler(ctx context.Context, data interface{}, action St
 func (h *testHandler) S1Compensate(ctx context.Context, data interface{}, action CompensateAction) {
     h.spy.Called("s1comp")
     tdata := data.(*testdata)
-    tdata.ID++
+    tdata.Inc()
     switch h.s1CompMode {
     case "error":
         action.Error(errors.DumbError)
@@ -163,7 +177,7 @@ func (h *testHandler) S1Compensate(ctx context.Context, data interface{}, action
 func (h *testHandler) S2Handler(ctx context.Context, data interface{}, action StepAction) {
     h.spy.Called("s2")
     tdata := data.(*testdata)
-    tdata.ID++
+    tdata.Inc()
 
     if h.s2Panic {
         panic(errors.DumbError)
@@ -200,7 +214,7 @@ func (h *testHandler) S2Handler(ctx context.Context, data interface{}, action St
 func (h *testHandler) S2Compensate(ctx context.Context, data interface{}, action CompensateAction) {
     h.spy.Called("s2comp")
     tdata := data.(*testdata)
-    tdata.ID++
+    tdata.Inc()
     switch h.s2CompMode {
     case "error":
         action.Error(errors.DumbError)
@@ -214,7 +228,7 @@ func (h *testHandler) S2Compensate(ctx context.Context, data interface{}, action
 func (h *testHandler) S3Handler(ctx context.Context, data interface{}, action StepAction) {
     h.spy.Called("s3")
     tdata := data.(*testdata)
-    tdata.ID++
+    tdata.Inc()
     switch h.s3handlerMode {
     case "next":
         action.Next("s4", tdata)
@@ -238,7 +252,7 @@ func (h *testHandler) S3Handler(ctx context.Context, data interface{}, action St
 func (h *testHandler) S3Compensate(ctx context.Context, data interface{}, action CompensateAction) {
     h.spy.Called("s3comp")
     tdata := data.(*testdata)
-    tdata.ID++
+    tdata.Inc()
     switch h.s3CompMode {
     case "error":
         action.Error(errors.DumbError)
@@ -252,9 +266,12 @@ func (h *testHandler) S3Compensate(ctx context.Context, data interface{}, action
 type handlerSuite struct {
     saga    *Saga
     handle  *testHandler
-    storage *stubStorage
+    storage dlq.Storage
     ctx     context.Context
     defs    *StateDefinitions
+    msg     *event.Msg
+    msgByte []byte
+    req     *Request
 }
 
 func setupHandlerSuite() *handlerSuite {
@@ -265,13 +282,14 @@ func setupHandlerSuite() *handlerSuite {
         startStep: "s1",
     }
 
-    h.storage = &stubStorage{
-        data: make(map[string]*State),
-    }
+    h.storage = memory.New()
 
     h.defs = h.handle.StateDefinitions()
-    h.saga = New(h.handle, h.storage, &Config{})
-    h.saga.FastRetry()
+    h.saga = New(&stubSource{}, &Config{
+        Handlers:   []SagaHandle{h.handle},
+        FastRetry:  true,
+        DLQStorage: h.storage,
+    })
     h.ctx = context.Background()
     h.saga.ErrorHandlers(PrintPanic)
 
@@ -333,17 +351,25 @@ func (h *handlerSuite) WithS2PanicString() *handlerSuite {
     return h
 }
 
-func (h *handlerSuite) WithGetResumeError() *handlerSuite {
-    h.storage.getError = true
-    return h
-}
-
 func (h *handlerSuite) WithGetResumeParseError() *handlerSuite {
     h.handle.parseError = true
     return h
 }
 
 func (h *handlerSuite) WithReutnFailedOnError() *handlerSuite {
-    h.saga.state.defs.ReturnFailedOnError = true
+    for _, state := range h.saga.states {
+        state.defs.ReturnFailedOnError = true
+    }
+
+    return h
+}
+
+func (h *handlerSuite) WithEventMsg(id string) *handlerSuite {
+    evt := &domain.StockItemCreated{Id: id}
+    evtByte, _ := event.MarshalEvent(evt)
+    h.msg = &event.Msg{Id: "e1", AggID: id, Event: evtByte, EventType: event.EventType((*domain.StockItemCreated)(nil))}
+    h.msgByte, _ = invoke.NewSagaRequest("fn").WithEventMsg(h.msg).MarshalRequest()
+    h.req = &Request{EventMsg: h.msg}
+
     return h
 }

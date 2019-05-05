@@ -3,28 +3,28 @@ package random
 import (
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
-    "github.com/onedaycat/zamus/reactor/kinesisstream"
+    "github.com/onedaycat/zamus/reactor/source/kinesisstream"
 )
 
 type kinesisBuilder struct {
-    event      *kinesisstream.EventSource
+    event      *kinesisstream.Source
     eventTypes common.Set
 }
 
 func KinesisEvents() *kinesisBuilder {
     return &kinesisBuilder{
-        event: &kinesisstream.EventSource{
+        event: &kinesisstream.Source{
             Records: make([]*kinesisstream.Record, 0, 100),
         },
         eventTypes: common.NewSet(),
     }
 }
 
-func (b *kinesisBuilder) Build() *kinesisstream.EventSource {
+func (b *kinesisBuilder) Build() *kinesisstream.Source {
     return b.event
 }
 
-func (b *kinesisBuilder) BuildWithEventTypes() (*kinesisstream.EventSource, []string) {
+func (b *kinesisBuilder) BuildWithEventTypes() (*kinesisstream.Source, []string) {
     return b.event, b.eventTypes.List()
 }
 

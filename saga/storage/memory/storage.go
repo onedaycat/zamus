@@ -24,13 +24,15 @@ func (s *SagaStorage) Clear() {
     s.data = make(map[string]*saga.State)
 }
 
-func (s *SagaStorage) Get(ctx context.Context, stateName, id string) (*saga.State, errors.Error) {
-    state, ok := s.data[stateName+delim+id]
+func (s *SagaStorage) Get(ctx context.Context, stateName, id string, state *saga.State) errors.Error {
+    ss, ok := s.data[stateName+delim+id]
     if !ok {
-        return nil, appErr.ErrStateNotFound.WithCaller().WithInput(stateName + delim + id)
+        return appErr.ErrStateNotFound.WithCaller().WithInput(stateName + delim + id)
     }
 
-    return state, nil
+    *state = *ss
+
+    return nil
 }
 
 func (s *SagaStorage) Save(ctx context.Context, state *saga.State) errors.Error {

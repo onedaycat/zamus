@@ -1,4 +1,4 @@
-package kinesisstream
+package dynamostream
 
 import (
     "context"
@@ -10,7 +10,7 @@ import (
 )
 
 type source struct {
-    recs *EventSource
+    recs *Source
     msgs event.Msgs
 }
 
@@ -31,8 +31,23 @@ func (s *source) GetRequest(ctx context.Context, payload []byte) (*reactor.Reque
 
     s.msgs = s.msgs[:0]
 
+    if s.recs.Msgs != nil {
+        msgList := &event.MsgList{}
+        if err := event.UnmarshalMsg(s.recs.Msgs, msgList); err != nil {
+            return nil, err
+        }
+
+        for _, msg := range msgList.Msgs {
+            s.msgs = append(s.msgs, msg)
+        }
+    }
+
     for _, rec := range s.recs.Records {
-        s.msgs = append(s.msgs, rec.Kinesis.Data.EventMsg)
+        if rec.EventName != EventInsert || rec.DynamoDB.NewImage == nil {
+            continue
+        }
+
+        s.msgs = append(s.msgs, rec.DynamoDB.NewImage.EventMsg)
     }
 
     req.Msgs = s.msgs
@@ -40,9 +55,9 @@ func (s *source) GetRequest(ctx context.Context, payload []byte) (*reactor.Reque
     return req, nil
 }
 
-func New() reactor.EventSource {
+func New() reactor.Source {
     return &source{
-        recs: &EventSource{
+        recs: &Source{
             Records: make(Records, 0, 100),
         },
         msgs: make(event.Msgs, 0, 100),

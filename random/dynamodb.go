@@ -3,24 +3,24 @@ package random
 import (
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
-    "github.com/onedaycat/zamus/reactor/dynamostream"
+    "github.com/onedaycat/zamus/reactor/source/dynamostream"
 )
 
 type dynamodbBuilder struct {
-    event      *dynamostream.EventSource
+    event      *dynamostream.Source
     eventTypes common.Set
 }
 
 func DynamoDB() *dynamodbBuilder {
     return &dynamodbBuilder{
-        event: &dynamostream.EventSource{
+        event: &dynamostream.Source{
             Records: make([]*dynamostream.Record, 0, 100),
         },
         eventTypes: common.NewSet(),
     }
 }
 
-func (b *dynamodbBuilder) Build() *dynamostream.EventSource {
+func (b *dynamodbBuilder) Build() *dynamostream.Source {
     return b.event
 }
 

@@ -37,3 +37,7 @@ func (s *invokeService) Save(ctx context.Context, dlqMsg *dlq.DLQMsg) errors.Err
 
     return nil
 }
+
+func (s *invokeService) Get(ctx context.Context, lambdaType dlq.LambdaType, id string) (*dlq.DLQMsg, errors.Error) {
+    return nil, nil
+}

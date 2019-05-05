@@ -21,9 +21,9 @@ func TestSaveSuccess(t *testing.T) {
         Service:    "hello",
         Time:       111,
         Version:    "1.0.0",
-        SourceType: dlq.Lambda,
-        Source:     "sel-hello-dev-srv",
-        EventMsgs:  []byte(`hello`),
+        LambdaType: dlq.Reactor,
+        Fn:         "sel-hello-dev-srv",
+        Data:       []byte(`hello`),
         Errors:     nil,
     }
 

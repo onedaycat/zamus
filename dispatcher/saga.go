@@ -53,7 +53,7 @@ func (c *SagaConfig) publish() errors.Error {
         msgs := msgs
         c.wgSaga.Go(func() errors.Error {
             for _, msg := range msgs {
-                req := invoke.NewSagaRequest(c.Fn).WithInput(c.Input(msg))
+                req := invoke.NewSagaRequest(c.Fn).WithEventMsg(msg)
                 _ = c.Client.InvokeSaga(c.ctx, req, nil)
             }
 

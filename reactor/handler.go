@@ -30,7 +30,7 @@ type Strategy interface {
     SetDLQ(dlq dlq.DLQ)
 }
 
-type EventSource interface {
+type Source interface {
     GetRequest(ctx context.Context, payload []byte) (*Request, errors.Error)
 }
 
@@ -47,21 +47,19 @@ type Config struct {
     SentryDSN           string
     DisableReponseError bool
     DLQMaxRetry         int
-    DLQSource           string
-    DLQSourceType       dlq.SourceType
     DLQStorage          dlq.Storage
 }
 
 type Handler struct {
     streamer            Strategy
-    source              EventSource
+    source              Source
     zcctx               *zamuscontext.ZamusContext
     warmer              *warmer.Warmer
     disableReponseError bool
 }
 
 //noinspection GoUnusedExportedFunction
-func NewHandler(source EventSource, streamer Strategy, config *Config) *Handler {
+func NewHandler(source Source, streamer Strategy, config *Config) *Handler {
     h := &Handler{
         zcctx: &zamuscontext.ZamusContext{
             AppStage:       config.AppStage,
@@ -78,8 +76,8 @@ func NewHandler(source EventSource, streamer Strategy, config *Config) *Handler 
     if config.DLQMaxRetry > 0 && config.DLQStorage != nil {
         h.streamer.SetDLQ(dlq.New(config.DLQStorage, &dlq.Config{
             Service:    config.Service,
-            Source:     config.DLQSource,
-            SourceType: config.DLQSourceType,
+            LambdaType: dlq.Reactor,
+            Fn:         lambdacontext.FunctionName,
             MaxRetry:   config.DLQMaxRetry,
             Version:    config.Version,
         }))

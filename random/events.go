@@ -4,7 +4,7 @@ import (
     "github.com/gogo/protobuf/proto"
     "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
-    "github.com/onedaycat/zamus/reactor/kinesisstream"
+    "github.com/onedaycat/zamus/reactor/source/kinesisstream"
 )
 
 type EventMsgsOption func(opts *eventMsgsOptions)
@@ -106,11 +106,11 @@ func (b *eventsBuilder) BuildJSON() []byte {
     return data
 }
 
-func (b *eventsBuilder) BuildKinesis() *kinesisstream.EventSource {
+func (b *eventsBuilder) BuildKinesis() *kinesisstream.Source {
     return KinesisEvents().Add(b.msgs...).Build()
 }
 
-func (b *eventsBuilder) BuildKinesisWithEventTypes() (*kinesisstream.EventSource, []string) {
+func (b *eventsBuilder) BuildKinesisWithEventTypes() (*kinesisstream.Source, []string) {
     return KinesisEvents().Add(b.msgs...).BuildWithEventTypes()
 }
 

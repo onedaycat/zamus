@@ -7,11 +7,13 @@ import (
     "github.com/aws/aws-sdk-go/service/lambda"
     "github.com/onedaycat/errors"
     appErr "github.com/onedaycat/zamus/errors"
+    "github.com/onedaycat/zamus/event"
     "github.com/onedaycat/zamus/internal/common"
     "github.com/onedaycat/zamus/internal/common/ptr"
     "github.com/onedaycat/zamus/invoke"
     "github.com/onedaycat/zamus/invoke/mocks"
     "github.com/onedaycat/zamus/random"
+    "github.com/onedaycat/zamus/testdata/domain"
     "github.com/stretchr/testify/mock"
     "github.com/stretchr/testify/require"
 )
@@ -410,9 +412,10 @@ func TestBatchInvokeAsync(t *testing.T) {
 
 func TestSagaInvoke(t *testing.T) {
     ctx := context.Background()
-    input := map[string]interface{}{
-        "id": "1",
-    }
+    evt := &domain.StockItemCreated{Id: "1"}
+    evtByte, _ := event.MarshalEvent(evt)
+    msg := &event.Msg{Event: evtByte, EventType: event.EventType((*domain.StockItemCreated)(nil))}
+
     fn := "fn1"
     mockResult := "state1"
     mockResultByte, _ := common.MarshalJSON(mockResult)
@@ -422,7 +425,7 @@ func TestSagaInvoke(t *testing.T) {
         ld := &mocks.LambdaInvokeClient{}
         in := invoke.NewInvoke(ld)
 
-        req := invoke.NewSagaRequest(fn).WithInput(input)
+        req := invoke.NewSagaRequest(fn).WithEventMsg(msg)
         reqByte, _ := req.MarshalRequest()
 
         ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -447,7 +450,7 @@ func TestSagaInvoke(t *testing.T) {
         ld := &mocks.LambdaInvokeClient{}
         in := invoke.NewInvoke(ld)
 
-        req := invoke.NewSagaRequest(fn).WithInput(input)
+        req := invoke.NewSagaRequest(fn).WithEventMsg(msg)
         reqByte, _ := req.MarshalRequest()
 
         ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -472,7 +475,7 @@ func TestSagaInvoke(t *testing.T) {
         ld := &mocks.LambdaInvokeClient{}
         in := invoke.NewInvoke(ld)
 
-        req := invoke.NewSagaRequest(fn).WithInput(input)
+        req := invoke.NewSagaRequest(fn).WithEventMsg(msg)
         reqByte, _ := req.MarshalRequest()
 
         ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -490,9 +493,9 @@ func TestSagaInvoke(t *testing.T) {
 
 func TestInvokeSagaAsync(t *testing.T) {
     ctx := context.Background()
-    input := map[string]interface{}{
-        "id": "1",
-    }
+    evt := &domain.StockItemCreated{Id: "1"}
+    evtByte, _ := event.MarshalEvent(evt)
+    msg := &event.Msg{Event: evtByte, EventType: event.EventType((*domain.StockItemCreated)(nil))}
 
     fn := "fn1"
 
@@ -500,7 +503,7 @@ func TestInvokeSagaAsync(t *testing.T) {
         ld := &mocks.LambdaInvokeClient{}
         in := invoke.NewInvoke(ld)
 
-        req := invoke.NewSagaRequest(fn).WithInput(input)
+        req := invoke.NewSagaRequest(fn).WithEventMsg(msg)
         reqByte, _ := req.MarshalRequest()
 
         ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
@@ -519,7 +522,7 @@ func TestInvokeSagaAsync(t *testing.T) {
         ld := &mocks.LambdaInvokeClient{}
         in := invoke.NewInvoke(ld)
 
-        req := invoke.NewSagaRequest(fn).WithInput(input)
+        req := invoke.NewSagaRequest(fn).WithEventMsg(msg)
         reqByte, _ := req.MarshalRequest()
 
         ld.On("InvokeWithContext", mock.Anything, &lambda.InvokeInput{
