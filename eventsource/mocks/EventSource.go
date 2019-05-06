@@ -95,29 +95,6 @@ func (_m *EventSource) PublishEvents(ctx context.Context, evts ...proto.Message)
 	return r0
 }
 
-// PublishEventsWithMetadata provides a mock function with given fields: ctx, metadata, evts
-func (_m *EventSource) PublishEventsWithMetadata(ctx context.Context, metadata map[string]string, evts ...proto.Message) errors.Error {
-	_va := make([]interface{}, len(evts))
-	for _i := range evts {
-		_va[_i] = evts[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx, metadata)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
-
-	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, map[string]string, ...proto.Message) errors.Error); ok {
-		r0 = rf(ctx, metadata, evts...)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.Error)
-		}
-	}
-
-	return r0
-}
-
 // Save provides a mock function with given fields: ctx, agg
 func (_m *EventSource) Save(ctx context.Context, agg ddd.AggregateRoot) errors.Error {
 	ret := _m.Called(ctx, agg)
@@ -125,22 +102,6 @@ func (_m *EventSource) Save(ctx context.Context, agg ddd.AggregateRoot) errors.E
 	var r0 errors.Error
 	if rf, ok := ret.Get(0).(func(context.Context, ddd.AggregateRoot) errors.Error); ok {
 		r0 = rf(ctx, agg)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(errors.Error)
-		}
-	}
-
-	return r0
-}
-
-// SaveWithMetadata provides a mock function with given fields: ctx, agg, metadata
-func (_m *EventSource) SaveWithMetadata(ctx context.Context, agg ddd.AggregateRoot, metadata map[string]string) errors.Error {
-	ret := _m.Called(ctx, agg, metadata)
-
-	var r0 errors.Error
-	if rf, ok := ret.Get(0).(func(context.Context, ddd.AggregateRoot, map[string]string) errors.Error); ok {
-		r0 = rf(ctx, agg, metadata)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(errors.Error)
