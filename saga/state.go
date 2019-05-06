@@ -82,7 +82,7 @@ type State struct {
 
 func newState() *State {
     return &State{
-        Steps: make([]*Step, 0, 30),
+        Steps: make([]*Step, 0, 10),
         index: -1,
     }
 }
