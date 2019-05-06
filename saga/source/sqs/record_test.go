@@ -42,7 +42,7 @@ func TestParseSQSEvent(t *testing.T) {
 			{
                 "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
                 "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
-                "body": "test",
+                "body": "%s",
                 "attributes": {
                     "ApproximateReceiveCount": "1",
                     "SentTimestamp": "1545082649183",
@@ -50,10 +50,6 @@ func TestParseSQSEvent(t *testing.T) {
                     "ApproximateFirstReceiveTimestamp": "1545082649185"
                 },
                 "messageAttributes": {
-                    "msg": {
-                        "Type": "Binary",
-                        "Value": "%s"
-                    },
                     "event": {
                         "Type": "String",
                         "Value": "testdata.stock.v1.StockItemCreated"
@@ -67,7 +63,7 @@ func TestParseSQSEvent(t *testing.T) {
             {
                 "messageId": "059f36b4-87a3-44ab-83d2-661975830a7d",
                 "receiptHandle": "AQEBwJnKyrHigUMZj6rYigCgxlaS3SLy0a...",
-                "body": "test",
+                "body": "%s",
                 "attributes": {
                     "ApproximateReceiveCount": "1",
                     "SentTimestamp": "1545082649183",
@@ -75,10 +71,6 @@ func TestParseSQSEvent(t *testing.T) {
                     "ApproximateFirstReceiveTimestamp": "1545082649185"
                 },
                 "messageAttributes": {
-                    "msg": {
-                        "Type": "Binary",
-                        "Value": "%s"
-                    },
                     "event": {
                         "Type": "String",
                         "Value": "testdata.stock.v1.StockItemCreated"

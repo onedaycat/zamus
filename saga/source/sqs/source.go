@@ -32,7 +32,9 @@ func (s *source) GetRequest(ctx context.Context, payload []byte) ([]*saga.Reques
 
     if s.recs.EventMsg != nil {
         msg := &event.Msg{}
-        _ = event.UnmarshalMsg(s.recs.EventMsg, msg)
+        if err := event.UnmarshalMsg(s.recs.EventMsg, msg); err != nil {
+            return nil, err
+        }
 
         s.reqs = append(s.reqs, &saga.Request{
             EventMsg: msg,
@@ -43,7 +45,7 @@ func (s *source) GetRequest(ctx context.Context, payload []byte) ([]*saga.Reques
 
     for _, rec := range s.recs.Records {
         s.reqs = append(s.reqs, &saga.Request{
-            EventMsg: rec.MessageAttributes.Msg.Value.EventMsg,
+            EventMsg: rec.Body.EventMsg,
         })
     }
 

@@ -43,7 +43,7 @@ func (s *source) GetRequest(ctx context.Context, payload []byte) (*reactor.Reque
     }
 
     for _, rec := range s.recs.Records {
-        s.msgs = append(s.msgs, rec.MessageAttributes.Msg.Value.EventMsg)
+        s.msgs = append(s.msgs, rec.Body.EventMsg)
     }
 
     req.Msgs = s.msgs

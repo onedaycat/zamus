@@ -10,8 +10,6 @@ import (
 
 var (
     snsStringDataType = "String"
-    snsBinaryDataType = "Binary"
-    msgKey            = "msg"
     eventTypeKey      = "event"
 )
 
@@ -71,15 +69,11 @@ func (c *SNSConfig) setContext(ctx context.Context) {
 
 func (c *SNSConfig) publish() errors.Error {
     for _, msg := range c.records {
-        data, _ := event.MarshalMsg(msg)
+        data := getBase64Msg(msg)
         _, err := c.Client.PublishWithContext(c.ctx, &sns.PublishInput{
             TopicArn: &c.TopicArn,
-            Message:  &msg.Id,
+            Message:  &data,
             MessageAttributes: map[string]*sns.MessageAttributeValue{
-                msgKey: {
-                    DataType:    &snsBinaryDataType,
-                    BinaryValue: data,
-                },
                 eventTypeKey: {
                     DataType:    &snsStringDataType,
                     StringValue: &msg.EventType,

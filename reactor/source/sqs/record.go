@@ -18,20 +18,16 @@ func (e *Source) Clear() {
 }
 
 type Record struct {
+    Body              *Payload          `json:"body"`
     MessageAttributes *MessageAttribute `json:"messageAttributes"`
 }
 
 type MessageAttribute struct {
-    Msg       *DataMsg       `json:"msg"`
     EventType *DataEventType `json:"event"`
 }
 
 type Payload struct {
     EventMsg *event.Msg
-}
-
-type DataMsg struct {
-    Value *Payload `json:"Value"`
 }
 
 type DataEventType struct {

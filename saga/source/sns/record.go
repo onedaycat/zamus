@@ -23,20 +23,16 @@ type Record struct {
 }
 
 type SNS struct {
+    Message           *Payload          `json:"Message"`
     MessageAttributes *MessageAttribute `json:"MessageAttributes"`
 }
 
 type MessageAttribute struct {
-    Msg       *DataMsg       `json:"msg"`
     EventType *DataEventType `json:"event"`
 }
 
 type Payload struct {
     EventMsg *event.Msg `json:"value"`
-}
-
-type DataMsg struct {
-    Value *Payload `json:"value"`
 }
 
 type DataEventType struct {

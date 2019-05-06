@@ -49,12 +49,10 @@ func (b *sqsBuilder) RandomMessage(n int) *sqsBuilder {
 func (b *sqsBuilder) Add(events ...*event.Msg) *sqsBuilder {
     for _, evt := range events {
         b.event.Records = append(b.event.Records, &sqs.Record{
+            Body: &sqs.Payload{
+                EventMsg: evt,
+            },
             MessageAttributes: &sqs.MessageAttribute{
-                Msg: &sqs.DataMsg{
-                    Value: &sqs.Payload{
-                        EventMsg: evt,
-                    },
-                },
                 EventType: &sqs.DataEventType{
                     Value: evt.EventType,
                 },

@@ -46,22 +46,18 @@ func (b *snsBuilder) RandomMessage() *snsBuilder {
     return b
 }
 
-func (b *snsBuilder) Add(evt *event.Msg) *snsBuilder {
+func (b *snsBuilder) Add(msg *event.Msg) *snsBuilder {
     b.event.Records = append(b.event.Records, &sns.Record{
         SNS: &sns.SNS{
+            Message: &sns.Payload{EventMsg: msg},
             MessageAttributes: &sns.MessageAttribute{
-                Msg: &sns.DataMsg{
-                    Value: &sns.Payload{
-                        EventMsg: evt,
-                    },
-                },
                 EventType: &sns.DataEventType{
-                    Value: evt.EventType,
+                    Value: msg.EventType,
                 },
             },
         },
     })
-    b.eventTypes.Set(evt.EventType)
+    b.eventTypes.Set(msg.EventType)
 
     return b
 }

@@ -2,6 +2,7 @@ package dispatcher
 
 import (
     "context"
+    "encoding/base64"
     "fmt"
 
     "github.com/aws/aws-lambda-go/lambda"
@@ -25,6 +26,10 @@ var (
     ErrUnablePublishKinesis = errors.DefInternalError("ErrUnablePublishKinesis", "Unable to publish kinesis")
     ErrUnablePublishSNS     = errors.DefInternalError("ErrUnablePublishSNS", "Unable to publish sns")
     ErrUnablePublishSQS     = errors.DefInternalError("ErrUnablePublishSQS", "Unable to publish sqs")
+)
+
+var (
+    b64Msg map[string]string
 )
 
 //go:generate mockery -name=KinesisPublisher
@@ -118,6 +123,7 @@ func (h *Handler) SQS(config *SQSConfig) {
 
 func (h *Handler) Handle(ctx context.Context, stream *dynamostream.Source) (err errors.Error) {
     defer h.recovery(ctx, &err)
+    b64Msg = make(map[string]string)
     for _, conf := range h.desconfig {
         conf.clear()
         conf.setContext(ctx)
@@ -173,4 +179,16 @@ func (h *Handler) recovery(ctx context.Context, err *errors.Error) {
             *err = appErr.ErrPanic.WithCauseMessage(fmt.Sprintf("%v\n", cause)).WithCaller().WithInput(h.recs)
         }
     }
+}
+
+func getBase64Msg(msg *event.Msg) string {
+    b64, ok := b64Msg[msg.Id]
+    if !ok {
+        data, _ := event.MarshalMsg(msg)
+        b64 = base64.StdEncoding.EncodeToString(data)
+        b64Msg[msg.Id] = b64
+        return b64
+    }
+
+    return b64
 }

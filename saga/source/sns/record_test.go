@@ -49,12 +49,8 @@ func TestParseSNSEvent(t *testing.T) {
                     "Signature": "tcc6faL2yUC6dgZdmrwh1Y4cGa/ebXEkAi6RibDsvpi+tE/1+82j...65r==",
                     "SigningCertUrl": "https://sns.us-east-2.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem",
                     "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-                    "Message": "Hello from SNS!",
+                    "Message": "%s",
                     "MessageAttributes": {
-                        "msg": {
-                            "Type": "Binary",
-                            "Value": "%s"
-                        },
                         "event": {
                             "Type": "String",
                             "Value": "testdata.stock.v1.StockItemCreated"
@@ -76,12 +72,8 @@ func TestParseSNSEvent(t *testing.T) {
                     "Signature": "tcc6faL2yUC6dgZdmrwh1Y4cGa/ebXEkAi6RibDsvpi+tE/1+82j...65r==",
                     "SigningCertUrl": "https://sns.us-east-2.amazonaws.com/SimpleNotificationService-ac565b8b1a6c5d002d285f9598aa1d9b.pem",
                     "MessageId": "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
-                    "Message": "Hello from SNS!",
+                    "Message": "%s",
                     "MessageAttributes": {
-                        "msg": {
-                            "Type": "Binary",
-                            "Value": "%s"
-                        },
                         "event": {
                             "Type": "String",
                             "Value": "testdata.stock.v1.StockItemCreated"
