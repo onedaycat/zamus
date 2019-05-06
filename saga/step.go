@@ -29,10 +29,10 @@ type Step struct {
     Action     Action           `json:"action,omitempty"`
     Retried    int              `json:"retried,omitempty"`
     StepError  *errors.AppError `json:"error,omitempty"`
+    NextState  string           `json:"-"`
     def        *StateDefinition
     data       interface{}
     errPartial bool
-    nextState  string
 }
 
 func (s *Step) Next(stateName string, data interface{}) {
@@ -40,7 +40,7 @@ func (s *Step) Next(stateName string, data interface{}) {
     s.Status = SUCCESS
     s.StepError = nil
     s.data = data
-    s.nextState = stateName
+    s.NextState = stateName
 }
 
 func (s *Step) Back(data interface{}) {

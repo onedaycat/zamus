@@ -48,7 +48,7 @@ func (s *State) startStep(stateName string, data interface{}) errors.Error {
 }
 
 func (s *State) nextStep() {
-    statename := s.step.nextState
+    statename := s.step.NextState
     def := s.defs.GetState(statename)
     if def == nil {
         err := appErr.ErrNextStateNotFound(statename).WithCaller().WithInput(statename)

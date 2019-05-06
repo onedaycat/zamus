@@ -41,14 +41,13 @@ type CompensateAction interface {
 }
 
 type Step struct {
-    Name       string
-    Status     Status
-    Action     Action
-    StepError  *errors.AppError
-    def        *StateDefinition
-    data       interface{}
-    errPartial bool
-    nextState  string
+    Name      string
+    Status    Status
+    Action    Action
+    StepError *errors.AppError
+    NextState string `json:"-"`
+    def       *StateDefinition
+    data      interface{}
 }
 
 func (s *Step) Next(stateName string, data interface{}) {
@@ -56,7 +55,7 @@ func (s *Step) Next(stateName string, data interface{}) {
     s.Status = SUCCESS
     s.StepError = nil
     s.data = data
-    s.nextState = stateName
+    s.NextState = stateName
 }
 
 func (s *Step) Back(data interface{}) {

@@ -19,6 +19,8 @@ type SagaHandle interface {
 //go:generate mockery -name=Saga
 type Saga interface {
     Start(ctx context.Context, stateName string, data interface{}) errors.Error
+    GetData() interface{}
+    GetState() *State
 }
 
 type SagaCmd struct {
@@ -128,4 +130,8 @@ func (s *SagaCmd) recovery(ctx context.Context, err *errors.Error) {
 
 func (s *SagaCmd) GetState() *State {
     return s.state
+}
+
+func (s *SagaCmd) GetData() interface{} {
+    return s.state.Data
 }
