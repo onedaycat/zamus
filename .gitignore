@@ -26,4 +26,7 @@ jack2
 /lastcommit
 .DS_Store
 .idea
-
+*.zip
+*.tfstate
+*.tfstate.backup
+.terraform
