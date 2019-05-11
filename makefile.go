@@ -9,7 +9,7 @@ import (
 )
 
 func Release() {
-    ver := "v0.80.0"
+    ver := "v0.81.0"
     mg.BuildLinux("./setup/eventsource", "./setup/eventsource/bin/app")
     mg.BuildLinux("./setup/dlq", "./setup/dlq/bin/app")
     mg.ExecX("zip ./eventsource.zip app").Dir("./setup/eventsource/bin").Run()

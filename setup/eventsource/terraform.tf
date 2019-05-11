@@ -219,11 +219,11 @@ resource "aws_glue_catalog_table" "eventsource_glue_table" {
         type = "string"
       },
       {
-        name = "aggID"
+        name = "aggid"
         type = "string"
       },
       {
-        name = "eventType"
+        name = "eventtype"
         type = "string"
       },
       {
