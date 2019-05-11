@@ -316,7 +316,7 @@ output "eventsource_sns_arn" {
 
 output "eventsource_kinesis" {
   description = "Event Source Kinesis"
-  value = "${aws_kinesis_stream.eventsource_kinesis.0.id}"
+  value = "${aws_kinesis_stream.eventsource_kinesis.0.name}"
 }
 
 output "eventsource_kinesis_arn" {
