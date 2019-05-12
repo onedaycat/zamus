@@ -2,6 +2,7 @@ package saga
 
 import (
     "context"
+    "encoding/json"
     "fmt"
     "time"
 
@@ -388,7 +389,7 @@ func (s *Saga) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
     return []byte("success"), nil
 }
 
-func (s *Saga) Handler(ctx context.Context, payload jsoniter.RawMessage) (interface{}, error) {
+func (s *Saga) Handler(ctx context.Context, payload json.RawMessage) (interface{}, error) {
     reqs, err := s.source.GetRequest(ctx, payload)
     if err != nil {
         return nil, appErr.ToLambdaError(appErr.ErrInvalidRequest.WithCause(err).WithCaller().WithInput(string(payload)))
