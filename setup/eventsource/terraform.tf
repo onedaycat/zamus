@@ -137,7 +137,10 @@ data "aws_iam_policy_document" "firehose_to_s3_policies_doc" {
     actions = [
       "s3:AbortMultipartUpload",
       "s3:GetBucketLocation",
-      "s3:GetObject"
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:ListBucketMultipartUploads",
+      "s3:PutObject",
     ]
     resources = [
       "*"
