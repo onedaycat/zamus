@@ -27,6 +27,12 @@ variable "region" {
   default = "ap-southeast-1"
 }
 
+variable "glue_database" {
+  description = "Glue Database Name"
+  type = "string"
+  default = "eventsource"
+}
+
 resource "aws_iam_role" "eventsource_transform_role" {
   name = "${var.project}-eventsource-transform-role"
   assume_role_policy = <<EOF
@@ -193,12 +199,12 @@ resource "aws_kinesis_stream" "eventsource_kinesis" {
 }
 
 resource "aws_glue_catalog_database" "eventsource_glue" {
-  name = "${var.project}_${var.stage}"
+  name = "${var.glue_database}_${var.stage}"
 }
 
 resource "aws_glue_catalog_table" "eventsource_glue_table" {
   database_name = "${aws_glue_catalog_database.eventsource_glue.name}"
-  name = "${var.project}_events_${var.stage}"
+  name = "events"
   table_type = "EXTERNAL_TABLE"
 
   partition_keys {

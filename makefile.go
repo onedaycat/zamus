@@ -14,7 +14,9 @@ func Release() {
     mg.BuildLinux("./setup/dlq", "./setup/dlq/bin/app")
     mg.ExecX("zip ./eventsource.zip app").Dir("./setup/eventsource/bin").Run()
     mg.ExecX("zip ./dlq.zip app").Dir("./setup/dlq/bin").Run()
-    mg.ExecX(fmt.Sprintf("hub release create -a ./setup/eventsource/bin/eventsource.zip -a ./setup/dlq/bin/dlq.zip -m %s %s", ver, ver)).Run()
+    mg.ExecX("zip ./tf_module_dlq.zip terraform.tf").Dir("./setup/dlq").Run()
+    mg.ExecX("zip ./tf_module_eventsource.zip terraform.tf").Dir("./setup/eventsource").Run()
+    mg.ExecX(fmt.Sprintf("hub release create -a ./setup/eventsource/tf_module_eventsource.zip -a ./setup/dlq/tf_module_dlq.zip -a ./setup/eventsource/bin/eventsource.zip -a ./setup/dlq/bin/dlq.zip -m %s %s", ver, ver)).Run()
 }
 
 type Deploy mg.Namespace
