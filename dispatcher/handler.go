@@ -3,6 +3,7 @@ package dispatcher
 import (
     "context"
     "encoding/base64"
+    "encoding/json"
     "fmt"
 
     "github.com/aws/aws-lambda-go/lambda"
@@ -150,6 +151,23 @@ func (h *Handler) Handle(ctx context.Context, stream *dynamostream.Source) (err 
 }
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+    h.recs.Clear()
+    if err := common.UnmarshalJSON(payload, h.recs); err != nil {
+        Sentry(ctx, h.recs, err)
+        return nil, appErr.ToLambdaError(err)
+    }
+
+    zmctx := zamuscontext.NewContext(ctx, h.zcctx)
+    if err := h.Handle(zmctx, h.recs); err != nil {
+        Sentry(ctx, h.recs, err)
+        TraceError(ctx, err)
+        return nil, appErr.ToLambdaError(err)
+    }
+
+    return nil, nil
+}
+
+func (h *Handler) Handler(ctx context.Context, payload json.RawMessage) (interface{}, error) {
     h.recs.Clear()
     if err := common.UnmarshalJSON(payload, h.recs); err != nil {
         Sentry(ctx, h.recs, err)

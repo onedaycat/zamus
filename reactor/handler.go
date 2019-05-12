@@ -2,6 +2,7 @@ package reactor
 
 import (
     "context"
+    "encoding/json"
 
     "github.com/aws/aws-lambda-go/lambda"
     "github.com/aws/aws-lambda-go/lambdacontext"
@@ -135,6 +136,20 @@ func (h *Handler) Handle(ctx context.Context, req *Request) errors.Error {
 }
 
 func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
+    req, err := h.source.GetRequest(ctx, payload)
+    if err != nil {
+        return nil, appErr.ToLambdaError(err)
+    }
+
+    if h.disableReponseError {
+        _ = h.Handle(ctx, req)
+        return nil, nil
+    }
+
+    return nil, appErr.ToLambdaError(h.Handle(ctx, req))
+}
+
+func (h *Handler) Handler(ctx context.Context, payload json.RawMessage) (interface{}, error) {
     req, err := h.source.GetRequest(ctx, payload)
     if err != nil {
         return nil, appErr.ToLambdaError(err)

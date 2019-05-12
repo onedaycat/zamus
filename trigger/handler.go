@@ -132,6 +132,15 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
     return resultByte, nil
 }
 
+func (h *Handler) Handler(ctx context.Context, payload jsoniter.RawMessage) (interface{}, error) {
+    result, err := h.Handle(ctx, Payload(payload))
+    if err != nil {
+        return nil, appErr.ToLambdaError(err)
+    }
+
+    return result, nil
+}
+
 func (h *Handler) StartLambda() {
     lambda.StartHandler(h)
 }

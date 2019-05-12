@@ -388,6 +388,28 @@ func (s *Saga) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
     return []byte("success"), nil
 }
 
+func (s *Saga) Handler(ctx context.Context, payload jsoniter.RawMessage) (interface{}, error) {
+    reqs, err := s.source.GetRequest(ctx, payload)
+    if err != nil {
+        return nil, appErr.ToLambdaError(appErr.ErrInvalidRequest.WithCause(err).WithCaller().WithInput(string(payload)))
+    }
+
+    for _, req := range reqs {
+        s.req.clear()
+        if err = s.Handle(ctx, req); err != nil {
+            if s.state != nil && s.state.Error != nil {
+                if s.state.defs.ReturnFailedOnError {
+                    return nil, appErr.ToLambdaError(s.state.Error)
+                }
+                return "success", nil
+            }
+            return nil, appErr.ToLambdaError(err)
+        }
+    }
+
+    return "success", nil
+}
+
 func (s *Saga) StartLambda() {
     lambda.StartHandler(s)
 }

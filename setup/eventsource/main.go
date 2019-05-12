@@ -2,6 +2,7 @@ package main
 
 import (
     "context"
+    "encoding/json"
     "os"
 
     "github.com/aws/aws-lambda-go/events"
@@ -91,6 +92,20 @@ func (h *Handler) Invoke(ctx context.Context, payload []byte) ([]byte, error) {
     resultByte, _ := common.MarshalJSON(result)
 
     return resultByte, nil
+}
+
+func (h *Handler) Handler(ctx context.Context, payload json.RawMessage) (interface{}, error) {
+    req := &events.KinesisFirehoseEvent{}
+    if err := common.UnmarshalJSON(payload, req); err != nil {
+        return nil, err
+    }
+
+    result, err := h.Handle(ctx, req)
+    if err != nil {
+        return nil, err
+    }
+
+    return result, nil
 }
 
 func main() {
