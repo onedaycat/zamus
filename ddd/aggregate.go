@@ -2,9 +2,10 @@ package ddd
 
 import (
     "github.com/onedaycat/errors"
-    appErr "github.com/onedaycat/zamus/errors"
     "github.com/onedaycat/zamus/event"
 )
+
+var ErrApplyNotImplement = errors.DefNotImplement("ErrNotImplement", "Apply method not implement")
 
 const (
     emptyStr = ""
@@ -70,7 +71,7 @@ func (a *AggregateBase) GetSequence() int64 {
 }
 
 func (a *AggregateBase) Apply(msg *event.Msg) errors.Error {
-    return appErr.ErrNotImplement
+    return ErrApplyNotImplement.New()
 }
 
 func (a *AggregateBase) HasEvent(evt event.Event) bool {
