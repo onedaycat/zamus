@@ -21,6 +21,7 @@ import (
 
 type ErrorHandler func(ctx context.Context, req *Request, err errors.Error)
 type Handler func(ctx context.Context, req *Request) (interface{}, errors.Error)
+type PostHandler func(ctx context.Context, req *Request, res interface{}, err errors.Error) (interface{}, errors.Error)
 type MergeBatchHandler func(ctx context.Context, req *Request, results BatchResults) errors.Error
 
 type Config struct {
@@ -34,7 +35,7 @@ type Config struct {
 type ServiceHandler struct {
     handlers     map[string]*handlerinfo
     preHandlers  []Handler
-    postHandlers []Handler
+    postHandlers []PostHandler
     errHandlers  []ErrorHandler
     zcctx        *zamuscontext.ZamusContext
     warmer       *warmer.Warmer
@@ -88,7 +89,7 @@ func (h *ServiceHandler) PreHandlers(handlers ...Handler) {
     h.preHandlers = append(h.preHandlers, handlers...)
 }
 
-func (h *ServiceHandler) PostHandlers(handlers ...Handler) {
+func (h *ServiceHandler) PostHandlers(handlers ...PostHandler) {
     h.postHandlers = append(h.postHandlers, handlers...)
 }
 
@@ -143,10 +144,9 @@ func (h *ServiceHandler) doHandler(info *handlerinfo, ctx context.Context, req *
         for _, errHandler := range h.errHandlers {
             errHandler(ctx, req, err)
         }
-        return nil, err
     }
 
-    return result, nil
+    return result, err
 }
 
 func (h *ServiceHandler) doPreHandler(ctx context.Context, req *Request) (result interface{}, err errors.Error) {
@@ -154,9 +154,6 @@ func (h *ServiceHandler) doPreHandler(ctx context.Context, req *Request) (result
     for _, handler := range h.preHandlers {
         result, err = handler(ctx, req)
         if err != nil {
-            for _, errHandler := range h.errHandlers {
-                errHandler(ctx, req, err)
-            }
             return nil, err
         }
 
@@ -173,9 +170,6 @@ func (h *ServiceHandler) doInPreHandler(info *handlerinfo, ctx context.Context, 
     for _, handler := range info.prehandlers {
         result, err = handler(ctx, req)
         if err != nil {
-            for _, errHandler := range h.errHandlers {
-                errHandler(ctx, req, err)
-            }
             return nil, err
         }
 
@@ -187,23 +181,17 @@ func (h *ServiceHandler) doInPreHandler(info *handlerinfo, ctx context.Context, 
     return result, nil
 }
 
-func (h *ServiceHandler) doPostHandler(ctx context.Context, req *Request) (result interface{}, err errors.Error) {
+func (h *ServiceHandler) doPostHandler(ctx context.Context, req *Request, res interface{}, reserr errors.Error) (result interface{}, err errors.Error) {
     defer h.recovery(ctx, req, &err)
-    for _, handler := range h.postHandlers {
-        result, err = handler(ctx, req)
-        if err != nil {
-            for _, errHandler := range h.errHandlers {
-                errHandler(ctx, req, err)
-            }
-            return nil, err
-        }
-
-        if result != nil {
-            return result, nil
-        }
+    if len(h.postHandlers) == 0 {
+        return res, reserr
     }
 
-    return result, nil
+    for _, handler := range h.postHandlers {
+        result, err = handler(ctx, req, res, reserr)
+    }
+
+    return result, err
 }
 
 func (h *ServiceHandler) runWarmer(ctx context.Context, req *Request) (interface{}, errors.Error) {
@@ -240,16 +228,9 @@ func (h *ServiceHandler) runHandler(info *handlerinfo, ctx context.Context, req 
     }
 
     result, err = h.doHandler(info, ctx, req)
+    result, err = h.doPostHandler(ctx, req, result, err)
     if err != nil {
         return nil, err
-    }
-
-    postresult, err := h.doPostHandler(ctx, req)
-    if err != nil {
-        return nil, err
-    }
-    if postresult != nil {
-        return postresult, nil
     }
 
     return result, nil
@@ -285,7 +266,7 @@ func (h *ServiceHandler) Run(ctx context.Context, req *Request, result interface
     }
 
     if resByte != nil {
-        if err := common.UnmarshalJSON(resByte, result); err != nil {
+        if err = common.UnmarshalJSON(resByte, result); err != nil {
             panic(err)
         }
     }
