@@ -30,3 +30,4 @@ jack2
 *.tfstate
 *.tfstate.backup
 .terraform
+zamus/service
