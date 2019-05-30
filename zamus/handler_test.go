@@ -179,7 +179,7 @@ func TestHandlerPreHandler(t *testing.T) {
         },
     })
 
-    t.Run("Forward to handler", func(t *testing.T) {
+    t.Run("Forward to Handler", func(t *testing.T) {
         h.preHandlers = nil
         h.RegisterPreHandler(func(ctx context.Context, src interface{}) (interface{}, error) {
             return nil, nil
@@ -326,7 +326,7 @@ func TestHandlerRetryHandler(t *testing.T) {
         require.Equal(t, 1, called)
     })
 
-    t.Run("On retry failed handler", func(t *testing.T) {
+    t.Run("On retry failed Handler", func(t *testing.T) {
         called = 0
         h.SetRetry(1)
         h.OnRetryFailedHandler(func(ctx context.Context, src interface{}, err error) (interface{}, error) {
