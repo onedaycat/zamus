@@ -181,7 +181,7 @@ func TestHandlerPreHandler(t *testing.T) {
 
     t.Run("Forward to Handle", func(t *testing.T) {
         h.preHandlers = nil
-        h.RegisterPreHandler(func(ctx context.Context, src interface{}) (interface{}, error) {
+        h.RegisterPreHandler(func(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error) {
             return nil, nil
         })
 
@@ -194,7 +194,7 @@ func TestHandlerPreHandler(t *testing.T) {
 
     t.Run("Response", func(t *testing.T) {
         h.preHandlers = nil
-        h.RegisterPreHandler(func(ctx context.Context, src interface{}) (interface{}, error) {
+        h.RegisterPreHandler(func(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error) {
             return &testRes{Name: "2"}, nil
         })
 
@@ -207,7 +207,7 @@ func TestHandlerPreHandler(t *testing.T) {
 
     t.Run("Error", func(t *testing.T) {
         h.preHandlers = nil
-        h.RegisterPreHandler(func(ctx context.Context, src interface{}) (interface{}, error) {
+        h.RegisterPreHandler(func(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error) {
             return nil, errors.InternalError("code1", "msg1")
         })
 
@@ -229,7 +229,7 @@ func TestHandlerPostHandler(t *testing.T) {
 
     t.Run("Forward to post processor", func(t *testing.T) {
         h.postHandlers = nil
-        h.RegisterPostHandler(func(ctx context.Context, src interface{}, res interface{}, err error) (interface{}, error) {
+        h.RegisterPostHandler(func(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, err error) (interface{}, error) {
             return res, nil
         })
 
@@ -242,7 +242,7 @@ func TestHandlerPostHandler(t *testing.T) {
 
     t.Run("Transform Response", func(t *testing.T) {
         h.postHandlers = nil
-        h.RegisterPostHandler(func(ctx context.Context, src interface{}, res interface{}, err error) (interface{}, error) {
+        h.RegisterPostHandler(func(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, err error) (interface{}, error) {
             x := res.(*testRes)
             x.Name = "3"
             return x, nil
@@ -257,7 +257,7 @@ func TestHandlerPostHandler(t *testing.T) {
 
     t.Run("Transform response to error", func(t *testing.T) {
         h.postHandlers = nil
-        h.RegisterPostHandler(func(ctx context.Context, src interface{}, res interface{}, err error) (interface{}, error) {
+        h.RegisterPostHandler(func(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, err error) (interface{}, error) {
             return nil, errors.InternalError("code1", "msg1")
         })
 
@@ -329,7 +329,7 @@ func TestHandlerRetryHandler(t *testing.T) {
     t.Run("On retry failed Handle", func(t *testing.T) {
         called = 0
         h.SetRetry(1)
-        h.OnRetryFailedHandler(func(ctx context.Context, payload json.RawMessage, err error) (interface{}, error) {
+        h.OnRetryFailedHandler(func(ctx context.Context, payload json.RawMessage, src interface{}, err error) (interface{}, error) {
             return nil, errors.InternalError("code2", "msg2")
         })
 

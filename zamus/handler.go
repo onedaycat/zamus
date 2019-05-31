@@ -18,12 +18,12 @@ var jsonen = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type SourceList interface{}
 
-type PreHandler func(ctx context.Context, src interface{}) (interface{}, error)
-type PostHandler func(ctx context.Context, src interface{}, res interface{}, err error) (interface{}, error)
-type BatchPreHandler func(ctx context.Context, src interface{}) (interface{}, error)
-type BatchPostHandler func(ctx context.Context, src interface{}, res interface{}, err error) (interface{}, error)
+type PreHandler func(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error)
+type PostHandler func(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, err error) (interface{}, error)
+type BatchPreHandler func(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error)
+type BatchPostHandler func(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, err error) (interface{}, error)
 type PanicHandler func(ctx context.Context, payload json.RawMessage, err error) (interface{}, error)
-type RetryFailedHandler func(ctx context.Context, payload json.RawMessage, err error) (interface{}, error)
+type RetryFailedHandler func(ctx context.Context, payload json.RawMessage, src interface{}, err error) (interface{}, error)
 
 type Handler interface {
     ParseSource(ctx context.Context, payload json.RawMessage) interface{}
@@ -69,7 +69,7 @@ func (h *Handle) Run(ctx context.Context, payload json.RawMessage, src interface
     h.retries.Reset()
 
     if isBatch {
-        result, err := h.doBatchPreHandler(ctx, src)
+        result, err := h.doBatchPreHandler(ctx, payload, src)
         if err != nil || result != nil {
             return result, err
         }
@@ -80,17 +80,17 @@ func (h *Handle) Run(ctx context.Context, payload json.RawMessage, src interface
                 goto RetryBatchHandler
             } else {
                 if h.retryHandler != nil {
-                    result, err = h.retryHandler(ctx, payload, err)
+                    result, err = h.retryHandler(ctx, payload, src, err)
                 }
             }
         }
 
-        result, err = h.doBatchPostHandler(ctx, src, result, err)
+        result, err = h.doBatchPostHandler(ctx, payload, src, result, err)
 
         return result, err
     }
 
-    result, err := h.doPreHandler(ctx, src)
+    result, err := h.doPreHandler(ctx, payload, src)
     if err != nil || result != nil {
         return result, err
     }
@@ -102,12 +102,12 @@ RetryHandler:
             goto RetryHandler
         } else {
             if h.retryHandler != nil {
-                result, err = h.retryHandler(ctx, payload, err)
+                result, err = h.retryHandler(ctx, payload, src, err)
             }
         }
     }
 
-    result, err = h.doPostHandler(ctx, src, result, err)
+    result, err = h.doPostHandler(ctx, payload, src, result, err)
 
     return result, err
 }
@@ -136,9 +136,9 @@ func (h *Handle) OnRetryFailedHandler(retryFailedHandler RetryFailedHandler) {
     h.retryHandler = retryFailedHandler
 }
 
-func (h *Handle) doPreHandler(ctx context.Context, src interface{}) (interface{}, error) {
+func (h *Handle) doPreHandler(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error) {
     for _, ph := range h.preHandlers {
-        result, err := ph(ctx, src)
+        result, err := ph(ctx, payload, src)
         if err != nil || result != nil {
             return result, err
         }
@@ -147,9 +147,9 @@ func (h *Handle) doPreHandler(ctx context.Context, src interface{}) (interface{}
     return nil, nil
 }
 
-func (h *Handle) doBatchPreHandler(ctx context.Context, src interface{}) (interface{}, error) {
+func (h *Handle) doBatchPreHandler(ctx context.Context, payload json.RawMessage, src interface{}) (interface{}, error) {
     for _, ph := range h.batchPreHandlers {
-        result, err := ph(ctx, src)
+        result, err := ph(ctx, payload, src)
         if err != nil || result != nil {
             return result, err
         }
@@ -158,23 +158,23 @@ func (h *Handle) doBatchPreHandler(ctx context.Context, src interface{}) (interf
     return nil, nil
 }
 
-func (h *Handle) doPostHandler(ctx context.Context, src interface{}, res interface{}, reserr error) (interface{}, error) {
+func (h *Handle) doPostHandler(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, reserr error) (interface{}, error) {
     result := res
     err := reserr
 
     for _, ph := range h.postHandlers {
-        result, err = ph(ctx, src, result, err)
+        result, err = ph(ctx, payload, src, result, err)
     }
 
     return result, err
 }
 
-func (h *Handle) doBatchPostHandler(ctx context.Context, src interface{}, res interface{}, reserr error) (interface{}, error) {
+func (h *Handle) doBatchPostHandler(ctx context.Context, payload json.RawMessage, src interface{}, res interface{}, reserr error) (interface{}, error) {
     result := res
     err := reserr
 
     for _, ph := range h.batchPostHandlers {
-        result, err = ph(ctx, src, result, err)
+        result, err = ph(ctx, payload, src, result, err)
     }
 
     return result, err
