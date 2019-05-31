@@ -280,7 +280,7 @@ func TestBatchHandlerRetryHandler(t *testing.T) {
     t.Run("Retry failed Handle", func(t *testing.T) {
         called = 0
         h.SetRetry(1)
-        h.OnRetryFailedHandler(func(ctx context.Context, src interface{}, err error) (interface{}, error) {
+        h.OnRetryFailedHandler(func(ctx context.Context, payload json.RawMessage, err error) (interface{}, error) {
             return nil, errors.InternalError("code2", "msg2")
         })
 

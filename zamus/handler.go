@@ -23,7 +23,7 @@ type PostHandler func(ctx context.Context, src interface{}, res interface{}, err
 type BatchPreHandler func(ctx context.Context, src interface{}) (interface{}, error)
 type BatchPostHandler func(ctx context.Context, src interface{}, res interface{}, err error) (interface{}, error)
 type PanicHandler func(ctx context.Context, payload json.RawMessage, err error) (interface{}, error)
-type RetryFailedHandler func(ctx context.Context, src interface{}, err error) (interface{}, error)
+type RetryFailedHandler func(ctx context.Context, payload json.RawMessage, err error) (interface{}, error)
 
 type Handler interface {
     ParseSource(ctx context.Context, payload json.RawMessage) interface{}
@@ -60,12 +60,12 @@ func (h *Handle) Invoke(ctx context.Context, payload json.RawMessage) (result in
     defer h.recovery(ctx, payload, &result, &err)
 
     src, isBatch = h.parseSource(ctx, payload)
-    result, err = h.Run(ctx, src, isBatch)
+    result, err = h.Run(ctx, payload, src, isBatch)
 
     return result, err
 }
 
-func (h *Handle) Run(ctx context.Context, src interface{}, isBatch bool) (interface{}, error) {
+func (h *Handle) Run(ctx context.Context, payload json.RawMessage, src interface{}, isBatch bool) (interface{}, error) {
     h.retries.Reset()
 
     if isBatch {
@@ -80,7 +80,7 @@ func (h *Handle) Run(ctx context.Context, src interface{}, isBatch bool) (interf
                 goto RetryBatchHandler
             } else {
                 if h.retryHandler != nil {
-                    result, err = h.retryHandler(ctx, src, err)
+                    result, err = h.retryHandler(ctx, payload, err)
                 }
             }
         }
@@ -102,7 +102,7 @@ RetryHandler:
             goto RetryHandler
         } else {
             if h.retryHandler != nil {
-                result, err = h.retryHandler(ctx, src, err)
+                result, err = h.retryHandler(ctx, payload, err)
             }
         }
     }
