@@ -4,8 +4,8 @@ go 1.12
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.3.3 // indirect
-	github.com/aws/aws-lambda-go v1.11.0
-	github.com/aws/aws-sdk-go v1.19.40
+	github.com/aws/aws-lambda-go v1.11.1
+	github.com/aws/aws-sdk-go v1.19.41
 	github.com/aws/aws-xray-sdk-go v0.0.0-20190430204757-23860078c41d
 	github.com/json-iterator/go v1.1.7-0.20190523055743-08047c174c6c
 	github.com/magefile/mage v1.8.0 // indirect

@@ -79,7 +79,7 @@ func (h *Handle) Run(ctx context.Context, payload json.RawMessage, src interface
             if h.retries.Retry() {
                 goto RetryBatchHandler
             } else {
-                if h.retryHandler != nil {
+                if h.retryHandler != nil && h.retries.times > 0 {
                     result, err = h.retryHandler(ctx, payload, src, err)
                 }
             }
@@ -101,7 +101,7 @@ RetryHandler:
         if h.retries.Retry() {
             goto RetryHandler
         } else {
-            if h.retryHandler != nil {
+            if h.retryHandler != nil && h.retries.times > 0 {
                 result, err = h.retryHandler(ctx, payload, src, err)
             }
         }
