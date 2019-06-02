@@ -11,7 +11,7 @@ require (
 	github.com/magefile/mage v1.8.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/onedaycat/errors v0.0.0-20190523084455-440607c64ff6
+	github.com/onedaycat/errors v0.0.0-20190602065545-53d66244d8d9
 	github.com/plimble/mage v0.0.0-20190324110514-f4bb144cd59b
 	github.com/rs/zerolog v1.14.4-0.20190526015133-1a2c7daec4a7
 	github.com/stretchr/testify v1.3.1-0.20190311161405-34c6fa2dc709

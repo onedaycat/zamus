@@ -9,13 +9,11 @@ github.com/aws/aws-sdk-go v1.19.41 h1:veutzvQP/lOmYmtX26S9mTFJLO6sp7/UsxFcCjglu4
 github.com/aws/aws-sdk-go v1.19.41/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-xray-sdk-go v0.0.0-20190430204757-23860078c41d h1:9OYW5OD07WbApCo1gjb/wV9eGmnbiCEri+2lOsKg9fs=
 github.com/aws/aws-xray-sdk-go v0.0.0-20190430204757-23860078c41d/go.mod h1:psZMcigoEqETEFuzWlOYXIXBDUIqLwEr8Zl/NxLmlAg=
-github.com/certifi/gocertifi v0.0.0-20190506164543-d2eda7129713/go.mod h1:GJKEexRPVJrBSOjoqN5VNOIKJ5Q3RViH6eu3puDRwx4=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
 github.com/davecgh/go-spew v0.0.0-20160907170601-6d212800a42e/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/getsentry/raven-go v0.1.2-0.20190513200303-c977f96e1095/go.mod h1:KungGk8q33+aIAZUIVWZDr2OfAEBsO49PX4NzFV5kcQ=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af h1:pmfjZENx5imkbgOkpRUYLnmbU7UEFbjtDA2hxJ1ichM=
 github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af/go.mod h1:Nht3zPeWKUH0NzdCt2Blrr5ys8VGpn0CEB0cQHVjt7k=
@@ -29,8 +27,8 @@ github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJ
 github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
 github.com/modern-go/reflect2 v1.0.1 h1:9f412s+6RmYXLWZSEzVVgPGK7C2PphHj5RJrvfx9AWI=
 github.com/modern-go/reflect2 v1.0.1/go.mod h1:bx2lNnkwVCuqBIxFjflWJWanXIb3RllmbCylyMrvgv0=
-github.com/onedaycat/errors v0.0.0-20190523084455-440607c64ff6 h1:KJKKFVykLT47cMYvyjW9/LlP9PaJExb+Rcm21uiH7Sg=
-github.com/onedaycat/errors v0.0.0-20190523084455-440607c64ff6/go.mod h1:feCshlN/aLTA4JNGvyOTsCE//O60sYeSfkKyauW6yKI=
+github.com/onedaycat/errors v0.0.0-20190602065545-53d66244d8d9 h1:u9XU+vLCupPEpjG+sGdAs/aR2AHEfJH7erhOt6IiuHs=
+github.com/onedaycat/errors v0.0.0-20190602065545-53d66244d8d9/go.mod h1:ggMkAhx2Wkoe6pVH1vwR3gccbFYlUIV5WGIVYOtsAw4=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/plimble/mage v0.0.0-20190324110514-f4bb144cd59b h1:AfcjNJajqagFCeC1bVCTNQ9Q4yHTc4l4DxW9U6JiKiY=
