@@ -124,14 +124,14 @@ func convertStacktace(err errors.Error) []*messages.InvokeResponse_Error_StackFr
         return nil
     }
 
-    if len(stack.Frames) == 0 {
+    if len(stack) == 0 {
         return nil
     }
 
-    stackFrams := make([]*messages.InvokeResponse_Error_StackFrame, len(stack.Frames))
-    for i, frame := range stack.Frames {
+    stackFrams := make([]*messages.InvokeResponse_Error_StackFrame, len(stack))
+    for i, frame := range stack {
         stackFrams[i] = &messages.InvokeResponse_Error_StackFrame{
-            Path:  frame.AbsolutePath,
+            Path:  frame.Filename,
             Line:  int32(frame.Lineno),
             Label: frame.Function,
         }
