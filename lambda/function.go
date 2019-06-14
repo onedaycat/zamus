@@ -71,7 +71,7 @@ func lambdaErrorResponse(invokeError error) *messages.InvokeResponse_Error {
     if ok {
         return &messages.InvokeResponse_Error{
             Message:    xerr.Error(),
-            Type:       xerr.GetCode(),
+            Type:       xerr.GetType(),
             StackTrace: convertStacktace(xerr),
         }
     }
@@ -95,7 +95,7 @@ func panicResponse(req *messages.InvokeRequest, response *messages.InvokeRespons
         switch cause := r.(type) {
         case errors.Error:
             response.Error = &messages.InvokeResponse_Error{
-                Type:       cause.GetCode(),
+                Type:       cause.GetType(),
                 Message:    cause.Error(),
                 StackTrace: convertStacktace(cause),
                 ShouldExit: true,
