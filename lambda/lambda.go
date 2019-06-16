@@ -13,7 +13,7 @@ import (
 
 var jsonfast = jsoniter.ConfigCompatibleWithStandardLibrary
 
-type Handler func(ctx context.Context, payload json.RawMessage) (interface{}, error)
+type Handler = func(ctx context.Context, payload json.RawMessage) (interface{}, error)
 type Handle interface {
     Invoke(ctx context.Context, payload json.RawMessage) (interface{}, error)
 }
