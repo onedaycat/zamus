@@ -15,6 +15,6 @@ func Test() {
 }
 
 func Dep() {
-    mg.ExecX("go get -u").Run()
+    mg.ExecX("go get -u ./...").Run()
     mg.ExecX("go mod tidy").Run()
 }
