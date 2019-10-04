@@ -17,6 +17,5 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - run: pwd
-      - run: pwd
-        working-directory: $GITHUB_WORKSPACE
+      - run: ls -al
       - run: mage test
