@@ -13,7 +13,7 @@ jobs:
     name: CI
     runs-on: ubuntu-latest
     container:
-      image:  onedaycat/ci
+      image: onedaycat/ci
     steps:
       - uses: actions/checkout@v1
       - run: mage test
