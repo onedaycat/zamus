@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: CI
+    runs-on: ubuntu-latest
+    container:
+      image:  onedaycat/ci
+    steps:
+      - uses: actions/checkout@v1
+      - run: mage test
+#        working-directory: $GITHUB_WORKSPACE
+
+
