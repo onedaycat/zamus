@@ -15,7 +15,7 @@ jobs:
     container:
       image: onedaycat/ci
     env:
-      XBRANCH: ${{ github.ref }}
+      XBRANCH: "${{ github.ref == 'refs/heads/master' ? 'A' : 'B' }}"
       XEVENT: ${{ github.event_name }}
     steps:
       - uses: actions/checkout@v1
