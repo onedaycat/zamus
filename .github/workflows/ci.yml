@@ -14,11 +14,6 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: onedaycat/ci
-    env:
-      XBRANCH: "${{ github.ref == 'refs/heads/master' ? 'A' : 'B' }}"
-      XEVENT: ${{ github.event_name }}
     steps:
       - uses: actions/checkout@v1
-      - run: echo $XBRANCH
-      - run: echo $XEVENT
       - run: mage test
